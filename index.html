@@ -74,8 +74,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .stat-card.accent .stat-label{color:rgba(255,255,255,0.6);}
 
 /* ── TABS ── */
-.view-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:22px;width:fit-content;flex-wrap:wrap;}
-.view-tab{padding:9px 18px;border:none;background:none;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:7px;}
+.view-tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:22px;flex-wrap:nowrap;overflow-x:auto;width:100%;}
+.view-tab{padding:7px 10px;border:none;background:none;border-radius:8px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
 .view-tab:hover{color:var(--text);}
 .view-tab.active{background:var(--teal-dark);color:white;}
 .view-tab .count{background:rgba(0,0,0,0.1);padding:1px 7px;border-radius:10px;font-size:11px;}
@@ -1758,73 +1758,89 @@ function renderBar(prefix,actual,obj){
 function renderProyeccion(actualOut,objOut,actualIn,objIn){
   const wTotal=workdaysInMonth();
   const wElapsed=isPastMonth()?wTotal:workdaysElapsed();
-  const totalActual=actualOut+actualIn;
-  const totalObj=objOut+objIn;
+  const wRestantes=wTotal-wElapsed;
 
   // Past month: show final result
   if(isPastMonth()){
+    const totalActual=actualOut+actualIn;
+    const totalObj=objOut+objIn;
     const pct=totalObj>0?Math.round(totalActual/totalObj*100):0;
     const icon=document.getElementById('proy-icon');
     const title=document.getElementById('proy-title');
     const text=document.getElementById('proy-text');
-    icon.textContent=pct>=100?'🏆':pct>=80?'✅':'📉';
+    icon.textContent=pct>=86?'🏆':pct>=70?'✅':'📉';
     title.textContent=`Resultado de ${monthLabel()}`;
-    title.className='proy-title '+(pct>=100?'verde':pct>=80?'amarillo':'rojo');
-    text.innerHTML=`Cerraste el mes con <b>${totalActual} demos creadas</b> de un objetivo de <b>${totalObj}</b> (${pct}%). Outbound: ${actualOut}/${objOut} · Inbound: ${actualIn}/${objIn}.`;
+    title.className='proy-title '+(pct>=86?'verde':pct>=70?'amarillo':'rojo');
+    text.innerHTML=`Cerraste el mes con <b>${totalActual} demos</b> de un objetivo de <b>${totalObj}</b> (${pct}%). Outbound: ${actualOut}/${objOut} · Inbound: ${actualIn}/${objIn}.`;
     document.getElementById('proy-aviso').style.display='none';
     return;
   }
 
-  // Current month: projection
-  if(wElapsed===0||totalObj===0){
+  // No objectives set yet
+  if((objOut+objIn)===0){
+    document.getElementById('proy-icon').textContent='📊';
     document.getElementById('proy-title').textContent='Proyección a fin de mes';
     document.getElementById('proy-title').className='proy-title';
-    document.getElementById('proy-text').innerHTML=totalObj===0?'Tu manager aún no ha cargado los objetivos de este mes.':'El mes acaba de empezar. ¡A por esas demos! 💪';
-    document.getElementById('proy-icon').textContent='📊';
+    document.getElementById('proy-text').innerHTML='Tu manager aún no ha cargado los objetivos de este mes.';
+    document.getElementById('proy-aviso').style.display='none';
+    return;
+  }
+  if(wElapsed===0){
+    document.getElementById('proy-icon').textContent='🚀';
+    document.getElementById('proy-title').textContent='¡El mes acaba de empezar!';
+    document.getElementById('proy-title').className='proy-title verde';
+    document.getElementById('proy-text').innerHTML='Cada demo cuenta desde el primer día. ¡A por todas!';
     document.getElementById('proy-aviso').style.display='none';
     return;
   }
 
-  const ritmoDiario=totalActual/wElapsed;
-  const proyeccion=Math.round(ritmoDiario*wTotal);
-  const wRestantes=wTotal-wElapsed;
-  const pctProy=totalObj>0?Math.round(proyeccion/totalObj*100):0;
+  // Projections per canal
+  const ritmoOut=wElapsed>0?actualOut/wElapsed:0;
+  const ritmoIn=wElapsed>0?actualIn/wElapsed:0;
+  const proyOut=Math.round(ritmoOut*wTotal);
+  const proyIn=Math.round(ritmoIn*wTotal);
+  const pctPrOut=objOut>0?Math.round(proyOut/objOut*100):0;
+  const pctPrIn=objIn>0?Math.round(proyIn/objIn*100):0;
+  const pctPrTotal=((objOut+objIn)>0)?Math.round((proyOut+proyIn)/(objOut+objIn)*100):0;
 
-  const icon=document.getElementById('proy-icon');
-  const title=document.getElementById('proy-title');
-  const text=document.getElementById('proy-text');
-  const aviso=document.getElementById('proy-aviso');
-
-  let estado,color,emoji;
-  if(proyeccion>=totalObj*1.05){estado='Excelente';color='verde';emoji='🚀';}
-  else if(proyeccion>=totalObj*0.85){estado='Bien';color='amarillo';emoji='👍';}
-  else{estado='Crítico';color='rojo';emoji='⚠️';}
-
-  icon.textContent=emoji;
-  title.textContent=estado+' — proyección: '+proyeccion+' demos';
-  title.className='proy-title '+color;
-
-  // How many today to improve
-  const faltanParaObj=Math.max(0,totalObj-totalActual);
-  const demosHoyParaRitmo=wRestantes>0?Math.ceil(faltanParaObj/wRestantes):faltanParaObj;
-
-  text.innerHTML=`Tu media es <b>${ritmoDiario.toFixed(1)} demos/día hábil</b>. Si mantienes el ritmo, llegarás a <b>${proyeccion} demos</b> (${pctProy}% del objetivo de ${totalObj}). Llevas ${totalActual} y quedan ${wRestantes} días hábiles.`;
-
-  if(proyeccion<totalObj){
-    aviso.style.display='block';
-    aviso.innerHTML=`💡 Para llegar a tu objetivo necesitas ~<b>${demosHoyParaRitmo} demos cada día hábil</b> de aquí a fin de mes.`;
+  // Estado basado en proyección total
+  let estado,color,emoji,titulo,msg,aviso;
+  if(pctPrTotal>=86){
+    estado='excelente';color='verde';emoji='🚀';
+    titulo='Excelente — vas muy por delante';
+    msg=`Tu ritmo actual proyecta <b>${proyOut+proyIn} demos</b> a fin de mes (${pctPrTotal}% del objetivo). Outbound: proyección <b>${proyOut}/${objOut}</b> (${pctPrOut}%) · Inbound: <b>${proyIn}/${objIn}</b> (${pctPrIn}%).`;
+    aviso='✅ Sigue así, no pierdas el foco. Cada demo que cierres ahora es un colchón para la semana que viene.';
+  }else if(pctPrTotal>=70){
+    estado='bien';color='amarillo';emoji='👍';
+    titulo='Dentro del rango — puedes ir a más';
+    msg=`Tu ritmo proyecta <b>${proyOut+proyIn} demos</b> a fin de mes (${pctPrTotal}% del objetivo). Outbound: <b>${proyOut}/${objOut}</b> (${pctPrOut}%) · Inbound: <b>${proyIn}/${objIn}</b> (${pctPrIn}%).`;
+    aviso=`💡 Estás en la zona correcta pero tienes potencial para llegar al 100%. ${wRestantes} días hábiles por delante — un empujón extra marca la diferencia.`;
   }else{
-    aviso.style.display='block';
-    aviso.style.color='var(--green)';
-    aviso.innerHTML=`✅ Vas en muy buen camino. ¡Sigue así!`;
+    estado='critico';color='rojo';emoji='⚠️';
+    titulo='Crítico — necesitas acelerar';
+    msg=`Tu ritmo proyecta solo <b>${proyOut+proyIn} demos</b> a fin de mes (${pctPrTotal}% del objetivo). Outbound: <b>${proyOut}/${objOut}</b> (${pctPrOut}%) · Inbound: <b>${proyIn}/${objIn}</b> (${pctPrIn}%).`;
+    const faltanOut=Math.max(0,objOut-actualOut);
+    const faltanIn=Math.max(0,objIn-actualIn);
+    const porDiaOut=wRestantes>0?Math.ceil(faltanOut/wRestantes):faltanOut;
+    const porDiaIn=wRestantes>0?Math.ceil(faltanIn/wRestantes):faltanIn;
+    aviso=`🔴 Para llegar al objetivo necesitas ~<b>${porDiaOut} outbound</b> y ~<b>${porDiaIn} inbound</b> por día hábil los próximos ${wRestantes} días.`;
   }
 
-  // Aviso de demos pendientes de reagendar
+  document.getElementById('proy-icon').textContent=emoji;
+  document.getElementById('proy-title').textContent=titulo;
+  document.getElementById('proy-title').className='proy-title '+color;
+  document.getElementById('proy-text').innerHTML=msg;
+
+  // Aviso reagendar
   const canceladas=demos.filter(d=>d.estado==='cancelada').length;
+  const avisoEl=document.getElementById('proy-aviso');
+  avisoEl.style.display='block';
+  avisoEl.style.color=color==='rojo'?'var(--red)':color==='amarillo'?'var(--amber)':'var(--green)';
+  let avisoHtml=aviso;
   if(canceladas>0){
-    const cur=aviso.innerHTML;
-    aviso.innerHTML=cur+`<br>🔄 Tienes <b>${canceladas} demo${canceladas>1?'s':''} pendiente${canceladas>1?'s':''} de reagendar</b> — retómalas para sumarlas a tu progreso.`;
+    avisoHtml+=`<br>🔄 Tienes <b>${canceladas} demo${canceladas>1?'s':''} cancelada${canceladas>1?'s':''}</b> pendiente${canceladas>1?'s':''} de reagendar — recupéralas.`;
   }
+  avisoEl.innerHTML=avisoHtml;
 }
 
 function renderComerciales(){
