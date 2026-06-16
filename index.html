@@ -574,7 +574,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="mgr-tab active" id="mgrtab-equipo">
       <div class="stats-row" id="mgr-team-stats" style="grid-template-columns:repeat(4,1fr);"></div>
       <div class="objetivos-panel" id="mgr-team-obj"></div>
-      <div class="lb-title" style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);margin-bottom:14px;">🏆 Ranking del equipo</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div class="lb-title" style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);">🏆 Ranking del equipo</div>
+        <div class="canal-filter-wrap">
+          <button class="canal-filter-btn" id="mgr-period-hoy" onclick="setMgrPeriod('hoy',this)">📅 Hoy</button>
+          <button class="canal-filter-btn" id="mgr-period-semana" onclick="setMgrPeriod('semana',this)">🗓️ Semana</button>
+          <button class="canal-filter-btn active" id="mgr-period-mes" onclick="setMgrPeriod('mes',this)">📆 Mes</button>
+        </div>
+      </div>
       <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-ranking"></table></div>
     </div>
 
@@ -922,6 +929,7 @@ let allSdrs=[];
 let allLlamadas=[];
 let mgrMonthOffset=0;
 let mgrIndividualSdr=null;
+let mgrPeriod='mes';
 
 async function enterManagerApp(){
   document.getElementById('manager-app').classList.add('active');
@@ -957,9 +965,34 @@ function mgrTargetMonth(){const d=new Date();return new Date(d.getFullYear(),d.g
 function mgrMonthRange(){const m=mgrTargetMonth();return{start:new Date(m.getFullYear(),m.getMonth(),1).toISOString().split('T')[0],end:new Date(m.getFullYear(),m.getMonth()+1,0).toISOString().split('T')[0]};}
 function mgrMonthLabel(){const m=mgrTargetMonth();const mo=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${mo[m.getMonth()]} ${m.getFullYear()}`;}
 
+function setMgrPeriod(period,btn){
+  mgrPeriod=period;
+  document.querySelectorAll('[id^="mgr-period-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMgrTeamStats();
+  renderMgrRanking();
+}
+
+function mgrPeriodDates(){
+  const now=new Date();
+  const today=now.toISOString().split('T')[0];
+  if(mgrPeriod==='hoy') return{start:today,end:today};
+  if(mgrPeriod==='semana'){
+    const day=now.getDay();
+    const mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    return{start:mon.toISOString().split('T')[0],end:sun.toISOString().split('T')[0]};
+  }
+  return mgrMonthRange(); // mes (default)
+}
+
 function sdrDemosCreatedInMonth(sdrId){
-  const{start,end}=mgrMonthRange();
-  return allDemos.filter(d=>d.sdr_id===sdrId&&(d.created_at||'').split('T')[0]>=start&&(d.created_at||'').split('T')[0]<=end);
+  const{start,end}=mgrPeriodDates();
+  return allDemos.filter(d=>{
+    if(d.sdr_id!==sdrId)return false;
+    const agendado=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return agendado>=start&&agendado<=end;
+  });
 }
 
 function sdrStats(sdrId){
@@ -1043,11 +1076,12 @@ function renderMgrTeamObj(){
 }
 
 function renderMgrRanking(){
+  const periodLabel={hoy:'hoy',semana:'esta semana',mes:mgrMonthLabel()}[mgrPeriod];
   const rows=allSdrs.map(s=>({nombre:s.nombre,...sdrStats(s.id)})).sort((a,b)=>b.totalDemos-a.totalDemos);
   const tot=(k)=>rows.reduce((a,b)=>a+b[k],0);
   const t=document.getElementById('mgr-ranking');
   t.innerHTML=`
-    <thead><tr><th>SDR</th><th>Demos Out</th><th>Demos In</th><th>Total demos</th><th>CWD</th><th>CLD</th><th>Canc.</th><th>Llam.</th><th>Conect.</th><th>% Cierre</th></tr></thead>
+    <thead><tr><th>SDR</th><th>Out</th><th>In</th><th>Total demos</th><th>CWD</th><th>CLD</th><th>Canc.</th><th>Llam.</th><th>Conect.</th><th>% Cierre</th></tr></thead>
     <tbody>
     ${rows.map(r=>`<tr><td>${r.nombre}</td><td>${r.demosOut}</td><td>${r.demosIn}</td><td><b>${r.totalDemos}</b></td><td>${r.totalCwd}</td><td>${r.cld}</td><td>${r.canceladas}</td><td>${r.hechas}</td><td>${r.conectadas}</td><td>${r.demoToCwd.toFixed(1)}%</td></tr>`).join('')}
     <tr class="row-total"><td>TOTAL</td><td>${tot('demosOut')}</td><td>${tot('demosIn')}</td><td>${tot('totalDemos')}</td><td>${tot('totalCwd')}</td><td>${tot('cld')}</td><td>${tot('canceladas')}</td><td>${tot('hechas')}</td><td>${tot('conectadas')}</td><td>—</td></tr>
@@ -1239,6 +1273,9 @@ function setMgrTab(tab,btn){
 }
 function setMgrMonth(offset,btn){
   mgrMonthOffset=offset;
+  mgrPeriod='mes';
+  document.querySelectorAll('[id^="mgr-period-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mgr-period-mes')?.classList.add('active');
   document.querySelectorAll('#manager-app .month-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   renderManager();
