@@ -1095,7 +1095,7 @@ function renderMgrTeamStats(){
   const totalEjec=stats.reduce((a,b)=>a+b.ejecutadas,0);
   const totalCwd=stats.reduce((a,b)=>a+b.totalCwd,0);
   const totalCanc=stats.reduce((a,b)=>a+b.canceladas,0);
-  const pctCanc=totalDemos>0?Math.round(totalCanc/(totalDemos)*100):0;
+  const pctCanc=( totalDemos+totalCanc)>0?Math.round(totalCanc/(totalDemos+totalCanc)*100):0;
   const pctCierre=totalEjec>0?Math.round(totalCwd/totalEjec*100):0;
   const el=document.getElementById('mgr-team-stats');
   el.innerHTML=`
@@ -1156,7 +1156,7 @@ function renderMgrRanking(){
     ${rows.map(r=>{
       const pctEjec=r.totalDemos>0?Math.round(r.ejecutadas/r.totalDemos*100):0;
       const pctCierre=r.ejecutadas>0?Math.round(r.totalCwd/r.ejecutadas*100):0;
-      const pctCanc=r.totalDemos>0?Math.round(r.canceladas/r.totalDemos*100):0;
+      const pctCanc=(r.totalDemos+r.canceladas)>0?Math.round(r.canceladas/(r.totalDemos+r.canceladas)*100):0;
       const pendientes=r.totalDemos-r.ejecutadas;
       return`<tr>
         <td>${r.nombre}</td>
@@ -1178,7 +1178,7 @@ function renderMgrRanking(){
       <td>${totDemos-totEjec}</td>
       <td>${totDemos>0?Math.round(totEjec/totDemos*100):0}%</td>
       <td><b>${totCwd}</b></td><td>${totEjec>0?Math.round(totCwd/totEjec*100):0}%</td>
-      <td>${totCanc}</td><td>${totDemos>0?Math.round(totCanc/totDemos*100):0}%</td>
+      <td>${totCanc}</td><td>${(totDemos+totCanc)>0?Math.round(totCanc/(totDemos+totCanc)*100):0}%</td>
       <td>${tot('hechas')}</td><td>${tot('conectadas')}</td>
     </tr>
     </tbody>`;
@@ -1298,7 +1298,7 @@ function renderMgrIndividual(){
   const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
   const pctEjec=s.totalDemos>0?Math.round(s.ejecutadas/s.totalDemos*100):0;
   const pctCierre=s.ejecutadas>0?Math.round(s.totalCwd/s.ejecutadas*100):0;
-  const pctCanc=s.totalDemos>0?Math.round(s.canceladas/s.totalDemos*100):0;
+  const pctCanc=(s.totalDemos+s.canceladas)>0?Math.round(s.canceladas/(s.totalDemos+s.canceladas)*100):0;
   // Modalidad breakdown — demos by creation date, CWD by demo date
   const{start,end}=mgrPeriodDates();
   const sdrDemos=allDemos.filter(d=>{
@@ -2203,15 +2203,12 @@ function clearComercialFilter(){comercialFilter=null;renderComerciales();renderL
 function renderStats(){
   const today=todayStr(),week=weekDates();
   const{start,end}=monthRange();
-  const hoy=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada').length;
   const sem=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   const monthByDate=demos.filter(d=>d.fecha>=start&&d.fecha<=end);
-  const ejec=monthByDate.filter(d=>d.estado==='ejecutada').length;
   const ganadas=monthByDate.filter(d=>d.outcome==='cerrado_ganado').length;
   const canc=monthByDate.filter(d=>d.estado==='cancelada').length;
-  const totalAgendadas=monthByDate.filter(d=>d.estado!=='reagendada').length;
-  const ratio=totalAgendadas>0?Math.round(canc/totalAgendadas*100)+'%':'—';
-  document.getElementById('stat-hoy').textContent=hoy;
+  const totalConCanceladas=monthByDate.filter(d=>d.estado!=='reagendada').length;
+  const ratio=totalConCanceladas>0?Math.round(canc/totalConCanceladas*100)+'%':'—';
   document.getElementById('stat-semana').textContent=sem;
   document.getElementById('stat-ganadas').textContent=ganadas;
   document.getElementById('stat-canceladas').textContent=canc;
