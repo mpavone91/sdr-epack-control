@@ -261,6 +261,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .noticia-item button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;}
 .noticia-item button:hover{color:var(--red);}
 
+/* ── CROSS-MONTH REMINDERS ── */
+.xmonth-panel{background:#fff8e8;border:1px solid #f0c060;border-radius:14px;padding:20px 24px;margin-bottom:20px;}
+.xmonth-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:#7a4e00;margin-bottom:4px;}
+.xmonth-subtitle{font-size:13px;color:#8a6500;margin-bottom:16px;}
+.xmonth-group{margin-bottom:14px;}
+.xmonth-group:last-child{margin-bottom:0;}
+.xmonth-group-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#a07020;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.xmonth-group-label::after{content:'';flex:1;height:1px;background:#f0d898;}
+.xmonth-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:white;border:1px solid #f0d898;border-radius:9px;padding:10px 14px;margin-bottom:6px;flex-wrap:wrap;}
+.xmonth-item-info{flex:1;min-width:0;}
+.xmonth-item-name{font-size:13.5px;font-weight:600;color:var(--teal-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.xmonth-item-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.xmonth-item-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.xmonth-badge{font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;}
+.xmonth-badge.interesado{background:var(--green-soft);color:var(--green);}
+.xmonth-badge.necesita_seguimiento{background:var(--amber-soft);color:var(--amber);}
+.xmonth-badge.cancelada{background:var(--red-soft);color:var(--red);}
+
 /* ── LIVE BANNER ── */
 .live-banner{margin:0 24px 0;border-radius:14px;padding:14px 20px;display:none;border:1px solid;}
 .live-banner.show{display:block;}
@@ -387,6 +405,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="month-tab" id="mtab-next" onclick="setMonth(1,this)">Mes siguiente →</button>
     </div>
 
+    <!-- CROSS-MONTH REMINDERS -->
+    <div class="xmonth-panel" id="xmonth-panel" style="display:none;">
+      <div class="xmonth-title">📌 Pendientes de meses anteriores</div>
+      <div class="xmonth-subtitle">Estas demos siguen abiertas. Dales una resolución para que desaparezcan de aquí.</div>
+      <div class="xmonth-groups" id="xmonth-groups"></div>
+    </div>
+
     <!-- OBJETIVOS -->
     <div class="objetivos-panel" id="objetivos-panel">
       <div class="obj-head">
@@ -458,8 +483,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
 
     <div class="view-tabs">
-      <button class="view-tab" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
-      <button class="view-tab" onclick="setView('enlive',this)">🔴 En vivo <span class="count" id="c-enlive">0</span></button>
+      <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
       <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
       <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
       <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
@@ -724,7 +748,10 @@ const FESTIVOS_2026=['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-0
 async function sb(path,opts={}){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}});
   const t=await r.text();
-  if(!r.ok) throw new Error(t);
+  if(!r.ok){
+    console.error('Supabase error',r.status,t);
+    throw new Error(`${r.status}: ${t}`);
+  }
   return t?JSON.parse(t):null;
 }
 
@@ -851,6 +878,8 @@ async function enterApp(){
   document.getElementById('today-date').textContent=fmtDateLong();
   await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias()]);
   await loadDemos();
+  // Start live refresh since Hoy is the default view
+  if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
 }
 
 // ── MANAGER STATE ──
@@ -1360,14 +1389,16 @@ async function saveDemo(){
       await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(payload)});
       showToast('✓ Demo actualizada');
     }else{
-      await sb('demos',{method:'POST',body:JSON.stringify(payload)});
+      const result=await sb('demos',{method:'POST',body:JSON.stringify(payload)});
+      console.log('Demo creada:', result);
       showToast('✓ Demo creada');
     }
     closeDemoModal();
     await loadDemos();
   }catch(e){
-    showToast('❌ Error al guardar');
-    console.error('saveDemo error:',e);
+    console.error('❌ saveDemo error completo:', e);
+    console.error('Payload enviado:', JSON.stringify(payload,null,2));
+    showToast('❌ Error al guardar — revisa la consola (F12)');
   }
 }
 
@@ -1421,9 +1452,14 @@ function getFilteredDemos(){
     case'perdidas':result=demos.filter(d=>d.outcome==='cerrado_perdido');break;
     case'reagendar':result=demos.filter(d=>d.estado==='cancelada');break;
     case'viejas':{
-      const cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-1);
+      const cutoff=new Date();cutoff.setDate(cutoff.getDate()-7);
       const cutStr=cutoff.toISOString().split('T')[0];
-      result=demos.filter(d=>d.fecha<cutStr&&['agendada','reagendada'].includes(d.estado)&&['interesado','necesita_seguimiento'].includes(d.outcome));break;
+      result=demos.filter(d=>
+        d.estado==='ejecutada'&&
+        ['interesado','necesita_seguimiento'].includes(d.outcome)&&
+        (d.created_at||'').split('T')[0]<=cutStr
+      );
+      break;
     }
     default:result=demos;
   }
@@ -1438,7 +1474,96 @@ function render(){
   renderComerciales();
   renderCounts();
   renderLiveBanner();
+  renderXMonthPanel();
   renderList();
+}
+
+function renderXMonthPanel(){
+  // Only show on current month view
+  const panel=document.getElementById('xmonth-panel');
+  const groups=document.getElementById('xmonth-groups');
+  if(!isCurrentMonth()){panel.style.display='none';return;}
+
+  const {start}=monthRange();
+  // Demos from BEFORE this month that are still unresolved
+  const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);
+  const cutStr7=cutoff7.toISOString().split('T')[0];
+
+  const pendingFollow=demos.filter(d=>{
+    const created=(d.created_at||'').split('T')[0];
+    return created<start&&
+      d.estado==='ejecutada'&&
+      ['interesado','necesita_seguimiento'].includes(d.outcome)&&
+      created<=cutStr7;
+  });
+
+  const pendingReagendar=demos.filter(d=>{
+    const created=(d.created_at||'').split('T')[0];
+    return created<start&&d.estado==='cancelada';
+  });
+
+  if(!pendingFollow.length&&!pendingReagendar.length){panel.style.display='none';return;}
+  panel.style.display='block';
+
+  let html='';
+
+  if(pendingFollow.length){
+    html+=`<div class="xmonth-group">
+      <div class="xmonth-group-label">📞 Seguimiento pendiente (${pendingFollow.length})</div>
+      ${pendingFollow.map(d=>`
+        <div class="xmonth-item">
+          <div class="xmonth-item-info">
+            <div class="xmonth-item-name">${d.sf_url?`<a href="${d.sf_url}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
+            <div class="xmonth-item-meta">📅 ${fmtDate(d.fecha)} · 👤 ${comercialName(d.comercial_id)} · 📍 ${ciudadName(d.ciudad_id)}</div>
+          </div>
+          <div class="xmonth-item-actions">
+            <span class="xmonth-badge ${d.outcome}">${outcomeLabel(d.outcome)}</span>
+            <select class="select-mini" onchange="changeEstadoOutcome(${d.id},this.value)" style="font-size:11px;padding:4px 8px;">
+              <option value="">Actualizar...</option>
+              <option value="cerrado_ganado">✅ Ganado</option>
+              <option value="cerrado_perdido">❌ Perdido</option>
+              <option value="no_interesado">👎 No interesado</option>
+            </select>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  if(pendingReagendar.length){
+    html+=`<div class="xmonth-group">
+      <div class="xmonth-group-label">🔄 Canceladas sin reagendar (${pendingReagendar.length})</div>
+      ${pendingReagendar.map(d=>`
+        <div class="xmonth-item">
+          <div class="xmonth-item-info">
+            <div class="xmonth-item-name">${d.sf_url?`<a href="${d.sf_url}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
+            <div class="xmonth-item-meta">📅 ${fmtDate(d.fecha)} · 👤 ${comercialName(d.comercial_id)}</div>
+          </div>
+          <div class="xmonth-item-actions">
+            <span class="xmonth-badge cancelada">Cancelada</span>
+            <button class="btn-primary" style="padding:5px 12px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
+            <button class="icon-btn" onclick="changeEstadoOutcome(${d.id},'descartada')" title="Descartar" style="font-size:12px;">🗑️</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  groups.innerHTML=html;
+}
+
+async function changeEstadoOutcome(id,value){
+  if(!value)return;
+  try{
+    let patch={};
+    if(value==='cerrado_ganado'||value==='cerrado_perdido'||value==='no_interesado'){
+      patch={outcome:value};
+    }else if(value==='descartada'){
+      // Mark as lost so it leaves the panel
+      patch={outcome:'cerrado_perdido'};
+    }
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast('✓ Demo actualizada');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
 }
 
 function demosCreatedThisMonth(){
@@ -1712,8 +1837,8 @@ function renderCounts(){
   document.getElementById('c-ganadas').textContent=demos.filter(d=>d.outcome==='cerrado_ganado').length;
   document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido').length;
   document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada').length;
-  const cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-1);const cutStr=cutoff.toISOString().split('T')[0];
-  document.getElementById('c-viejas').textContent=demos.filter(d=>d.fecha<cutStr&&['agendada','reagendada'].includes(d.estado)&&['interesado','necesita_seguimiento'].includes(d.outcome)).length;
+  const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);const cutStr7=cutoff7.toISOString().split('T')[0];
+  document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.created_at||'').split('T')[0]<=cutStr7).length;
 }
 
 // ── LIVE / HORA LOGIC ──
@@ -1868,13 +1993,13 @@ function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Ne
 function renderList(){
   const list=document.getElementById('demo-list');
 
-  // Live view handled separately
-  if(currentView==='enlive'){renderLiveView();return;}
+  // Hoy uses the live view with semáforo
+  if(currentView==='hoy'||currentView==='enlive'){renderLiveView();return;}
 
   const filtered=getFilteredDemos();
   if(!filtered.length){
     const empties={
-      hoy:['📅','No tienes demos hoy','Cuando agendes una demo para hoy, aparecerá aquí.'],
+      hoy:['📅','Sin demos hoy','No tienes demos agendadas para hoy. ¡A llamar!'],
       manana:['⏭️','Nada para mañana todavía','Las demos de mañana se mostrarán aquí.'],
       semana:['🗓️','Semana despejada','No hay demos agendadas esta semana.'],
       todas:['📋','Aún no hay demos','Pulsa "Nueva demo" para registrar la primera.'],
@@ -1902,8 +2027,8 @@ function setView(view,btn){
   currentView=view;
   document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  // Start/stop live interval
-  if(view==='enlive'){
+  // Auto-refresh for hoy (live view)
+  if(view==='hoy'||view==='enlive'){
     if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
   }else{
     if(liveInterval){clearInterval(liveInterval);liveInterval=null;}
