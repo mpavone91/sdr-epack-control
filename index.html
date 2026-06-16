@@ -581,6 +581,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="form-hint">Pega el enlace y extraeremos el nombre automáticamente.</div>
         <div class="sf-preview" id="sf-preview"></div>
       </div>
+      <div class="form-group">
+        <label class="form-label">Nombre de la oportunidad</label>
+        <input class="form-input" id="f-sf-nombre" placeholder="Ej: O00113990 - GASTROBAR A FER LA MA"/>
+        <div class="form-hint">Se rellena solo si pegas el enlace. Puedes editarlo o escribirlo manualmente.</div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Comercial asignado</label>
@@ -739,7 +744,10 @@ function setupPinInputs(){
   const pins=['pin1','pin2','pin3','pin4'];
   pins.forEach((id,i)=>{
     const el=document.getElementById(id);
-    el.addEventListener('input',()=>{if(el.value&&i<3)document.getElementById(pins[i+1]).focus();});
+    el.addEventListener('input',()=>{
+      if(el.value&&i<3){document.getElementById(pins[i+1]).focus();}
+      if(i===3&&el.value){doLogin();}
+    });
     el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(pins[i-1]).focus();if(e.key==='Enter')doLogin();});
   });
   document.getElementById('login-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pin1').focus();});
@@ -1200,10 +1208,18 @@ function parseSfName(url){
 function parseSfUrl(){
   const raw=document.getElementById('f-sf-url').value.trim();
   const preview=document.getElementById('sf-preview');
+  const nombreField=document.getElementById('f-sf-nombre');
   const name=parseSfName(raw);
-  if(name){preview.textContent='✓ '+name;preview.classList.add('show');preview.dataset.name=name;}
-  else if(raw.includes('salesforce.com')||raw.includes('force.com')){preview.textContent='⚠️ Enlace detectado pero no pude extraer el nombre. Se guardará igual.';preview.classList.add('show');preview.dataset.name='';}
-  else{preview.classList.remove('show');preview.dataset.name='';}
+  if(name){
+    preview.textContent='✓ Nombre extraído automáticamente';
+    preview.classList.add('show');
+    nombreField.value=name;
+  }else if(raw.includes('salesforce.com')||raw.includes('force.com')){
+    preview.textContent='⚠️ Enlace detectado pero no se pudo extraer el nombre. Escríbelo manualmente.';
+    preview.classList.add('show');
+  }else{
+    preview.classList.remove('show');
+  }
 }
 function extractCleanUrl(raw){
   const m=raw.match(/https?:\/\/[^\s\)\]]+/);
@@ -1218,6 +1234,7 @@ function openDemoModal(demo=null){
     document.getElementById('modal-title').textContent='Editar demo';
     document.getElementById('edit-demo-id').value=demo.id;
     document.getElementById('f-sf-url').value=demo.sf_url||'';
+    document.getElementById('f-sf-nombre').value=demo.sf_nombre||'';
     document.getElementById('f-comercial').value=demo.comercial_id||'';
     document.getElementById('f-ciudad').value=demo.ciudad_id||'';
     document.getElementById('f-fecha').value=demo.fecha||'';
@@ -1231,6 +1248,7 @@ function openDemoModal(demo=null){
     document.getElementById('modal-title').textContent='Nueva demo';
     document.getElementById('edit-demo-id').value='';
     document.getElementById('f-sf-url').value='';
+    document.getElementById('f-sf-nombre').value='';
     document.getElementById('f-fecha').value=todayStr();
     document.getElementById('f-tipo').value='presencial';
     document.getElementById('f-estado').value='agendada';
@@ -1258,7 +1276,7 @@ function populateSelects(){
 async function saveDemo(){
   const id=document.getElementById('edit-demo-id').value;
   const rawUrl=document.getElementById('f-sf-url').value.trim();
-  const sfName=document.getElementById('sf-preview').dataset.name||parseSfName(rawUrl)||'Sin nombre';
+  const sfName=document.getElementById('f-sf-nombre').value.trim()||parseSfName(rawUrl)||'Sin nombre';
   const payload={
     sdr_id:currentUser.id,
     sf_url:extractCleanUrl(rawUrl),
