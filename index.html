@@ -222,6 +222,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .com-stat.ca b{color:var(--red);}
 .com-stat.pe b{color:var(--blue);}
 
+/* ── MANAGER BLOCKS ── */
+.mgr-block{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;}
+.mgr-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.mgr-block-title{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--teal-dark);}
+.mgr-block-sub{font-size:12px;color:var(--muted);}
+.pct-pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.pct-pill.verde{background:var(--green-soft);color:var(--green);}
+.pct-pill.amarillo{background:var(--amber-soft);color:var(--amber);}
+.pct-pill.rojo{background:#fde8e8;color:var(--red);}
+.mgr-table .num{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
+
 /* ── MANAGER PANEL ── */
 .mgr-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
 .mgr-nav-btn{padding:10px 16px;border:1px solid var(--border);background:var(--surface);border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
@@ -578,17 +589,43 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
     <!-- TAB: EQUIPO -->
     <div class="mgr-tab active" id="mgrtab-equipo">
-      <div class="stats-row" id="mgr-team-stats" style="grid-template-columns:repeat(4,1fr);"></div>
-      <div class="objetivos-panel" id="mgr-team-obj"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-        <div class="lb-title" style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);">🏆 Ranking del equipo</div>
-        <div class="canal-filter-wrap">
-          <button class="canal-filter-btn" id="mgr-period-hoy" onclick="setMgrPeriod('hoy',this)">📅 Hoy</button>
-          <button class="canal-filter-btn" id="mgr-period-semana" onclick="setMgrPeriod('semana',this)">🗓️ Semana</button>
-          <button class="canal-filter-btn active" id="mgr-period-mes" onclick="setMgrPeriod('mes',this)">📆 Mes</button>
+
+      <!-- KPIs -->
+      <div class="stats-row" id="mgr-team-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:20px;"></div>
+
+      <!-- Objetivos barras -->
+      <div class="objetivos-panel" id="mgr-team-obj" style="margin-bottom:20px;"></div>
+
+      <!-- Ranking SDR -->
+      <div class="mgr-block">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">🏆 Ranking SDR</div>
+          <div class="canal-filter-wrap">
+            <button class="canal-filter-btn" id="mgr-period-hoy" onclick="setMgrPeriod('hoy',this)">📅 Hoy</button>
+            <button class="canal-filter-btn" id="mgr-period-semana" onclick="setMgrPeriod('semana',this)">🗓️ Semana</button>
+            <button class="canal-filter-btn active" id="mgr-period-mes" onclick="setMgrPeriod('mes',this)">📆 Mes</button>
+          </div>
         </div>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-ranking"></table></div>
       </div>
-      <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-ranking"></table></div>
+
+      <!-- Por comercial -->
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">👥 Por comercial</div>
+          <div class="mgr-block-sub">Solo comerciales con demos en el período seleccionado</div>
+        </div>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-comerciales-table"></table></div>
+      </div>
+
+      <!-- Presencial vs Online -->
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">📊 Presencial vs Online por SDR</div>
+        </div>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-modalidad-table"></table></div>
+      </div>
+
     </div>
 
     <!-- TAB: INDIVIDUAL -->
@@ -598,6 +635,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
 
     <!-- TAB: LLAMADAS -->
+
     <div class="mgr-tab" id="mgrtab-llamadas">
       <div class="mgr-card">
         <div class="mgr-card-title">📞 Registro de llamadas — <span id="llamadas-month-label"></span></div>
@@ -979,6 +1017,8 @@ function setMgrPeriod(period,btn){
   btn.classList.add('active');
   renderMgrTeamStats();
   renderMgrRanking();
+  renderMgrComerciales();
+  renderMgrModalidad();
 }
 
 function mgrPeriodDates(){
@@ -1039,6 +1079,8 @@ function renderManager(){
   renderMgrTeamStats();
   renderMgrTeamObj();
   renderMgrRanking();
+  renderMgrComerciales();
+  renderMgrModalidad();
   renderMgrSdrSelector();
   renderLlamadasTable();
   renderObjetivosForm();
@@ -1050,15 +1092,19 @@ function renderManager(){
 function renderMgrTeamStats(){
   const stats=allSdrs.map(s=>sdrStats(s.id));
   const totalDemos=stats.reduce((a,b)=>a+b.totalDemos,0);
+  const totalEjec=stats.reduce((a,b)=>a+b.ejecutadas,0);
   const totalCwd=stats.reduce((a,b)=>a+b.totalCwd,0);
   const totalCanc=stats.reduce((a,b)=>a+b.canceladas,0);
-  const totalHechas=stats.reduce((a,b)=>a+b.hechas,0);
+  const pctCanc=totalDemos>0?Math.round(totalCanc/(totalDemos)*100):0;
+  const pctCierre=totalEjec>0?Math.round(totalCwd/totalEjec*100):0;
   const el=document.getElementById('mgr-team-stats');
   el.innerHTML=`
-    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Demos del equipo</div></div>
-    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ventas cerradas</div></div>
+    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Agendadas</div></div>
+    <div class="stat-card"><div class="stat-num">${totalEjec}</div><div class="stat-label">Ejecutadas</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ganadas (CWD)</div></div>
     <div class="stat-card"><div class="stat-num">${totalCanc}</div><div class="stat-label">Canceladas</div></div>
-    <div class="stat-card"><div class="stat-num">${totalHechas}</div><div class="stat-label">Llamadas hechas</div></div>`;
+    <div class="stat-card"><div class="stat-num">${pctCanc}%</div><div class="stat-label">% Cancelación</div></div>
+    <div class="stat-card"><div class="stat-num">${pctCierre}%</div><div class="stat-label">% Cierre</div></div>`;
 }
 
 function renderMgrTeamObj(){
@@ -1087,15 +1133,139 @@ function renderMgrTeamObj(){
 }
 
 function renderMgrRanking(){
-  const periodLabel={hoy:'hoy',semana:'esta semana',mes:mgrMonthLabel()}[mgrPeriod];
   const rows=allSdrs.map(s=>({nombre:s.nombre,...sdrStats(s.id)})).sort((a,b)=>b.totalDemos-a.totalDemos);
   const tot=(k)=>rows.reduce((a,b)=>a+b[k],0);
+  const totEjec=tot('ejecutadas');
+  const totCwd=tot('totalCwd');
+  const totCanc=tot('canceladas');
+  const totDemos=tot('totalDemos');
+  const pctPill=(val,green=30,yellow=15)=>{
+    const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
+    return`<span class="pct-pill ${cls}">${val}%</span>`;
+  };
   const t=document.getElementById('mgr-ranking');
   t.innerHTML=`
-    <thead><tr><th>SDR</th><th>Out</th><th>In</th><th>Total demos</th><th>CWD</th><th>CLD</th><th>Canc.</th><th>Llam.</th><th>Conect.</th><th>% Cierre</th></tr></thead>
+    <thead><tr>
+      <th>SDR</th><th>Agend.</th><th>Out</th><th>In</th>
+      <th>Ejec.</th><th>% Ejec</th>
+      <th>Ganadas</th><th>% Cierre</th>
+      <th>Canc.</th><th>% Canc</th>
+      <th>Llam.</th><th>Conect.</th>
+    </tr></thead>
     <tbody>
-    ${rows.map(r=>`<tr><td>${r.nombre}</td><td>${r.demosOut}</td><td>${r.demosIn}</td><td><b>${r.totalDemos}</b></td><td>${r.totalCwd}</td><td>${r.cld}</td><td>${r.canceladas}</td><td>${r.hechas}</td><td>${r.conectadas}</td><td>${r.demoToCwd.toFixed(1)}%</td></tr>`).join('')}
-    <tr class="row-total"><td>TOTAL</td><td>${tot('demosOut')}</td><td>${tot('demosIn')}</td><td>${tot('totalDemos')}</td><td>${tot('totalCwd')}</td><td>${tot('cld')}</td><td>${tot('canceladas')}</td><td>${tot('hechas')}</td><td>${tot('conectadas')}</td><td>—</td></tr>
+    ${rows.map(r=>{
+      const pctEjec=r.totalDemos>0?Math.round(r.ejecutadas/r.totalDemos*100):0;
+      const pctCierre=r.ejecutadas>0?Math.round(r.totalCwd/r.ejecutadas*100):0;
+      const pctCanc=r.totalDemos>0?Math.round(r.canceladas/r.totalDemos*100):0;
+      return`<tr>
+        <td>${r.nombre}</td>
+        <td><span class="num">${r.totalDemos}</span></td>
+        <td>${r.demosOut}</td><td>${r.demosIn}</td>
+        <td>${r.ejecutadas}</td><td>${pctPill(pctEjec,70,50)}</td>
+        <td><span class="num">${r.totalCwd}</span></td><td>${pctPill(pctCierre,20,10)}</td>
+        <td>${r.canceladas}</td><td>${pctPill(100-pctCanc,80,60)}</td>
+        <td>${r.hechas}</td><td>${r.conectadas}</td>
+      </tr>`;
+    }).join('')}
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td><b>${totDemos}</b></td>
+      <td>${tot('demosOut')}</td><td>${tot('demosIn')}</td>
+      <td>${totEjec}</td><td>${totDemos>0?Math.round(totEjec/totDemos*100):0}%</td>
+      <td><b>${totCwd}</b></td><td>${totEjec>0?Math.round(totCwd/totEjec*100):0}%</td>
+      <td>${totCanc}</td><td>${totDemos>0?Math.round(totCanc/totDemos*100):0}%</td>
+      <td>${tot('hechas')}</td><td>${tot('conectadas')}</td>
+    </tr>
+    </tbody>`;
+}
+
+function renderMgrComerciales(){
+  const{start,end}=mgrPeriodDates();
+  // Get all demos in period
+  const periodDemos=allDemos.filter(d=>{
+    const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return ag>=start&&ag<=end;
+  });
+  // Group by comercial
+  const byCom={};
+  periodDemos.forEach(d=>{
+    if(!d.comercial_id)return;
+    if(!byCom[d.comercial_id])byCom[d.comercial_id]={agendadas:0,ejecutadas:0,ganadas:0,canceladas:0,sdrs:new Set()};
+    const c=byCom[d.comercial_id];
+    if(d.estado!=='cancelada'&&d.estado!=='reagendada')c.agendadas++;
+    if(d.estado==='ejecutada')c.ejecutadas++;
+    if(d.outcome==='cerrado_ganado')c.ganadas++;
+    if(d.estado==='cancelada')c.canceladas++;
+    if(d.sdr_id)c.sdrs.add(d.sdr_id);
+  });
+  const ids=Object.keys(byCom).sort((a,b)=>byCom[b].agendadas-byCom[a].agendadas);
+  if(!ids.length){
+    document.getElementById('mgr-comerciales-table').innerHTML='<tbody><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Sin demos en este período</td></tr></tbody>';
+    return;
+  }
+  const pctPill=(num,den,green=20,yellow=10)=>{
+    const v=den>0?Math.round(num/den*100):0;
+    const cls=v>=green?'verde':v>=yellow?'amarillo':'rojo';
+    return`<span class="pct-pill ${cls}">${v}%</span>`;
+  };
+  const t=document.getElementById('mgr-comerciales-table');
+  t.innerHTML=`
+    <thead><tr><th>Comercial</th><th>Agend.</th><th>Ejec.</th><th>% Ejec</th><th>Ganadas</th><th>% Cierre</th><th>Canc.</th><th>SDRs</th></tr></thead>
+    <tbody>
+    ${ids.map(id=>{
+      const c=byCom[id];
+      const nombre=comerciales.find(x=>x.id==id)?.nombre||'—';
+      const sdrNames=[...c.sdrs].map(sid=>allSdrs.find(s=>s.id===sid)?.nombre||'').filter(Boolean).join(', ');
+      return`<tr>
+        <td>${nombre}</td>
+        <td><span class="num">${c.agendadas}</span></td>
+        <td>${c.ejecutadas}</td>
+        <td>${pctPill(c.ejecutadas,c.agendadas,70,50)}</td>
+        <td><span class="num">${c.ganadas}</span></td>
+        <td>${pctPill(c.ganadas,c.ejecutadas,20,10)}</td>
+        <td>${c.canceladas}</td>
+        <td style="font-size:11px;color:var(--muted);">${sdrNames}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>`;
+}
+
+function renderMgrModalidad(){
+  const rows=allSdrs.map(s=>{
+    const{start,end}=mgrPeriodDates();
+    const d=allDemos.filter(x=>{
+      const ag=x.fecha_agendamiento||(x.created_at||'').split('T')[0];
+      return x.sdr_id===s.id&&ag>=start&&ag<=end&&x.estado!=='cancelada';
+    });
+    const pres=d.filter(x=>x.tipo==='presencial');
+    const onl=d.filter(x=>x.tipo==='online');
+    const presEjec=pres.filter(x=>x.estado==='ejecutada').length;
+    const onlEjec=onl.filter(x=>x.estado==='ejecutada').length;
+    const presCwd=pres.filter(x=>x.outcome==='cerrado_ganado').length;
+    const onlCwd=onl.filter(x=>x.outcome==='cerrado_ganado').length;
+    return{nombre:s.nombre,
+      pres:pres.length,presEjec,presCwd,
+      onl:onl.length,onlEjec,onlCwd};
+  });
+  const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  const t=document.getElementById('mgr-modalidad-table');
+  t.innerHTML=`
+    <thead><tr>
+      <th>SDR</th>
+      <th>📍 Pres.</th><th>Ejec.</th><th>Cierre</th>
+      <th>💻 Online</th><th>Ejec.</th><th>Cierre</th>
+    </tr></thead>
+    <tbody>
+    ${rows.map(r=>`<tr>
+      <td>${r.nombre}</td>
+      <td><span class="num">${r.pres}</span></td><td>${r.presEjec} <span style="color:var(--muted);font-size:11px;">(${pct(r.presEjec,r.pres)})</span></td><td>${pct(r.presCwd,r.presEjec)}</td>
+      <td><span class="num">${r.onl}</span></td><td>${r.onlEjec} <span style="color:var(--muted);font-size:11px;">(${pct(r.onlEjec,r.onl)})</span></td><td>${pct(r.onlCwd,r.onlEjec)}</td>
+    </tr>`).join('')}
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td>${rows.reduce((a,b)=>a+b.pres,0)}</td><td>${rows.reduce((a,b)=>a+b.presEjec,0)}</td><td>${pct(rows.reduce((a,b)=>a+b.presCwd,0),rows.reduce((a,b)=>a+b.presEjec,0))}</td>
+      <td>${rows.reduce((a,b)=>a+b.onl,0)}</td><td>${rows.reduce((a,b)=>a+b.onlEjec,0)}</td><td>${pct(rows.reduce((a,b)=>a+b.onlCwd,0),rows.reduce((a,b)=>a+b.onlEjec,0))}</td>
+    </tr>
     </tbody>`;
 }
 
@@ -1117,21 +1287,54 @@ function renderMgrIndividual(){
     const color=o===0?'rojo':a>=o*0.85?(a>=o?'verde':'amarillo'):'rojo';
     return`<div class="obj-bar-block"><div class="obj-bar-top"><div class="obj-bar-label">${label}</div><div class="obj-bar-nums"><b>${a}</b> / ${o}</div></div><div class="battery"><div class="battery-fill ${color}" style="width:${pct}%"><span class="battery-pct">${pct>8?pct+'%':''}</span></div></div></div>`;
   };
+  const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  const pctEjec=s.totalDemos>0?Math.round(s.ejecutadas/s.totalDemos*100):0;
+  const pctCierre=s.ejecutadas>0?Math.round(s.totalCwd/s.ejecutadas*100):0;
+  const pctCanc=s.totalDemos>0?Math.round(s.canceladas/s.totalDemos*100):0;
+  // Modalidad breakdown
+  const{start,end}=mgrPeriodDates();
+  const sdrDemos=allDemos.filter(d=>{
+    const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return d.sdr_id===mgrIndividualSdr&&ag>=start&&ag<=end&&d.estado!=='cancelada';
+  });
+  const pres=sdrDemos.filter(d=>d.tipo==='presencial');
+  const onl=sdrDemos.filter(d=>d.tipo==='online');
   document.getElementById('mgr-individual-content').innerHTML=`
-    <div class="stats-row" style="grid-template-columns:repeat(5,1fr);">
-      <div class="stat-card accent"><div class="stat-num">${s.totalDemos}</div><div class="stat-label">Demos</div></div>
+    <div class="stats-row" style="grid-template-columns:repeat(6,1fr);margin-bottom:20px;">
+      <div class="stat-card accent"><div class="stat-num">${s.totalDemos}</div><div class="stat-label">Agendadas</div></div>
+      <div class="stat-card"><div class="stat-num">${s.ejecutadas}</div><div class="stat-label">Ejecutadas</div></div>
       <div class="stat-card"><div class="stat-num">${s.totalCwd}</div><div class="stat-label">Ganadas</div></div>
-      <div class="stat-card"><div class="stat-num">${s.cld}</div><div class="stat-label">Perdidas</div></div>
-      <div class="stat-card"><div class="stat-num">${s.hechas}</div><div class="stat-label">Llamadas</div></div>
-      <div class="stat-card"><div class="stat-num">${s.ratioConexion.toFixed(0)}%</div><div class="stat-label">Ratio conexión</div></div>
+      <div class="stat-card"><div class="stat-num">${s.canceladas}</div><div class="stat-label">Canceladas</div></div>
+      <div class="stat-card"><div class="stat-num">${pctCanc}%</div><div class="stat-label">% Cancelación</div></div>
+      <div class="stat-card"><div class="stat-num">${pctCierre}%</div><div class="stat-label">% Cierre</div></div>
     </div>
-    <div class="objetivos-panel">
-      <div class="obj-head"><div class="obj-title">🎯 ${sdr.nombre} — ${mgrMonthLabel()}</div></div>
+    <div class="mgr-block" style="margin-bottom:16px;">
+      <div class="mgr-block-head"><div class="mgr-block-title">🎯 Objetivos — ${sdr.nombre}</div></div>
       <div class="obj-group-label">📅 Demos agendadas</div>
       <div class="obj-bars">${bar('🎯 Outbound',s.demosOut,obj?.demos_objetivo_outbound||0)}${bar('📥 Inbound',s.demosIn,obj?.demos_objetivo_inbound||0)}</div>
       <div class="obj-group-label">💰 Ventas cerradas (CWD)</div>
       <div class="obj-bars">${bar('🎯 Outbound',s.cwdOut,obj?.cwd_objetivo_outbound||0)}${bar('📥 Inbound',s.cwdIn,obj?.cwd_objetivo_inbound||0)}</div>
-      <div class="proyeccion-box"><div class="proy-icon">📞</div><div class="proy-content"><div class="proy-title">Métricas de llamadas</div><div class="proy-text">Hechas: <b>${s.hechas}</b> · Conectadas: <b>${s.conectadas}</b> (${s.ratioConexion.toFixed(1)}%)<br>Llamadas por demo: <b>${s.callsPerDemo.toFixed(1)}</b> · Conectadas por demo: <b>${s.connectedPerDemo.toFixed(1)}</b> · Demo→CWD: <b>${s.demoToCwd.toFixed(1)}%</b></div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="mgr-block">
+        <div class="mgr-block-head"><div class="mgr-block-title">📍 Presencial vs 💻 Online</div></div>
+        <table class="mgr-table">
+          <thead><tr><th>Modalidad</th><th>Agend.</th><th>Ejec.</th><th>% Ejec</th><th>Ganadas</th><th>% Cierre</th></tr></thead>
+          <tbody>
+            <tr><td>📍 Presencial</td><td>${pres.length}</td><td>${pres.filter(d=>d.estado==='ejecutada').length}</td><td>${pct(pres.filter(d=>d.estado==='ejecutada').length,pres.length)}</td><td>${pres.filter(d=>d.outcome==='cerrado_ganado').length}</td><td>${pct(pres.filter(d=>d.outcome==='cerrado_ganado').length,pres.filter(d=>d.estado==='ejecutada').length)}</td></tr>
+            <tr><td>💻 Online</td><td>${onl.length}</td><td>${onl.filter(d=>d.estado==='ejecutada').length}</td><td>${pct(onl.filter(d=>d.estado==='ejecutada').length,onl.length)}</td><td>${onl.filter(d=>d.outcome==='cerrado_ganado').length}</td><td>${pct(onl.filter(d=>d.outcome==='cerrado_ganado').length,onl.filter(d=>d.estado==='ejecutada').length)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mgr-block">
+        <div class="mgr-block-head"><div class="mgr-block-title">📞 Llamadas</div></div>
+        <div class="proyeccion-box" style="margin-top:0;">
+          <div class="proy-icon">📞</div>
+          <div class="proy-content">
+            <div class="proy-text">Hechas: <b>${s.hechas}</b> · Conectadas: <b>${s.conectadas}</b> (${s.ratioConexion.toFixed(1)}%)<br>Llamadas/demo: <b>${s.callsPerDemo.toFixed(1)}</b> · Conectadas/demo: <b>${s.connectedPerDemo.toFixed(1)}</b><br>Demo → CWD: <b>${s.demoToCwd.toFixed(1)}%</b></div>
+          </div>
+        </div>
+      </div>
     </div>`;
 }
 
