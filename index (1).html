@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SDR Hub · ePackPro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+:root{
+  --lime:#7FD81F; --lime-dark:#6BB81A; --lime-soft:rgba(127,216,31,0.12);
+  --teal:#2C4F5B; --teal-dark:#1d3942; --teal-light:#3d6878;
+  --bg:#f4f6f5; --surface:#ffffff; --surface-2:#fafbfa;
+  --text:#15201f; --muted:#647574; --border:#e2e8e6;
+  --red:#e23d3d; --red-soft:#fdeaea; --amber:#e8a317; --amber-soft:#fdf6e8;
+  --green:#1fa856; --green-soft:#e8f7ee;
+  --blue:#3b7dd8; --blue-soft:#eaf1fc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased;}
+
+/* ── LOGIN ── */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 100%);position:relative;overflow:hidden;}
+.login-screen::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,var(--lime-soft) 0%,transparent 70%);top:-150px;right:-100px;}
+.login-card{background:var(--surface);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.25);position:relative;z-index:1;}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.login-logo-mark{width:36px;height:36px;background:var(--lime);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.login-logo-text{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--teal-dark);}
+.login-sub{color:var(--muted);font-size:14px;margin-bottom:32px;}
+.login-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;display:block;text-transform:uppercase;letter-spacing:0.04em;}
+.login-input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:11px;font-size:15px;font-family:'Inter',sans-serif;margin-bottom:18px;transition:border-color 0.15s;}
+.login-input:focus{outline:none;border-color:var(--lime);}
+.pin-inputs{display:flex;gap:10px;margin-bottom:24px;justify-content:center;}
+.pin-box{width:60px;height:64px;border:1.5px solid var(--border);border-radius:12px;text-align:center;font-size:24px;font-weight:700;font-family:'Inter',sans-serif;color:var(--teal-dark);transition:all 0.15s;}
+.pin-box:focus{outline:none;border-color:var(--lime);background:var(--lime-soft);}
+.login-btn{width:100%;padding:14px;background:var(--lime);color:var(--teal-dark);border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s;}
+.login-btn:hover{background:var(--lime-dark);}
+.login-error{color:var(--red);font-size:13px;text-align:center;margin-top:14px;min-height:18px;}
+
+/* ── APP SHELL ── */
+.app{display:none;min-height:100vh;}
+.app.active{display:block;}
+.topbar{background:var(--teal-dark);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-logo{width:30px;height:30px;background:var(--lime);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.topbar-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:white;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.user-chip{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,0.85);font-size:14px;font-weight:500;}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--lime);color:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.logout-btn{background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:background 0.15s;}
+.logout-btn:hover{background:rgba(255,255,255,0.18);}
+
+/* ── MESSAGE OF DAY ── */
+.message-banner{background:linear-gradient(100deg,var(--teal) 0%,var(--teal-light) 100%);margin:24px;border-radius:16px;padding:22px 28px;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden;}
+.message-banner::after{content:'"';position:absolute;right:24px;top:-20px;font-family:'Fraunces',serif;font-size:120px;color:rgba(255,255,255,0.07);}
+.message-icon{font-size:28px;flex-shrink:0;}
+.message-text{color:white;font-size:16px;font-weight:500;font-style:italic;font-family:'Fraunces',serif;}
+.message-label{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--lime);font-weight:600;margin-bottom:3px;font-family:'Inter',sans-serif;font-style:normal;}
+
+/* ── CONTENT ── */
+.content{max-width:1200px;margin:0 auto;padding:0 24px 60px;}
+.page-head{display:flex;align-items:center;justify-content:space-between;margin:8px 0 24px;gap:16px;flex-wrap:wrap;}
+.page-title{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--teal-dark);}
+.page-sub{color:var(--muted);font-size:14px;margin-top:2px;}
+.btn-primary{background:var(--lime);color:var(--teal-dark);border:none;padding:11px 20px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px;transition:background 0.15s;}
+.btn-primary:hover{background:var(--lime-dark);}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+.stat-num{font-family:'Fraunces',serif;font-size:30px;font-weight:700;color:var(--teal-dark);line-height:1;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500;}
+.stat-card.accent{background:var(--teal-dark);border-color:var(--teal-dark);}
+.stat-card.accent .stat-num{color:var(--lime);}
+.stat-card.accent .stat-label{color:rgba(255,255,255,0.6);}
+
+/* ── TABS ── */
+.view-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:22px;width:fit-content;flex-wrap:wrap;}
+.view-tab{padding:9px 18px;border:none;background:none;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:7px;}
+.view-tab:hover{color:var(--text);}
+.view-tab.active{background:var(--teal-dark);color:white;}
+.view-tab .count{background:rgba(0,0,0,0.1);padding:1px 7px;border-radius:10px;font-size:11px;}
+.view-tab.active .count{background:var(--lime);color:var(--teal-dark);}
+.view-tab.alert .count{background:var(--red);color:white;}
+
+/* ── DEMO LIST ── */
+.demo-view{display:none;}
+.demo-view.active{display:block;}
+.demo-list{display:flex;flex-direction:column;gap:10px;}
+.demo-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;transition:box-shadow 0.15s,border-color 0.15s;}
+.demo-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);border-color:#d0dad7;}
+.demo-main{min-width:0;}
+.demo-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+.demo-name{font-weight:600;font-size:15px;color:var(--text);}
+.demo-name a{color:var(--teal);text-decoration:none;border-bottom:1.5px solid var(--lime);}
+.demo-name a:hover{color:var(--lime-dark);}
+.demo-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+.demo-meta-item{display:flex;align-items:center;gap:5px;}
+.demo-right{display:flex;align-items:center;gap:12px;}
+
+/* ── BADGES ── */
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.badge.presencial{background:var(--blue-soft);color:var(--blue);}
+.badge.online{background:var(--lime-soft);color:var(--lime-dark);}
+.badge-estado{font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;}
+.badge-estado.agendada{background:var(--blue-soft);color:var(--blue);}
+.badge-estado.ejecutada{background:var(--green-soft);color:var(--green);}
+.badge-estado.cancelada{background:var(--red-soft);color:var(--red);}
+.badge-estado.reagendada{background:var(--amber-soft);color:var(--amber);}
+
+/* ── OUTCOME PILL ── */
+.outcome-pill{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500;}
+.outcome-interesado{background:var(--green-soft);color:var(--green);}
+.outcome-necesita_seguimiento{background:var(--amber-soft);color:var(--amber);}
+.outcome-no_interesado{background:#f0f0f0;color:#888;}
+.outcome-cerrado_ganado{background:var(--lime);color:var(--teal-dark);font-weight:700;}
+.outcome-cerrado_perdido{background:var(--red-soft);color:var(--red);}
+
+/* ── DEMO ACTIONS ── */
+.demo-actions{display:flex;gap:6px;}
+.icon-btn{width:34px;height:34px;border:1px solid var(--border);background:var(--surface);border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.15s;}
+.icon-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
+.select-mini{padding:6px 10px;border:1px solid var(--border);border-radius:9px;font-size:12.5px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);cursor:pointer;}
+.select-mini:focus{outline:none;border-color:var(--lime);}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:42px;margin-bottom:14px;opacity:0.4;}
+.empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.empty-text{font-size:13.5px;}
+
+/* ── REAGENDAR HIGHLIGHT ── */
+.demo-card.reagendar{border-left:3px solid var(--amber);background:var(--amber-soft);}
+.demo-card.vieja{border-left:3px solid var(--red);}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(21,32,31,0.5);z-index:100;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px);}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-head{padding:24px 28px 0;display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);}
+.modal-close{width:32px;height:32px;border:none;background:var(--bg);border-radius:8px;cursor:pointer;font-size:16px;color:var(--muted);}
+.modal-body{padding:20px 28px 28px;}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:7px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;transition:border-color 0.15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--lime);}
+.form-textarea{resize:vertical;min-height:60px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-hint{font-size:11.5px;color:var(--muted);margin-top:5px;}
+.sf-preview{background:var(--lime-soft);border:1px solid var(--lime);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--teal-dark);display:none;}
+.sf-preview.show{display:block;}
+.modal-actions{display:flex;gap:10px;margin-top:8px;}
+.btn-cancel{flex:1;padding:12px;border:1.5px solid var(--border);background:var(--surface);border-radius:11px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-save{flex:2;padding:12px;background:var(--lime);color:var(--teal-dark);border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-save:hover{background:var(--lime-dark);}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--teal-dark);color:white;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:500;z-index:200;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.2);border-left:3px solid var(--lime);}
+
+/* ── CANAL TOGGLE ── */
+.canal-toggle{display:flex;gap:8px;}
+.canal-btn{flex:1;padding:11px;border:1.5px solid var(--border);background:var(--surface);border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.canal-btn.active{border-color:var(--lime);background:var(--lime-soft);color:var(--teal-dark);}
+.badge.outbound{background:#ede4fb;color:#7c3aed;}
+.badge.inbound{background:#e0f2fe;color:#0284c7;}
+
+/* ── MONTH TABS ── */
+.month-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:4px;width:fit-content;margin-bottom:20px;}
+.month-tab{padding:8px 18px;border:none;background:none;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.month-tab:hover{color:var(--text);}
+.month-tab.active{background:var(--lime);color:var(--teal-dark);}
+
+/* ── OBJETIVOS PANEL ── */
+.objetivos-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;}
+.obj-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.obj-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);}
+.obj-month-label{font-size:13px;color:var(--muted);}
+.obj-bars{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.obj-bar-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+.obj-bar-label{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
+.obj-bar-nums{font-size:13px;color:var(--muted);}
+.obj-bar-nums b{font-family:'Fraunces',serif;font-size:20px;color:var(--teal-dark);}
+.battery{height:28px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;overflow:hidden;position:relative;}
+.battery-fill{height:100%;border-radius:6px;transition:width 0.5s ease,background 0.3s;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;min-width:2px;}
+.battery-fill.rojo{background:linear-gradient(90deg,#e23d3d,#f06565);}
+.battery-fill.amarillo{background:linear-gradient(90deg,#e8a317,#f5c542);}
+.battery-fill.verde{background:linear-gradient(90deg,#1fa856,#3ed47e);}
+.battery-pct{font-size:12px;font-weight:700;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.obj-target-line{position:absolute;top:0;bottom:0;width:2px;background:var(--teal-dark);opacity:0.35;z-index:2;}
+
+/* ── PROYECCION ── */
+.proyeccion-box{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start;}
+.proy-icon{font-size:22px;flex-shrink:0;}
+.proy-content{flex:1;}
+.proy-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.proy-title.rojo{color:var(--red);}
+.proy-title.amarillo{color:var(--amber);}
+.proy-title.verde{color:var(--green);}
+.proy-text{font-size:13px;color:var(--muted);line-height:1.6;}
+.proy-text b{color:var(--text);}
+.proy-aviso{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12.5px;color:var(--amber);}
+
+/* ── PANEL COMERCIALES ── */
+.comerciales-section{margin-bottom:28px;}
+.com-section-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.comerciales-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.com-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:16px 18px;cursor:pointer;transition:all 0.15s;}
+.com-card:hover{border-color:var(--lime);box-shadow:0 4px 14px rgba(0,0,0,0.05);}
+.com-card.active{border-color:var(--lime);background:var(--lime-soft);}
+.com-card-name{font-weight:700;font-size:15px;color:var(--teal-dark);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.com-total{background:var(--teal-dark);color:var(--lime);font-size:12px;padding:2px 9px;border-radius:20px;}
+.com-breakdown{display:flex;gap:14px;}
+.com-stat{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;}
+.com-stat b{display:block;font-size:18px;font-family:'Fraunces',serif;color:var(--text);letter-spacing:0;}
+.com-stat.ej b{color:var(--green);}
+.com-stat.ca b{color:var(--red);}
+.com-stat.pe b{color:var(--blue);}
+
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--lime);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:780px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .demo-card{grid-template-columns:1fr;}
+  .demo-right{justify-content:space-between;}
+  .form-row{grid-template-columns:1fr;}
+  .message-banner{margin:16px;}
+  .content{padding:0 16px 40px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loading"><div class="spinner"></div></div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark">📊</div>
+      <div class="login-logo-text">SDR Hub</div>
+    </div>
+    <p class="login-sub">Tu centro de control de demos · ePackPro</p>
+    <label class="login-label">¿Quién eres?</label>
+    <select class="login-input" id="login-name">
+      <option value="">Selecciona tu nombre...</option>
+    </select>
+    <label class="login-label">PIN de acceso</label>
+    <div class="pin-inputs">
+      <input class="pin-box" type="password" inputmode="numeric" maxlength="1" id="pin1"/>
+      <input class="pin-box" type="password" inputmode="numeric" maxlength="1" id="pin2"/>
+      <input class="pin-box" type="password" inputmode="numeric" maxlength="1" id="pin3"/>
+      <input class="pin-box" type="password" inputmode="numeric" maxlength="1" id="pin4"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">📊</div>
+      <div class="topbar-title">SDR Hub</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name">—</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="message-banner">
+    <div class="message-icon">💡</div>
+    <div>
+      <div class="message-label">Mensaje del día</div>
+      <div class="message-text" id="message-text">Cargando...</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Mis demos</div>
+        <div class="page-sub" id="today-date">—</div>
+      </div>
+      <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
+    </div>
+
+    <div class="month-tabs">
+      <button class="month-tab" id="mtab-prev" onclick="setMonth(-1,this)">← Mes anterior</button>
+      <button class="month-tab active" id="mtab-cur" onclick="setMonth(0,this)">Mes en curso</button>
+      <button class="month-tab" id="mtab-next" onclick="setMonth(1,this)">Mes siguiente →</button>
+    </div>
+
+    <!-- OBJETIVOS -->
+    <div class="objetivos-panel" id="objetivos-panel">
+      <div class="obj-head">
+        <div class="obj-title">🎯 Progreso del mes</div>
+        <div class="obj-month-label" id="obj-month-label">—</div>
+      </div>
+      <div class="obj-bars">
+        <div class="obj-bar-block">
+          <div class="obj-bar-top">
+            <div class="obj-bar-label">🎯 Outbound</div>
+            <div class="obj-bar-nums"><b id="out-actual">0</b> / <span id="out-obj">0</span></div>
+          </div>
+          <div class="battery">
+            <div class="obj-target-line" id="out-target-line" style="left:0%"></div>
+            <div class="battery-fill rojo" id="out-fill" style="width:0%"><span class="battery-pct" id="out-pct"></span></div>
+          </div>
+        </div>
+        <div class="obj-bar-block">
+          <div class="obj-bar-top">
+            <div class="obj-bar-label">📥 Inbound</div>
+            <div class="obj-bar-nums"><b id="in-actual">0</b> / <span id="in-obj">0</span></div>
+          </div>
+          <div class="battery">
+            <div class="obj-target-line" id="in-target-line" style="left:0%"></div>
+            <div class="battery-fill rojo" id="in-fill" style="width:0%"><span class="battery-pct" id="in-pct"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="proyeccion-box">
+        <div class="proy-icon" id="proy-icon">📊</div>
+        <div class="proy-content">
+          <div class="proy-title" id="proy-title">Proyección a fin de mes</div>
+          <div class="proy-text" id="proy-text">—</div>
+          <div class="proy-aviso" id="proy-aviso" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="stat-hoy">0</div><div class="stat-label">Demos hoy</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-semana">0</div><div class="stat-label">Esta semana</div></div>
+      <div class="stat-card accent"><div class="stat-num" id="stat-ejecutadas">0</div><div class="stat-label">Ejecutadas (mes)</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-canceladas">0</div><div class="stat-label">Canceladas (mes)</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-ratio">—</div><div class="stat-label">Ratio cancelación</div></div>
+    </div>
+
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
+      <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
+      <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
+      <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
+      <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
+      <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Seguimiento <span class="count" id="c-viejas">0</span></button>
+    </div>
+
+    <div class="demo-view active" id="view-content">
+      <div class="demo-list" id="demo-list"></div>
+    </div>
+
+    <!-- COMERCIALES (al final) -->
+    <div class="comerciales-section" id="comerciales-section" style="margin-top:36px;">
+      <div class="com-section-title">👥 Demos por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
+      <div class="comerciales-grid" id="comerciales-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA DEMO -->
+<div class="modal-overlay" id="demo-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Nueva demo</div>
+      <button class="modal-close" onclick="closeDemoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-demo-id"/>
+      <div class="form-group">
+        <label class="form-label">Enlace de la oportunidad (Salesforce)</label>
+        <input class="form-input" id="f-sf-url" placeholder="Pega aquí el enlace completo de Salesforce" oninput="parseSfUrl()"/>
+        <div class="form-hint">Pega el enlace y extraeremos el nombre automáticamente.</div>
+        <div class="sf-preview" id="sf-preview"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Comercial asignado</label>
+          <select class="form-select" id="f-comercial"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad</label>
+          <select class="form-select" id="f-ciudad"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha de la demo</label>
+          <input class="form-input" type="date" id="f-fecha"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modalidad</label>
+          <select class="form-select" id="f-tipo">
+            <option value="presencial">Presencial</option>
+            <option value="online">Online</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Canal de la demo</label>
+        <div class="canal-toggle">
+          <button type="button" class="canal-btn active" id="canal-outbound" onclick="setCanal('outbound')">🎯 Outbound</button>
+          <button type="button" class="canal-btn" id="canal-inbound" onclick="setCanal('inbound')">📥 Inbound</button>
+        </div>
+        <input type="hidden" id="f-canal" value="outbound"/>
+        <div class="form-hint">Outbound = tú la buscaste. Inbound = el cliente llegó solo.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-estado">
+            <option value="agendada">Agendada</option>
+            <option value="ejecutada">Ejecutada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Outcome</label>
+          <select class="form-select" id="f-outcome">
+            <option value="">Sin definir</option>
+            <option value="interesado">Interesado</option>
+            <option value="necesita_seguimiento">Necesita seguimiento</option>
+            <option value="no_interesado">No interesado</option>
+            <option value="cerrado_ganado">Cerrado ganado</option>
+            <option value="cerrado_perdido">Cerrado perdido</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <textarea class="form-textarea" id="f-notas" placeholder="Algo específico que quieras recordar de esta demo..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeDemoModal()">Cancelar</button>
+        <button class="btn-save" id="btn-save-demo" onclick="saveDemo()">Guardar demo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://ilzntryzijdfnntwuthp.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsem50cnl6aWpkZm5udHd1dGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU0MTgsImV4cCI6MjA5MTU2MTQxOH0.WAgYFBUTPo9QhMtDhH8F1e3vCSvA-8OCcdXnah3FRBk';
+
+let currentUser=null;
+let comerciales=[];
+let ciudades=[];
+let demos=[];
+let objetivos=[];
+let currentView='hoy';
+let monthOffset=0; // 0=current, -1=prev, 1=next
+let comercialFilter=null;
+let selectedCanal='outbound';
+
+// Festivos Madrid 2026 (nacionales + autonómicos + locales Madrid ciudad)
+const FESTIVOS_2026=['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-05-01','2026-05-15','2026-08-15','2026-10-12','2026-11-02','2026-11-09','2026-12-07','2026-12-08','2026-12-25'];
+
+async function sb(path,opts={}){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}});
+  const t=await r.text();
+  if(!r.ok) throw new Error(t);
+  return t?JSON.parse(t):null;
+}
+
+// ── DATES ──
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
+function weekDates(){
+  const d=new Date();const day=d.getDay();const diff=day===0?-6:1-day;
+  const monday=new Date(d);monday.setDate(d.getDate()+diff);
+  const dates=[];for(let i=0;i<7;i++){const x=new Date(monday);x.setDate(monday.getDate()+i);dates.push(x.toISOString().split('T')[0]);}
+  return dates;
+}
+function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-');const months=['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return`${parseInt(d)} ${months[parseInt(m)]}`;}
+function fmtDateLong(s){const d=new Date();const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]}`;}
+function monthStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];}
+
+// ── MONTH NAVIGATION ──
+function getTargetMonth(){
+  const d=new Date();
+  return new Date(d.getFullYear(),d.getMonth()+monthOffset,1);
+}
+function monthRange(){
+  const m=getTargetMonth();
+  const start=new Date(m.getFullYear(),m.getMonth(),1);
+  const end=new Date(m.getFullYear(),m.getMonth()+1,0);
+  return{start:start.toISOString().split('T')[0],end:end.toISOString().split('T')[0]};
+}
+function monthLabel(){
+  const m=getTargetMonth();
+  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return`${months[m.getMonth()]} ${m.getFullYear()}`;
+}
+function isWorkday(date){
+  const day=date.getDay();
+  if(day===0||day===6)return false;
+  const s=date.toISOString().split('T')[0];
+  return!FESTIVOS_2026.includes(s);
+}
+function workdaysInMonth(){
+  const m=getTargetMonth();
+  const year=m.getFullYear(),month=m.getMonth();
+  const last=new Date(year,month+1,0).getDate();
+  let total=0;
+  for(let d=1;d<=last;d++){if(isWorkday(new Date(year,month,d)))total++;}
+  return total;
+}
+function workdaysElapsed(){
+  const m=getTargetMonth();
+  const year=m.getFullYear(),month=m.getMonth();
+  const today=new Date();today.setHours(0,0,0,0);
+  const last=new Date(year,month+1,0).getDate();
+  let elapsed=0;
+  for(let d=1;d<=last;d++){
+    const dt=new Date(year,month,d);
+    if(dt>today)break;
+    if(isWorkday(dt))elapsed++;
+  }
+  return elapsed;
+}
+function isCurrentMonth(){return monthOffset===0;}
+function isPastMonth(){return monthOffset<0;}
+function isFutureMonth(){return monthOffset>0;}
+
+// ── LOGIN ──
+function setupPinInputs(){
+  const pins=['pin1','pin2','pin3','pin4'];
+  pins.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',()=>{if(el.value&&i<3)document.getElementById(pins[i+1]).focus();});
+    el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(pins[i-1]).focus();if(e.key==='Enter')doLogin();});
+  });
+  document.getElementById('login-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pin1').focus();});
+}
+
+async function loadLoginNames(){
+  try{
+    const users=await sb('sdr_users?activo=eq.true&select=id,nombre,rol&order=nombre.asc');
+    const sel=document.getElementById('login-name');
+    sel.innerHTML='<option value="">Selecciona tu nombre...</option>'+
+      (users||[]).map(u=>`<option value="${u.id}">${u.nombre}${u.rol==='manager'?' (Manager)':''}</option>`).join('');
+  }catch(e){console.error(e);}
+}
+
+async function doLogin(){
+  const userId=document.getElementById('login-name').value;
+  const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
+  const errEl=document.getElementById('login-error');
+  if(!userId||pin.length!==4){errEl.textContent='Selecciona tu nombre e introduce los 4 dígitos del PIN.';return;}
+  errEl.textContent='';
+  try{
+    const users=await sb(`sdr_users?id=eq.${userId}&select=*`);
+    if(!users||!users.length){errEl.textContent='Usuario no encontrado.';return;}
+    const user=users[0];
+    if(user.pin!==pin){errEl.textContent='PIN incorrecto. Inténtalo de nuevo.';clearPins();return;}
+    if(!user.activo){errEl.textContent='Tu cuenta está desactivada. Habla con tu manager.';return;}
+    currentUser=user;
+    sessionStorage.setItem('sdr_user',JSON.stringify(user));
+    enterApp();
+  }catch(e){errEl.textContent='Error de conexión. Inténtalo de nuevo.';console.error(e);}
+}
+function clearPins(){['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value='');document.getElementById('pin1').focus();}
+
+function logout(){
+  sessionStorage.removeItem('sdr_user');
+  currentUser=null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display='flex';
+  clearPins();document.getElementById('login-name').value='';
+}
+
+async function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('active');
+  document.getElementById('user-name').textContent=currentUser.nombre;
+  document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
+  document.getElementById('today-date').textContent=fmtDateLong();
+  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos()]);
+  await loadDemos();
+}
+
+// ── DATA LOADERS ──
+async function loadComerciales(){comerciales=await sb('comerciales?activo=eq.true&select=*&order=nombre.asc')||[];}
+async function loadCiudades(){ciudades=await sb('ciudades?activa=eq.true&select=*&order=nombre.asc')||[];}
+async function loadMessage(){
+  const today=todayStr();
+  const msgs=await sb(`mensaje_dia?fecha=eq.${today}&select=*`);
+  document.getElementById('message-text').textContent=(msgs&&msgs.length)?msgs[0].mensaje:'Cada llamada es una oportunidad. Hoy puede ser el día de tu mejor demo. 💪';
+}
+async function loadDemos(){
+  demos=await sb(`demos?sdr_id=eq.${currentUser.id}&select=*&order=fecha.asc`)||[];
+  render();
+}
+async function loadObjetivos(){
+  objetivos=await sb(`objetivos?sdr_id=eq.${currentUser.id}&select=*`)||[];
+}
+
+function setMonth(offset,btn){
+  monthOffset=offset;
+  document.querySelectorAll('.month-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  comercialFilter=null;
+  render();
+}
+
+// ── SF URL PARSER ──
+function parseSfName(url){
+  // Try to extract from markdown-style or plain text
+  // Format: O00113990 - GASTROBAR A FER LA MA
+  const txt=decodeURIComponent(url);
+  // Look for pattern "CODE - NAME" before | or ]
+  let m=txt.match(/(O\d{6,})\s*-\s*([^|\]\n]+)/i);
+  if(m) return `${m[1]} - ${m[2].trim().replace(/-\s*$/,'').trim()}`;
+  return null;
+}
+function parseSfUrl(){
+  const raw=document.getElementById('f-sf-url').value.trim();
+  const preview=document.getElementById('sf-preview');
+  const name=parseSfName(raw);
+  if(name){preview.textContent='✓ '+name;preview.classList.add('show');preview.dataset.name=name;}
+  else if(raw.includes('salesforce.com')||raw.includes('force.com')){preview.textContent='⚠️ Enlace detectado pero no pude extraer el nombre. Se guardará igual.';preview.classList.add('show');preview.dataset.name='';}
+  else{preview.classList.remove('show');preview.dataset.name='';}
+}
+function extractCleanUrl(raw){
+  const m=raw.match(/https?:\/\/[^\s\)\]]+/);
+  return m?m[0]:raw;
+}
+
+// ── MODAL ──
+function openDemoModal(demo=null){
+  populateSelects();
+  const modal=document.getElementById('demo-modal');
+  if(demo){
+    document.getElementById('modal-title').textContent='Editar demo';
+    document.getElementById('edit-demo-id').value=demo.id;
+    document.getElementById('f-sf-url').value=demo.sf_url||'';
+    document.getElementById('f-comercial').value=demo.comercial_id||'';
+    document.getElementById('f-ciudad').value=demo.ciudad_id||'';
+    document.getElementById('f-fecha').value=demo.fecha||'';
+    document.getElementById('f-tipo').value=demo.tipo||'presencial';
+    document.getElementById('f-estado').value=demo.estado||'agendada';
+    document.getElementById('f-outcome').value=demo.outcome||'';
+    document.getElementById('f-notas').value=demo.notas||'';
+    setCanal(demo.canal||'outbound');
+    parseSfUrl();
+  }else{
+    document.getElementById('modal-title').textContent='Nueva demo';
+    document.getElementById('edit-demo-id').value='';
+    document.getElementById('f-sf-url').value='';
+    document.getElementById('f-fecha').value=todayStr();
+    document.getElementById('f-tipo').value='presencial';
+    document.getElementById('f-estado').value='agendada';
+    document.getElementById('f-outcome').value='';
+    document.getElementById('f-notas').value='';
+    setCanal('outbound');
+    document.getElementById('sf-preview').classList.remove('show');
+  }
+  modal.classList.add('active');
+}
+function closeDemoModal(){document.getElementById('demo-modal').classList.remove('active');}
+function setCanal(canal){
+  selectedCanal=canal;
+  document.getElementById('f-canal').value=canal;
+  document.getElementById('canal-outbound').classList.toggle('active',canal==='outbound');
+  document.getElementById('canal-inbound').classList.toggle('active',canal==='inbound');
+}
+function populateSelects(){
+  const cSel=document.getElementById('f-comercial');
+  cSel.innerHTML='<option value="">Selecciona...</option>'+comerciales.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  const ciSel=document.getElementById('f-ciudad');
+  ciSel.innerHTML='<option value="">Selecciona...</option>'+ciudades.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+}
+
+async function saveDemo(){
+  const id=document.getElementById('edit-demo-id').value;
+  const rawUrl=document.getElementById('f-sf-url').value.trim();
+  const sfName=document.getElementById('sf-preview').dataset.name||parseSfName(rawUrl)||'Sin nombre';
+  const payload={
+    sdr_id:currentUser.id,
+    sf_url:extractCleanUrl(rawUrl),
+    sf_nombre:sfName,
+    comercial_id:document.getElementById('f-comercial').value||null,
+    ciudad_id:document.getElementById('f-ciudad').value||null,
+    fecha:document.getElementById('f-fecha').value||null,
+    tipo:document.getElementById('f-tipo').value,
+    canal:document.getElementById('f-canal').value,
+    estado:document.getElementById('f-estado').value,
+    outcome:document.getElementById('f-outcome').value||null,
+    notas:document.getElementById('f-notas').value||null
+  };
+  if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
+  try{
+    if(id){await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(payload)});showToast('✓ Demo actualizada');}
+    else{await sb('demos',{method:'POST',body:JSON.stringify(payload)});showToast('✓ Demo creada');}
+    closeDemoModal();
+    await loadDemos();
+  }catch(e){showToast('❌ Error al guardar');console.error(e);}
+}
+
+// ── ESTADO CHANGE (inline) ──
+async function changeEstado(id,estado){
+  try{
+    const patch={estado};
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast('✓ Estado actualizado');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── REAGENDAR ──
+async function reagendar(id){
+  const demo=demos.find(d=>d.id===id);
+  if(!demo)return;
+  const nuevaFecha=prompt('Nueva fecha para la demo reagendada (YYYY-MM-DD):',todayStr());
+  if(!nuevaFecha||!/^\d{4}-\d{2}-\d{2}$/.test(nuevaFecha))return;
+  try{
+    // Mark original as reagendada
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'reagendada'})});
+    // Create new demo with same comercial/ciudad, new date
+    await sb('demos',{method:'POST',body:JSON.stringify({
+      sdr_id:currentUser.id,sf_url:demo.sf_url,sf_nombre:demo.sf_nombre,
+      comercial_id:demo.comercial_id,ciudad_id:demo.ciudad_id,
+      fecha:nuevaFecha,tipo:demo.tipo,estado:'agendada',demo_padre_id:demo.id
+    })});
+    showToast('✓ Demo reagendada para '+fmtDate(nuevaFecha));
+    await loadDemos();
+  }catch(e){showToast('❌ Error al reagendar');console.error(e);}
+}
+
+async function deleteDemo(id){
+  if(!confirm('¿Eliminar esta demo? No se puede deshacer.'))return;
+  try{await sb(`demos?id=eq.${id}`,{method:'DELETE'});showToast('✓ Demo eliminada');await loadDemos();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── FILTERING ──
+function getFilteredDemos(){
+  const today=todayStr(),tomorrow=tomorrowStr(),week=weekDates();
+  let result;
+  switch(currentView){
+    case'hoy':result=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');break;
+    case'manana':result=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada');break;
+    case'semana':result=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada');break;
+    case'todas':result=demos.filter(d=>d.estado!=='cancelada');break;
+    case'reagendar':result=demos.filter(d=>d.estado==='cancelada');break;
+    case'viejas':{
+      const cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-1);
+      const cutStr=cutoff.toISOString().split('T')[0];
+      result=demos.filter(d=>d.fecha<cutStr&&['agendada','reagendada'].includes(d.estado)&&['interesado','necesita_seguimiento'].includes(d.outcome));break;
+    }
+    default:result=demos;
+  }
+  if(comercialFilter){result=result.filter(d=>d.comercial_id==comercialFilter);}
+  return result;
+}
+
+// ── RENDER ──
+function render(){
+  renderObjetivos();
+  renderStats();
+  renderComerciales();
+  renderCounts();
+  renderList();
+}
+
+function demosCreatedThisMonth(){
+  // Demos created in target month (by created_at), excluding cancelled
+  const{start,end}=monthRange();
+  return demos.filter(d=>{
+    const created=(d.created_at||'').split('T')[0];
+    return created>=start&&created<=end;
+  });
+}
+
+function renderObjetivos(){
+  const panel=document.getElementById('objetivos-panel');
+  document.getElementById('obj-month-label').textContent=monthLabel();
+
+  // Future month: show only preview of agendadas
+  if(isFutureMonth()){
+    panel.innerHTML=`
+      <div class="obj-head"><div class="obj-title">🔮 Adelanto del mes</div><div class="obj-month-label">${monthLabel()}</div></div>
+      <div class="proyeccion-box">
+        <div class="proy-icon">📅</div>
+        <div class="proy-content">
+          <div class="proy-title" style="color:var(--teal)">Demos ya agendadas para ${monthLabel()}</div>
+          <div class="proy-text">Tienes <b>${demosWithDateInMonth().length} demos</b> agendadas con fecha en este mes. El objetivo y el progreso empezarán de cero cuando llegue el mes — lo que cuenta son las demos que crees durante ${monthLabel()}.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const mObj=objetivos.find(o=>{
+    const m=getTargetMonth();
+    return o.mes===m.getMonth()+1&&o.anio===m.getFullYear();
+  });
+  const objOut=mObj?(mObj.demos_objetivo_outbound||0):0;
+  const objIn=mObj?(mObj.demos_objetivo_inbound||0):0;
+
+  const created=demosCreatedThisMonth();
+  const actualOut=created.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
+  const actualIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
+
+  // Restore panel structure if it was replaced (e.g. coming back from future month)
+  if(!document.getElementById('out-fill')){restoreObjPanel();}
+  else{document.getElementById('obj-month-label').textContent=monthLabel();}
+
+  renderBar('out',actualOut,objOut);
+  renderBar('in',actualIn,objIn);
+  renderProyeccion(actualOut,objOut,actualIn,objIn);
+}
+
+function demosWithDateInMonth(){
+  const{start,end}=monthRange();
+  return demos.filter(d=>d.fecha>=start&&d.fecha<=end&&d.estado!=='cancelada');
+}
+
+function restoreObjPanel(){
+  document.getElementById('objetivos-panel').innerHTML=`
+    <div class="obj-head"><div class="obj-title">🎯 Progreso del mes</div><div class="obj-month-label" id="obj-month-label">${monthLabel()}</div></div>
+    <div class="obj-bars">
+      <div class="obj-bar-block">
+        <div class="obj-bar-top"><div class="obj-bar-label">🎯 Outbound</div><div class="obj-bar-nums"><b id="out-actual">0</b> / <span id="out-obj">0</span></div></div>
+        <div class="battery"><div class="obj-target-line" id="out-target-line" style="left:0%"></div><div class="battery-fill rojo" id="out-fill" style="width:0%"><span class="battery-pct" id="out-pct"></span></div></div>
+      </div>
+      <div class="obj-bar-block">
+        <div class="obj-bar-top"><div class="obj-bar-label">📥 Inbound</div><div class="obj-bar-nums"><b id="in-actual">0</b> / <span id="in-obj">0</span></div></div>
+        <div class="battery"><div class="obj-target-line" id="in-target-line" style="left:0%"></div><div class="battery-fill rojo" id="in-fill" style="width:0%"><span class="battery-pct" id="in-pct"></span></div></div>
+      </div>
+    </div>
+    <div class="proyeccion-box"><div class="proy-icon" id="proy-icon">📊</div><div class="proy-content"><div class="proy-title" id="proy-title">Proyección a fin de mes</div><div class="proy-text" id="proy-text">—</div><div class="proy-aviso" id="proy-aviso" style="display:none;"></div></div></div>`;
+}
+
+function renderBar(prefix,actual,obj){
+  document.getElementById(prefix+'-actual').textContent=actual;
+  document.getElementById(prefix+'-obj').textContent=obj;
+  const pct=obj>0?Math.min(100,Math.round(actual/obj*100)):0;
+  const fill=document.getElementById(prefix+'-fill');
+  fill.style.width=pct+'%';
+  document.getElementById(prefix+'-pct').textContent=pct>8?pct+'%':'';
+
+  // Expected progress line (by workdays)
+  const wTotal=workdaysInMonth();
+  const wElapsed=isPastMonth()?wTotal:workdaysElapsed();
+  const expectedPct=wTotal>0?Math.round(wElapsed/wTotal*100):0;
+  document.getElementById(prefix+'-target-line').style.left=Math.min(100,expectedPct)+'%';
+
+  // Color logic: compare actual vs expected
+  const expectedDemos=obj>0?(obj*wElapsed/wTotal):0;
+  let color='rojo';
+  if(obj===0){color='rojo';}
+  else if(actual>=expectedDemos*1.1){color='verde';}
+  else if(actual>=expectedDemos*0.85){color='amarillo';}
+  else{color='rojo';}
+  fill.className='battery-fill '+color;
+}
+
+function renderProyeccion(actualOut,objOut,actualIn,objIn){
+  const wTotal=workdaysInMonth();
+  const wElapsed=isPastMonth()?wTotal:workdaysElapsed();
+  const totalActual=actualOut+actualIn;
+  const totalObj=objOut+objIn;
+
+  // Past month: show final result
+  if(isPastMonth()){
+    const pct=totalObj>0?Math.round(totalActual/totalObj*100):0;
+    const icon=document.getElementById('proy-icon');
+    const title=document.getElementById('proy-title');
+    const text=document.getElementById('proy-text');
+    icon.textContent=pct>=100?'🏆':pct>=80?'✅':'📉';
+    title.textContent=`Resultado de ${monthLabel()}`;
+    title.className='proy-title '+(pct>=100?'verde':pct>=80?'amarillo':'rojo');
+    text.innerHTML=`Cerraste el mes con <b>${totalActual} demos creadas</b> de un objetivo de <b>${totalObj}</b> (${pct}%). Outbound: ${actualOut}/${objOut} · Inbound: ${actualIn}/${objIn}.`;
+    document.getElementById('proy-aviso').style.display='none';
+    return;
+  }
+
+  // Current month: projection
+  if(wElapsed===0||totalObj===0){
+    document.getElementById('proy-title').textContent='Proyección a fin de mes';
+    document.getElementById('proy-title').className='proy-title';
+    document.getElementById('proy-text').innerHTML=totalObj===0?'Tu manager aún no ha cargado los objetivos de este mes.':'El mes acaba de empezar. ¡A por esas demos! 💪';
+    document.getElementById('proy-icon').textContent='📊';
+    document.getElementById('proy-aviso').style.display='none';
+    return;
+  }
+
+  const ritmoDiario=totalActual/wElapsed;
+  const proyeccion=Math.round(ritmoDiario*wTotal);
+  const wRestantes=wTotal-wElapsed;
+  const pctProy=totalObj>0?Math.round(proyeccion/totalObj*100):0;
+
+  const icon=document.getElementById('proy-icon');
+  const title=document.getElementById('proy-title');
+  const text=document.getElementById('proy-text');
+  const aviso=document.getElementById('proy-aviso');
+
+  let estado,color,emoji;
+  if(proyeccion>=totalObj*1.05){estado='Excelente';color='verde';emoji='🚀';}
+  else if(proyeccion>=totalObj*0.85){estado='Bien';color='amarillo';emoji='👍';}
+  else{estado='Crítico';color='rojo';emoji='⚠️';}
+
+  icon.textContent=emoji;
+  title.textContent=estado+' — proyección: '+proyeccion+' demos';
+  title.className='proy-title '+color;
+
+  // How many today to improve
+  const faltanParaObj=Math.max(0,totalObj-totalActual);
+  const demosHoyParaRitmo=wRestantes>0?Math.ceil(faltanParaObj/wRestantes):faltanParaObj;
+
+  text.innerHTML=`Tu media es <b>${ritmoDiario.toFixed(1)} demos/día hábil</b>. Si mantienes el ritmo, llegarás a <b>${proyeccion} demos</b> (${pctProy}% del objetivo de ${totalObj}). Llevas ${totalActual} y quedan ${wRestantes} días hábiles.`;
+
+  if(proyeccion<totalObj){
+    aviso.style.display='block';
+    aviso.innerHTML=`💡 Para llegar a tu objetivo necesitas ~<b>${demosHoyParaRitmo} demos cada día hábil</b> de aquí a fin de mes.`;
+  }else{
+    aviso.style.display='block';
+    aviso.style.color='var(--green)';
+    aviso.innerHTML=`✅ Vas en muy buen camino. ¡Sigue así!`;
+  }
+
+  // Aviso de demos pendientes de reagendar
+  const canceladas=demos.filter(d=>d.estado==='cancelada').length;
+  if(canceladas>0){
+    const cur=aviso.innerHTML;
+    aviso.innerHTML=cur+`<br>🔄 Tienes <b>${canceladas} demo${canceladas>1?'s':''} pendiente${canceladas>1?'s':''} de reagendar</b> — retómalas para sumarlas a tu progreso.`;
+  }
+}
+
+function renderComerciales(){
+  const grid=document.getElementById('comerciales-grid');
+  const section=document.getElementById('comerciales-section');
+  // Demos of current target month by date
+  const{start,end}=monthRange();
+  const monthDemos=demos.filter(d=>d.fecha>=start&&d.fecha<=end);
+
+  // Group by comercial
+  const byCom={};
+  monthDemos.forEach(d=>{
+    if(!d.comercial_id)return;
+    if(!byCom[d.comercial_id])byCom[d.comercial_id]={total:0,ejecutada:0,cancelada:0,pendiente:0};
+    byCom[d.comercial_id].total++;
+    if(d.estado==='ejecutada')byCom[d.comercial_id].ejecutada++;
+    else if(d.estado==='cancelada')byCom[d.comercial_id].cancelada++;
+    else byCom[d.comercial_id].pendiente++;
+  });
+
+  const ids=Object.keys(byCom).sort((a,b)=>byCom[b].total-byCom[a].total);
+  if(!ids.length){section.style.display='none';return;}
+  section.style.display='block';
+  document.getElementById('com-filter-clear').style.display=comercialFilter?'inline':'none';
+
+  grid.innerHTML=ids.map(id=>{
+    const c=byCom[id];
+    const active=comercialFilter==id?'active':'';
+    return`<div class="com-card ${active}" onclick="filterByComercial('${id}')">
+      <div class="com-card-name">${comercialName(parseInt(id))}<span class="com-total">${c.total}</span></div>
+      <div class="com-breakdown">
+        <div class="com-stat ej"><b>${c.ejecutada}</b>Ejec.</div>
+        <div class="com-stat ca"><b>${c.cancelada}</b>Canc.</div>
+        <div class="com-stat pe"><b>${c.pendiente}</b>Pend.</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterByComercial(id){
+  comercialFilter=comercialFilter==id?null:id;
+  renderComerciales();
+  renderList();
+}
+function clearComercialFilter(){comercialFilter=null;renderComerciales();renderList();}
+
+function renderStats(){
+  const today=todayStr(),week=weekDates();
+  const{start,end}=monthRange();
+  const hoy=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada').length;
+  const sem=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
+  const monthByDate=demos.filter(d=>d.fecha>=start&&d.fecha<=end);
+  const ejec=monthByDate.filter(d=>d.estado==='ejecutada').length;
+  const canc=monthByDate.filter(d=>d.estado==='cancelada').length;
+  const totalAgendadas=monthByDate.filter(d=>d.estado!=='reagendada').length;
+  const ratio=totalAgendadas>0?Math.round(canc/totalAgendadas*100)+'%':'—';
+  document.getElementById('stat-hoy').textContent=hoy;
+  document.getElementById('stat-semana').textContent=sem;
+  document.getElementById('stat-ejecutadas').textContent=ejec;
+  document.getElementById('stat-canceladas').textContent=canc;
+  document.getElementById('stat-ratio').textContent=ratio;
+}
+
+function renderCounts(){
+  const today=todayStr(),tomorrow=tomorrowStr(),week=weekDates();
+  document.getElementById('c-hoy').textContent=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada').length;
+  document.getElementById('c-manana').textContent=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada').length;
+  document.getElementById('c-semana').textContent=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
+  document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
+  document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada').length;
+  const cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-1);const cutStr=cutoff.toISOString().split('T')[0];
+  document.getElementById('c-viejas').textContent=demos.filter(d=>d.fecha<cutStr&&['agendada','reagendada'].includes(d.estado)&&['interesado','necesita_seguimiento'].includes(d.outcome)).length;
+}
+
+function comercialName(id){const c=comerciales.find(x=>x.id===id);return c?c.nombre:'—';}
+function ciudadName(id){const c=ciudades.find(x=>x.id===id);return c?c.nombre:'—';}
+function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Necesita seguimiento',no_interesado:'No interesado',cerrado_ganado:'Cerrado ganado',cerrado_perdido:'Cerrado perdido'}[o]||'';}
+
+function renderList(){
+  const list=document.getElementById('demo-list');
+  const filtered=getFilteredDemos();
+  if(!filtered.length){
+    const empties={
+      hoy:['📅','No tienes demos hoy','Cuando agendes una demo para hoy, aparecerá aquí.'],
+      manana:['⏭️','Nada para mañana todavía','Las demos de mañana se mostrarán aquí.'],
+      semana:['🗓️','Semana despejada','No hay demos agendadas esta semana.'],
+      todas:['📋','Aún no hay demos','Pulsa "Nueva demo" para registrar la primera.'],
+      reagendar:['🎉','Nada pendiente de reagendar','Las demos canceladas aparecerán aquí para que las recuperes.'],
+      viejas:['✓','Todo al día','No hay demos antiguas con interés pendientes de seguimiento.']
+    };
+    const e=empties[currentView]||empties.todas;
+    list.innerHTML=`<div class="empty"><div class="empty-icon">${e[0]}</div><div class="empty-title">${e[1]}</div><div class="empty-text">${e[2]}</div></div>`;
+    return;
+  }
+  // Sort: reagendar/viejas by date desc, others by date asc
+  const sorted=[...filtered].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  list.innerHTML=sorted.map(d=>{
+    const isReagendar=currentView==='reagendar';
+    const isVieja=currentView==='viejas';
+    const cardClass=isReagendar?'reagendar':isVieja?'vieja':'';
+    const sfLink=d.sf_url?`<a href="${d.sf_url}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
+    return`
+    <div class="demo-card ${cardClass}">
+      <div class="demo-main">
+        <div class="demo-top">
+          <span class="demo-name">${sfLink}</span>
+          <span class="badge ${d.tipo}">${d.tipo==='presencial'?'📍 Presencial':'💻 Online'}</span>
+          <span class="badge ${d.canal||'outbound'}">${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>
+          ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
+        </div>
+        <div class="demo-meta">
+          <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}</span>
+          <span class="demo-meta-item">👤 ${comercialName(d.comercial_id)}</span>
+          <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
+          ${d.notas?`<span class="demo-meta-item">📝 ${d.notas.length>40?d.notas.slice(0,40)+'…':d.notas}</span>`:''}
+        </div>
+      </div>
+      <div class="demo-right">
+        ${isReagendar
+          ?`<button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>`
+          :`<select class="select-mini" onchange="changeEstado(${d.id},this.value)">
+              <option value="agendada" ${d.estado==='agendada'?'selected':''}>Agendada</option>
+              <option value="ejecutada" ${d.estado==='ejecutada'?'selected':''}>Ejecutada</option>
+              <option value="cancelada" ${d.estado==='cancelada'?'selected':''}>Cancelada</option>
+              ${d.estado==='reagendada'?'<option value="reagendada" selected>Reagendada</option>':''}
+            </select>`}
+        <div class="demo-actions">
+          <button class="icon-btn" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="Editar">✏️</button>
+          <button class="icon-btn" onclick="deleteDemo(${d.id})" title="Eliminar">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setView(view,btn){
+  currentView=view;
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2800);}
+
+// ── INIT ──
+async function init(){
+  setupPinInputs();
+  const saved=sessionStorage.getItem('sdr_user');
+  document.getElementById('loading').style.display='none';
+  if(saved){
+    try{currentUser=JSON.parse(saved);await enterApp();return;}catch(e){}
+  }
+  await loadLoginNames();
+  document.getElementById('login-screen').style.display='flex';
+}
+init();
+</script>
+</body>
+</html>
