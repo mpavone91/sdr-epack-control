@@ -1238,21 +1238,22 @@ function renderMgrComerciales(){
 }
 
 function renderMgrModalidad(){
+  const{start,end}=mgrPeriodDates();
   const rows=allSdrs.map(s=>{
-    const{start,end}=mgrPeriodDates();
-    const d=allDemos.filter(x=>{
+    // Demos for objective: by fecha_agendamiento (creation date)
+    const created=allDemos.filter(x=>{
       const ag=x.fecha_agendamiento||(x.created_at||'').split('T')[0];
       return x.sdr_id===s.id&&ag>=start&&ag<=end&&x.estado!=='cancelada';
     });
-    const pres=d.filter(x=>x.tipo==='presencial');
-    const onl=d.filter(x=>x.tipo==='online');
+    // CWD: by demo date (fecha) — same logic as everywhere else
+    const cwd=allDemos.filter(x=>x.sdr_id===s.id&&x.outcome==='cerrado_ganado'&&(x.fecha||'')>=start&&(x.fecha||'')<=end);
+    const pres=created.filter(x=>x.tipo==='presencial');
+    const onl=created.filter(x=>x.tipo==='online');
     const presEjec=pres.filter(x=>x.estado==='ejecutada').length;
     const onlEjec=onl.filter(x=>x.estado==='ejecutada').length;
-    const presCwd=pres.filter(x=>x.outcome==='cerrado_ganado').length;
-    const onlCwd=onl.filter(x=>x.outcome==='cerrado_ganado').length;
-    return{nombre:s.nombre,
-      pres:pres.length,presEjec,presCwd,
-      onl:onl.length,onlEjec,onlCwd};
+    const presCwd=cwd.filter(x=>x.tipo==='presencial').length;
+    const onlCwd=cwd.filter(x=>x.tipo==='online').length;
+    return{nombre:s.nombre,pres:pres.length,presEjec,presCwd,onl:onl.length,onlEjec,onlCwd};
   });
   const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
   const t=document.getElementById('mgr-modalidad-table');
@@ -1298,14 +1299,17 @@ function renderMgrIndividual(){
   const pctEjec=s.totalDemos>0?Math.round(s.ejecutadas/s.totalDemos*100):0;
   const pctCierre=s.ejecutadas>0?Math.round(s.totalCwd/s.ejecutadas*100):0;
   const pctCanc=s.totalDemos>0?Math.round(s.canceladas/s.totalDemos*100):0;
-  // Modalidad breakdown
+  // Modalidad breakdown — demos by creation date, CWD by demo date
   const{start,end}=mgrPeriodDates();
   const sdrDemos=allDemos.filter(d=>{
     const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
     return d.sdr_id===mgrIndividualSdr&&ag>=start&&ag<=end&&d.estado!=='cancelada';
   });
+  const sdrCwd=allDemos.filter(d=>d.sdr_id===mgrIndividualSdr&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
   const pres=sdrDemos.filter(d=>d.tipo==='presencial');
   const onl=sdrDemos.filter(d=>d.tipo==='online');
+  const presCwd=sdrCwd.filter(d=>d.tipo==='presencial').length;
+  const onlCwd=sdrCwd.filter(d=>d.tipo==='online').length;
   document.getElementById('mgr-individual-content').innerHTML=`
     <div class="stats-row" style="grid-template-columns:repeat(6,1fr);margin-bottom:20px;">
       <div class="stat-card accent"><div class="stat-num">${s.totalDemos}</div><div class="stat-label">Agendadas</div></div>
@@ -1328,8 +1332,8 @@ function renderMgrIndividual(){
         <table class="mgr-table">
           <thead><tr><th>Modalidad</th><th>Agend.</th><th>Ejec.</th><th>% Ejec</th><th>Ganadas</th><th>% Cierre</th></tr></thead>
           <tbody>
-            <tr><td>📍 Presencial</td><td>${pres.length}</td><td>${pres.filter(d=>d.estado==='ejecutada').length}</td><td>${pct(pres.filter(d=>d.estado==='ejecutada').length,pres.length)}</td><td>${pres.filter(d=>d.outcome==='cerrado_ganado').length}</td><td>${pct(pres.filter(d=>d.outcome==='cerrado_ganado').length,pres.filter(d=>d.estado==='ejecutada').length)}</td></tr>
-            <tr><td>💻 Online</td><td>${onl.length}</td><td>${onl.filter(d=>d.estado==='ejecutada').length}</td><td>${pct(onl.filter(d=>d.estado==='ejecutada').length,onl.length)}</td><td>${onl.filter(d=>d.outcome==='cerrado_ganado').length}</td><td>${pct(onl.filter(d=>d.outcome==='cerrado_ganado').length,onl.filter(d=>d.estado==='ejecutada').length)}</td></tr>
+            <tr><td>📍 Presencial</td><td>${pres.length}</td><td>${pres.filter(d=>d.estado==='ejecutada').length}</td><td>${pct(pres.filter(d=>d.estado==='ejecutada').length,pres.length)}</td><td>${presCwd}</td><td>${pct(presCwd,pres.filter(d=>d.estado==='ejecutada').length)}</td></tr>
+            <tr><td>💻 Online</td><td>${onl.length}</td><td>${onl.filter(d=>d.estado==='ejecutada').length}</td><td>${pct(onl.filter(d=>d.estado==='ejecutada').length,onl.length)}</td><td>${onlCwd}</td><td>${pct(onlCwd,onl.filter(d=>d.estado==='ejecutada').length)}</td></tr>
           </tbody>
         </table>
       </div>
