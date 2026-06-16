@@ -261,6 +261,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .noticia-item button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;}
 .noticia-item button:hover{color:var(--red);}
 
+/* ── SEARCH + CANAL FILTER ── */
+.list-controls{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.search-wrap{flex:1;min-width:200px;position:relative;display:flex;align-items:center;}
+.search-icon{position:absolute;left:12px;font-size:14px;pointer-events:none;}
+.search-input{width:100%;padding:10px 36px 10px 34px;border:1.5px solid var(--border);border-radius:10px;font-size:13.5px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);}
+.search-input:focus{outline:none;border-color:var(--lime);}
+.search-clear{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0;}
+.canal-filter-wrap{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;}
+.canal-filter-btn{padding:7px 14px;border:none;background:none;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.canal-filter-btn.active{background:var(--teal-dark);color:#fff;}
+
 /* ── CROSS-MONTH REMINDERS ── */
 .xmonth-panel{background:#fff8e8;border:1px solid #f0c060;border-radius:14px;padding:20px 24px;margin-bottom:20px;}
 .xmonth-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:#7a4e00;margin-bottom:4px;}
@@ -482,6 +493,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="stat-card"><div class="stat-num" id="stat-ratio">—</div><div class="stat-label">Ratio cancelación</div></div>
     </div>
 
+    <!-- COMERCIALES (arriba, compacto) -->
+    <div class="comerciales-section" id="comerciales-section" style="margin-bottom:16px;">
+      <div class="com-section-title" style="font-size:14px;margin-bottom:10px;">👥 Por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
+      <div class="comerciales-grid" id="comerciales-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>
+    </div>
+
+    <!-- SEARCH + CANAL FILTER -->
+    <div class="list-controls">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="demo-search" placeholder="Buscar por oportunidad, comercial, notas..." oninput="renderList()"/>
+        <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
+      </div>
+      <div class="canal-filter-wrap">
+        <button class="canal-filter-btn active" id="cf-all" onclick="setCanalFilter('all',this)">Todos</button>
+        <button class="canal-filter-btn" id="cf-outbound" onclick="setCanalFilter('outbound',this)">🎯 Outbound</button>
+        <button class="canal-filter-btn" id="cf-inbound" onclick="setCanalFilter('inbound',this)">📥 Inbound</button>
+      </div>
+    </div>
+
     <div class="view-tabs">
       <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
       <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
@@ -495,12 +526,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
     <div class="demo-view active" id="view-content">
       <div class="demo-list" id="demo-list"></div>
-    </div>
-
-    <!-- COMERCIALES (al final) -->
-    <div class="comerciales-section" id="comerciales-section" style="margin-top:36px;">
-      <div class="com-section-title">👥 Demos por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
-      <div class="comerciales-grid" id="comerciales-grid"></div>
     </div>
   </div>
 </div>
@@ -668,7 +693,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Hora de la demo</label>
-          <input class="form-input" type="time" id="f-hora"/>
+          <input class="form-input" type="text" id="f-hora" placeholder="Ej: 10:30" maxlength="5" pattern="[0-9]{2}:[0-9]{2}"/>
         </div>
       <div class="form-row">
         <div class="form-group">
@@ -746,6 +771,7 @@ let noticias=[];
 let currentView='hoy';
 let monthOffset=0; // 0=current, -1=prev, 1=next
 let comercialFilter=null;
+let canalFilter='all';
 let selectedCanal='outbound';
 
 // Festivos Madrid 2026 (nacionales + autonómicos + locales Madrid ciudad)
@@ -1284,6 +1310,9 @@ function setMonth(offset,btn){
   document.querySelectorAll('.month-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   comercialFilter=null;
+  canalFilter='all';
+  document.querySelectorAll('.canal-filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cf-all')?.classList.add('active');
   render();
 }
 
@@ -1385,6 +1414,9 @@ async function saveDemo(){
   const ciudadVal=document.getElementById('f-ciudad').value;
   const tipo=document.getElementById('f-tipo').value;
   const fechaAgendamiento=document.getElementById('f-fecha-agendamiento').value||todayStr();
+  // Validate hora format
+  const horaRaw=document.getElementById('f-hora').value.trim();
+  const horaVal=horaRaw?(/^\d{1,2}:\d{2}$/.test(horaRaw)?horaRaw.padStart(5,'0'):null):null;
   const payload={
     sdr_id:currentUser.id,
     sf_url:extractCleanUrl(rawUrl)||null,
@@ -1393,7 +1425,7 @@ async function saveDemo(){
     ciudad_id:ciudadVal?parseInt(ciudadVal):null,
     fecha_agendamiento:fechaAgendamiento,
     fecha:document.getElementById('f-fecha').value||null,
-    hora:document.getElementById('f-hora').value||null,
+    hora:horaVal,
     tipo:tipo,
     plataforma:tipo==='online'?(document.getElementById('f-plataforma').value||null):null,
     canal:document.getElementById('f-canal').value||'outbound',
@@ -1483,6 +1515,19 @@ function getFilteredDemos(){
     default:result=demos;
   }
   if(comercialFilter){result=result.filter(d=>d.comercial_id==comercialFilter);}
+  // Canal filter
+  if(canalFilter!=='all'){result=result.filter(d=>(d.canal||'outbound')===canalFilter);}
+  // Search filter
+  const q=getSearchQuery();
+  if(q){
+    result=result.filter(d=>{
+      const name=(d.sf_nombre||'').toLowerCase();
+      const notas=(d.notas||'').toLowerCase();
+      const com=comercialName(d.comercial_id).toLowerCase();
+      const ciudad=ciudadName(d.ciudad_id).toLowerCase();
+      return name.includes(q)||notas.includes(q)||com.includes(q)||ciudad.includes(q);
+    });
+  }
   return result;
 }
 
@@ -1819,6 +1864,24 @@ function renderComerciales(){
   }).join('');
 }
 
+function setCanalFilter(val,btn){
+  canalFilter=val;
+  document.querySelectorAll('.canal-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+function clearSearch(){
+  document.getElementById('demo-search').value='';
+  document.getElementById('search-clear').style.display='none';
+  renderList();
+}
+function getSearchQuery(){
+  const el=document.getElementById('demo-search');
+  if(!el)return'';
+  const v=el.value.trim().toLowerCase();
+  document.getElementById('search-clear').style.display=v?'block':'none';
+  return v;
+}
 function filterByComercial(id){
   comercialFilter=comercialFilter==id?null:id;
   renderComerciales();
