@@ -1147,7 +1147,7 @@ function renderMgrRanking(){
   t.innerHTML=`
     <thead><tr>
       <th>SDR</th><th>Agend.</th><th>Out</th><th>In</th>
-      <th>Ejec.</th><th>% Ejec</th>
+      <th>Ejec.</th><th>Pend.</th><th>% Ejec</th>
       <th>Ganadas</th><th>% Cierre</th>
       <th>Canc.</th><th>% Canc</th>
       <th>Llam.</th><th>Conect.</th>
@@ -1157,11 +1157,14 @@ function renderMgrRanking(){
       const pctEjec=r.totalDemos>0?Math.round(r.ejecutadas/r.totalDemos*100):0;
       const pctCierre=r.ejecutadas>0?Math.round(r.totalCwd/r.ejecutadas*100):0;
       const pctCanc=r.totalDemos>0?Math.round(r.canceladas/r.totalDemos*100):0;
+      const pendientes=r.totalDemos-r.ejecutadas;
       return`<tr>
         <td>${r.nombre}</td>
         <td><span class="num">${r.totalDemos}</span></td>
         <td>${r.demosOut}</td><td>${r.demosIn}</td>
-        <td>${r.ejecutadas}</td><td>${pctPill(pctEjec,70,50)}</td>
+        <td>${r.ejecutadas}</td>
+        <td><span style="font-weight:600;color:${pendientes>0?'var(--blue)':'var(--muted)'};">${pendientes}</span></td>
+        <td>${pctPill(pctEjec,70,50)}</td>
         <td><span class="num">${r.totalCwd}</span></td><td>${pctPill(pctCierre,20,10)}</td>
         <td>${r.canceladas}</td><td>${pctPill(100-pctCanc,80,60)}</td>
         <td>${r.hechas}</td><td>${r.conectadas}</td>
@@ -1171,7 +1174,9 @@ function renderMgrRanking(){
       <td>TOTAL</td>
       <td><b>${totDemos}</b></td>
       <td>${tot('demosOut')}</td><td>${tot('demosIn')}</td>
-      <td>${totEjec}</td><td>${totDemos>0?Math.round(totEjec/totDemos*100):0}%</td>
+      <td>${totEjec}</td>
+      <td>${totDemos-totEjec}</td>
+      <td>${totDemos>0?Math.round(totEjec/totDemos*100):0}%</td>
       <td><b>${totCwd}</b></td><td>${totEjec>0?Math.round(totCwd/totEjec*100):0}%</td>
       <td>${totCanc}</td><td>${totDemos>0?Math.round(totCanc/totDemos*100):0}%</td>
       <td>${tot('hechas')}</td><td>${tot('conectadas')}</td>
@@ -1210,16 +1215,18 @@ function renderMgrComerciales(){
   };
   const t=document.getElementById('mgr-comerciales-table');
   t.innerHTML=`
-    <thead><tr><th>Comercial</th><th>Agend.</th><th>Ejec.</th><th>% Ejec</th><th>Ganadas</th><th>% Cierre</th><th>Canc.</th><th>SDRs</th></tr></thead>
+    <thead><tr><th>Comercial</th><th>Agend.</th><th>Ejec.</th><th>Pend.</th><th>% Ejec</th><th>Ganadas</th><th>% Cierre</th><th>Canc.</th><th>SDRs</th></tr></thead>
     <tbody>
     ${ids.map(id=>{
       const c=byCom[id];
+      const pendientes=c.agendadas-c.ejecutadas;
       const nombre=comerciales.find(x=>x.id==id)?.nombre||'—';
       const sdrNames=[...c.sdrs].map(sid=>allSdrs.find(s=>s.id===sid)?.nombre||'').filter(Boolean).join(', ');
       return`<tr>
         <td>${nombre}</td>
         <td><span class="num">${c.agendadas}</span></td>
         <td>${c.ejecutadas}</td>
+        <td><span style="font-weight:600;color:${pendientes>0?'var(--blue)':'var(--muted)'};">${pendientes}</span></td>
         <td>${pctPill(c.ejecutadas,c.agendadas,70,50)}</td>
         <td><span class="num">${c.ganadas}</span></td>
         <td>${pctPill(c.ganadas,c.ejecutadas,20,10)}</td>
