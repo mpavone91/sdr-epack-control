@@ -175,6 +175,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .obj-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);}
 .obj-month-label{font-size:13px;color:var(--muted);}
 .obj-bars{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.obj-group-label{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--gold-dim,#8a6e2a);margin-bottom:12px;color:var(--muted);}
 .obj-bar-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
 .obj-bar-label{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
 .obj-bar-nums{font-size:13px;color:var(--muted);}
@@ -214,6 +215,57 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .com-stat.ej b{color:var(--green);}
 .com-stat.ca b{color:var(--red);}
 .com-stat.pe b{color:var(--blue);}
+
+/* ── MANAGER PANEL ── */
+.mgr-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.mgr-nav-btn{padding:10px 16px;border:1px solid var(--border);background:var(--surface);border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.mgr-nav-btn:hover{border-color:var(--lime);color:var(--text);}
+.mgr-nav-btn.active{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+.mgr-tab{display:none;}
+.mgr-tab.active{display:block;}
+.mgr-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;}
+.mgr-card-title{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--teal-dark);margin-bottom:6px;}
+.mgr-card-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.mgr-table-wrap{overflow-x:auto;}
+.mgr-table{width:100%;border-collapse:collapse;font-size:13px;}
+.mgr-table thead th{background:var(--teal-dark);color:rgba(255,255,255,0.75);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:11px 12px;text-align:center;white-space:nowrap;}
+.mgr-table thead th:first-child{text-align:left;border-radius:8px 0 0 0;}
+.mgr-table thead th:last-child{border-radius:0 8px 0 0;}
+.mgr-table tbody td{padding:11px 12px;text-align:center;border-bottom:1px solid var(--border);}
+.mgr-table tbody td:first-child{text-align:left;font-weight:600;color:var(--teal-dark);}
+.mgr-table tbody tr:hover{background:var(--surface-2);}
+.mgr-table tbody tr:last-child td{border-bottom:none;}
+.mgr-table .row-total{background:var(--surface-2);font-weight:700;}
+.mgr-table .row-total td{color:var(--teal-dark);}
+.mgr-table input{width:64px;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;text-align:center;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;}
+.mgr-table input:focus{outline:none;border-color:var(--lime);}
+.mini-ratio{font-size:11px;color:var(--muted);}
+.obj-form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.obj-form-item label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:7px;}
+.mgr-sdr-selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.mgr-sdr-chip{padding:9px 18px;border:1.5px solid var(--border);background:var(--surface);border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.mgr-sdr-chip:hover{border-color:var(--lime);}
+.mgr-sdr-chip.active{background:var(--lime);border-color:var(--lime);color:var(--teal-dark);}
+.chip-list{display:flex;flex-wrap:wrap;gap:8px;}
+.manage-chip{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:500;}
+.manage-chip.inactive{opacity:0.45;}
+.manage-chip button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:0;line-height:1;}
+.manage-chip button:hover{color:var(--red);}
+.msg-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.msg-row-name{width:100px;font-weight:600;font-size:13px;color:var(--teal-dark);flex-shrink:0;}
+.msg-row input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;}
+.msg-row input:focus{outline:none;border-color:var(--lime);}
+.msg-row button{padding:9px 14px;border:none;background:var(--lime);color:var(--teal-dark);border-radius:9px;font-weight:600;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;}
+.noticia-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:11px 16px;margin-bottom:8px;}
+.noticia-text{font-size:13px;}
+.noticia-item button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;}
+.noticia-item button:hover{color:var(--red);}
+
+/* ── NEWS BANNER (SDR view) ── */
+.news-banner{margin:0 24px 0;background:var(--amber-soft);border:1px solid var(--amber-border,#f0d58a);border-radius:14px;padding:14px 20px;display:none;}
+.news-banner.show{display:block;}
+.news-banner-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--amber);margin-bottom:6px;}
+.news-item{font-size:13.5px;color:#6a4400;padding:2px 0;}
 
 .loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--lime);border-radius:50%;animation:spin 0.8s linear infinite;}
@@ -282,6 +334,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
   </div>
 
+  <div class="news-banner" id="news-banner">
+    <div class="news-banner-title">📰 Tablón del equipo</div>
+    <div id="news-items"></div>
+  </div>
+
   <div class="content">
     <div class="page-head">
       <div>
@@ -303,6 +360,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="obj-title">🎯 Progreso del mes</div>
         <div class="obj-month-label" id="obj-month-label">—</div>
       </div>
+      <div class="obj-group-label">📅 Demos agendadas</div>
       <div class="obj-bars">
         <div class="obj-bar-block">
           <div class="obj-bar-top">
@@ -325,6 +383,29 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           </div>
         </div>
       </div>
+      <div class="obj-group-label">💰 Ventas cerradas (CWD)</div>
+      <div class="obj-bars">
+        <div class="obj-bar-block">
+          <div class="obj-bar-top">
+            <div class="obj-bar-label">🎯 Outbound</div>
+            <div class="obj-bar-nums"><b id="cwdout-actual">0</b> / <span id="cwdout-obj">0</span></div>
+          </div>
+          <div class="battery">
+            <div class="obj-target-line" id="cwdout-target-line" style="left:0%"></div>
+            <div class="battery-fill rojo" id="cwdout-fill" style="width:0%"><span class="battery-pct" id="cwdout-pct"></span></div>
+          </div>
+        </div>
+        <div class="obj-bar-block">
+          <div class="obj-bar-top">
+            <div class="obj-bar-label">📥 Inbound</div>
+            <div class="obj-bar-nums"><b id="cwdin-actual">0</b> / <span id="cwdin-obj">0</span></div>
+          </div>
+          <div class="battery">
+            <div class="obj-target-line" id="cwdin-target-line" style="left:0%"></div>
+            <div class="battery-fill rojo" id="cwdin-fill" style="width:0%"><span class="battery-pct" id="cwdin-pct"></span></div>
+          </div>
+        </div>
+      </div>
       <div class="proyeccion-box">
         <div class="proy-icon" id="proy-icon">📊</div>
         <div class="proy-content">
@@ -338,7 +419,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="stat-hoy">0</div><div class="stat-label">Demos hoy</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-semana">0</div><div class="stat-label">Esta semana</div></div>
-      <div class="stat-card accent"><div class="stat-num" id="stat-ejecutadas">0</div><div class="stat-label">Ejecutadas (mes)</div></div>
+      <div class="stat-card accent"><div class="stat-num" id="stat-ganadas">0</div><div class="stat-label">Ganadas (mes)</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-canceladas">0</div><div class="stat-label">Canceladas (mes)</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-ratio">—</div><div class="stat-label">Ratio cancelación</div></div>
     </div>
@@ -348,6 +429,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
       <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
       <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
+      <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
+      <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
       <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
       <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Seguimiento <span class="count" id="c-viejas">0</span></button>
     </div>
@@ -361,6 +444,125 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="com-section-title">👥 Demos por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
       <div class="comerciales-grid" id="comerciales-grid"></div>
     </div>
+  </div>
+</div>
+
+<!-- MANAGER PANEL -->
+<div class="app" id="manager-app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">📊</div>
+      <div class="topbar-title">SDR Hub · Manager</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip"><div class="user-avatar" id="mgr-avatar">M</div><span id="mgr-name">Manager</span></div>
+      <button class="logout-btn" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="content" style="padding-top:24px;">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Panel de equipo</div>
+        <div class="page-sub" id="mgr-date">—</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary" style="background:var(--teal);color:#fff;" onclick="exportExcel()">⬇️ Descargar Excel</button>
+      </div>
+    </div>
+
+    <!-- MANAGER NAV -->
+    <div class="mgr-nav">
+      <button class="mgr-nav-btn active" onclick="setMgrTab('equipo',this)">📊 Visión equipo</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('individual',this)">👤 Por SDR</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('llamadas',this)">📞 Llamadas</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('objetivos',this)">🎯 Objetivos</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('mensajes',this)">💬 Mensajes y tablón</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('gestion',this)">⚙️ Comerciales y ciudades</button>
+    </div>
+
+    <div class="month-tabs">
+      <button class="month-tab" id="mmtab-prev" onclick="setMgrMonth(-1,this)">← Mes anterior</button>
+      <button class="month-tab active" id="mmtab-cur" onclick="setMgrMonth(0,this)">Mes en curso</button>
+      <button class="month-tab" id="mmtab-next" onclick="setMgrMonth(1,this)">Mes siguiente →</button>
+    </div>
+
+    <!-- TAB: EQUIPO -->
+    <div class="mgr-tab active" id="mgrtab-equipo">
+      <div class="stats-row" id="mgr-team-stats" style="grid-template-columns:repeat(4,1fr);"></div>
+      <div class="objetivos-panel" id="mgr-team-obj"></div>
+      <div class="lb-title" style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);margin-bottom:14px;">🏆 Ranking del equipo</div>
+      <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-ranking"></table></div>
+    </div>
+
+    <!-- TAB: INDIVIDUAL -->
+    <div class="mgr-tab" id="mgrtab-individual">
+      <div class="mgr-sdr-selector" id="mgr-sdr-selector"></div>
+      <div id="mgr-individual-content"></div>
+    </div>
+
+    <!-- TAB: LLAMADAS -->
+    <div class="mgr-tab" id="mgrtab-llamadas">
+      <div class="mgr-card">
+        <div class="mgr-card-title">📞 Registro de llamadas — <span id="llamadas-month-label"></span></div>
+        <p class="mgr-card-sub">Introduce el acumulado de llamadas del mes por SDR. Las demos se calculan solas de lo que registran ellos.</p>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="llamadas-table"></table></div>
+      </div>
+    </div>
+
+    <!-- TAB: OBJETIVOS -->
+    <div class="mgr-tab" id="mgrtab-objetivos">
+      <div class="mgr-card">
+        <div class="mgr-card-title">🎯 Objetivos mensuales — <span id="obj-month-label-mgr"></span></div>
+        <p class="mgr-card-sub">Los objetivos son iguales para todos. Define las metas del mes y aplícalas a todo el equipo.</p>
+        <div class="obj-form-grid">
+          <div class="obj-form-item"><label>📅 Demos Outbound</label><input type="number" min="0" id="obj-in-demos-out" class="form-input"/></div>
+          <div class="obj-form-item"><label>📥 Demos Inbound</label><input type="number" min="0" id="obj-in-demos-in" class="form-input"/></div>
+          <div class="obj-form-item"><label>💰 CWD Outbound</label><input type="number" min="0" id="obj-in-cwd-out" class="form-input"/></div>
+          <div class="obj-form-item"><label>💰 CWD Inbound</label><input type="number" min="0" id="obj-in-cwd-in" class="form-input"/></div>
+        </div>
+        <button class="btn-primary" style="margin-top:18px;" onclick="saveObjetivosGlobal()">Aplicar a todo el equipo</button>
+      </div>
+    </div>
+
+    <!-- TAB: MENSAJES -->
+    <div class="mgr-tab" id="mgrtab-mensajes">
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">💬 Mensaje del día por SDR</div>
+        <p class="mgr-card-sub">Un mensaje personalizado para cada uno. Lo verán al entrar hoy. Déjalo vacío para usar el motivacional por defecto.</p>
+        <div id="mensajes-list"></div>
+      </div>
+      <div class="mgr-card">
+        <div class="mgr-card-title">📰 Tablón del equipo</div>
+        <p class="mgr-card-sub">Avisos que ven todos los SDRs (festivos, vacaciones de comerciales, recordatorios...).</p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <input class="form-input" id="noticia-input" placeholder="Ej: Hoy es festivo en Valencia · Iván está de vacaciones" style="flex:1;"/>
+          <button class="btn-primary" onclick="addNoticia()">Publicar</button>
+        </div>
+        <div id="noticias-list"></div>
+      </div>
+    </div>
+
+    <!-- TAB: GESTION -->
+    <div class="mgr-tab" id="mgrtab-gestion">
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">👥 Comerciales</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <input class="form-input" id="comercial-input" placeholder="Nombre del comercial" style="flex:1;"/>
+          <button class="btn-primary" onclick="addComercial()">Añadir</button>
+        </div>
+        <div class="chip-list" id="comerciales-manage"></div>
+      </div>
+      <div class="mgr-card">
+        <div class="mgr-card-title">📍 Ciudades</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <input class="form-input" id="ciudad-input" placeholder="Nombre de la ciudad" style="flex:1;"/>
+          <button class="btn-primary" onclick="addCiudad()">Añadir</button>
+        </div>
+        <div class="chip-list" id="ciudades-manage"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -446,6 +648,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL='https://ilzntryzijdfnntwuthp.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsem50cnl6aWpkZm5udHd1dGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU0MTgsImV4cCI6MjA5MTU2MTQxOH0.WAgYFBUTPo9QhMtDhH8F1e3vCSvA-8OCcdXnah3FRBk';
@@ -455,6 +658,7 @@ let comerciales=[];
 let ciudades=[];
 let demos=[];
 let objetivos=[];
+let noticias=[];
 let currentView='hoy';
 let monthOffset=0; // 0=current, -1=prev, 1=next
 let comercialFilter=null;
@@ -573,27 +777,399 @@ function logout(){
   sessionStorage.removeItem('sdr_user');
   currentUser=null;
   document.getElementById('app').classList.remove('active');
+  document.getElementById('manager-app').classList.remove('active');
   document.getElementById('login-screen').style.display='flex';
   clearPins();document.getElementById('login-name').value='';
 }
 
 async function enterApp(){
   document.getElementById('login-screen').style.display='none';
+  if(currentUser.rol==='manager'){
+    await enterManagerApp();
+    return;
+  }
   document.getElementById('app').classList.add('active');
   document.getElementById('user-name').textContent=currentUser.nombre;
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('today-date').textContent=fmtDateLong();
-  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos()]);
+  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias()]);
   await loadDemos();
 }
+
+// ── MANAGER STATE ──
+let allDemos=[];      // all SDRs' demos
+let allSdrs=[];
+let allLlamadas=[];
+let mgrMonthOffset=0;
+let mgrIndividualSdr=null;
+
+async function enterManagerApp(){
+  document.getElementById('manager-app').classList.add('active');
+  document.getElementById('mgr-name').textContent=currentUser.nombre;
+  document.getElementById('mgr-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
+  document.getElementById('mgr-date').textContent=fmtDateLong();
+  await loadManagerData();
+  renderManager();
+}
+
+async function loadManagerData(){
+  showLoadingMgr(true);
+  try{
+    const[sdrs,coms,cits,allD,objs,llam,nots]=await Promise.all([
+      sb('sdr_users?rol=eq.sdr&activo=eq.true&select=*&order=nombre.asc'),
+      sb('comerciales?select=*&order=nombre.asc'),
+      sb('ciudades?select=*&order=nombre.asc'),
+      sb('demos?select=*&order=fecha.asc'),
+      sb('objetivos?select=*'),
+      sb('llamadas?select=*'),
+      sb('noticias?select=*&order=created_at.desc')
+    ]);
+    allSdrs=sdrs||[];comerciales=coms||[];ciudades=cits||[];
+    allDemos=allD||[];objetivos=objs||[];allLlamadas=llam||[];noticias=nots||[];
+    await loadMensajesHoy();
+  }catch(e){showToast('❌ Error cargando datos del equipo');console.error(e);}
+  finally{showLoadingMgr(false);}
+}
+function showLoadingMgr(s){document.getElementById('loading').style.display=s?'flex':'none';}
+
+// Use mgr month offset for manager views
+function mgrTargetMonth(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+mgrMonthOffset,1);}
+function mgrMonthRange(){const m=mgrTargetMonth();return{start:new Date(m.getFullYear(),m.getMonth(),1).toISOString().split('T')[0],end:new Date(m.getFullYear(),m.getMonth()+1,0).toISOString().split('T')[0]};}
+function mgrMonthLabel(){const m=mgrTargetMonth();const mo=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${mo[m.getMonth()]} ${m.getFullYear()}`;}
+
+function sdrDemosCreatedInMonth(sdrId){
+  const{start,end}=mgrMonthRange();
+  return allDemos.filter(d=>d.sdr_id===sdrId&&(d.created_at||'').split('T')[0]>=start&&(d.created_at||'').split('T')[0]<=end);
+}
+
+function sdrStats(sdrId){
+  const created=sdrDemosCreatedInMonth(sdrId);
+  const demosOut=created.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
+  const demosIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
+  const cwdOut=created.filter(d=>d.canal==='outbound'&&d.outcome==='cerrado_ganado').length;
+  const cwdIn=created.filter(d=>d.canal==='inbound'&&d.outcome==='cerrado_ganado').length;
+  const cld=created.filter(d=>d.outcome==='cerrado_perdido').length;
+  const canceladas=created.filter(d=>d.estado==='cancelada').length;
+  const ejecutadas=created.filter(d=>d.estado==='ejecutada').length;
+  const totalDemos=demosOut+demosIn;
+  const totalCwd=cwdOut+cwdIn;
+  const m=mgrTargetMonth();
+  const llam=allLlamadas.find(l=>l.sdr_id===sdrId&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
+  const hechas=llam?(llam.llamadas_hechas||0):0;
+  const conectadas=llam?(llam.llamadas_conectadas||0):0;
+  return{demosOut,demosIn,cwdOut,cwdIn,cld,canceladas,ejecutadas,totalDemos,totalCwd,hechas,conectadas,
+    ratioConexion:hechas>0?(conectadas/hechas*100):0,
+    callsPerDemo:totalDemos>0?(hechas/totalDemos):0,
+    connectedPerDemo:totalDemos>0?(conectadas/totalDemos):0,
+    demoToCwd:totalDemos>0?(totalCwd/totalDemos*100):0};
+}
+
+function getObjForMonth(){
+  const m=mgrTargetMonth();
+  return objetivos.find(o=>o.mes===m.getMonth()+1&&o.anio===m.getFullYear()&&o.sdr_id===allSdrs[0]?.id)||null;
+}
+
+// ── MANAGER RENDER ──
+function renderManager(){
+  document.getElementById('mmtab-cur')&&(document.querySelector('#manager-app .month-tab.active'));
+  renderMgrTeamStats();
+  renderMgrTeamObj();
+  renderMgrRanking();
+  renderMgrSdrSelector();
+  renderLlamadasTable();
+  renderObjetivosForm();
+  renderMensajesList();
+  renderNoticiasList();
+  renderGestionLists();
+}
+
+function renderMgrTeamStats(){
+  const stats=allSdrs.map(s=>sdrStats(s.id));
+  const totalDemos=stats.reduce((a,b)=>a+b.totalDemos,0);
+  const totalCwd=stats.reduce((a,b)=>a+b.totalCwd,0);
+  const totalCanc=stats.reduce((a,b)=>a+b.canceladas,0);
+  const totalHechas=stats.reduce((a,b)=>a+b.hechas,0);
+  const el=document.getElementById('mgr-team-stats');
+  el.innerHTML=`
+    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Demos del equipo</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ventas cerradas</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCanc}</div><div class="stat-label">Canceladas</div></div>
+    <div class="stat-card"><div class="stat-num">${totalHechas}</div><div class="stat-label">Llamadas hechas</div></div>`;
+}
+
+function renderMgrTeamObj(){
+  const obj=getObjForMonth();
+  const stats=allSdrs.map(s=>sdrStats(s.id));
+  const aOut=stats.reduce((a,b)=>a+b.demosOut,0);
+  const aIn=stats.reduce((a,b)=>a+b.demosIn,0);
+  const aCwdOut=stats.reduce((a,b)=>a+b.cwdOut,0);
+  const aCwdIn=stats.reduce((a,b)=>a+b.cwdIn,0);
+  const n=allSdrs.length;
+  const oOut=(obj?.demos_objetivo_outbound||0)*n;
+  const oIn=(obj?.demos_objetivo_inbound||0)*n;
+  const oCwdOut=(obj?.cwd_objetivo_outbound||0)*n;
+  const oCwdIn=(obj?.cwd_objetivo_inbound||0)*n;
+  const bar=(label,a,o)=>{
+    const pct=o>0?Math.min(100,Math.round(a/o*100)):0;
+    const color=o===0?'rojo':a>=o*0.85?(a>=o?'verde':'amarillo'):'rojo';
+    return`<div class="obj-bar-block"><div class="obj-bar-top"><div class="obj-bar-label">${label}</div><div class="obj-bar-nums"><b>${a}</b> / ${o}</div></div><div class="battery"><div class="battery-fill ${color}" style="width:${pct}%"><span class="battery-pct">${pct>8?pct+'%':''}</span></div></div></div>`;
+  };
+  document.getElementById('mgr-team-obj').innerHTML=`
+    <div class="obj-head"><div class="obj-title">🎯 Objetivo conjunto del equipo</div><div class="obj-month-label">${mgrMonthLabel()}</div></div>
+    <div class="obj-group-label">📅 Demos agendadas (equipo)</div>
+    <div class="obj-bars">${bar('🎯 Outbound',aOut,oOut)}${bar('📥 Inbound',aIn,oIn)}</div>
+    <div class="obj-group-label">💰 Ventas cerradas (equipo)</div>
+    <div class="obj-bars">${bar('🎯 Outbound',aCwdOut,oCwdOut)}${bar('📥 Inbound',aCwdIn,oCwdIn)}</div>`;
+}
+
+function renderMgrRanking(){
+  const rows=allSdrs.map(s=>({nombre:s.nombre,...sdrStats(s.id)})).sort((a,b)=>b.totalDemos-a.totalDemos);
+  const tot=(k)=>rows.reduce((a,b)=>a+b[k],0);
+  const t=document.getElementById('mgr-ranking');
+  t.innerHTML=`
+    <thead><tr><th>SDR</th><th>Demos Out</th><th>Demos In</th><th>Total demos</th><th>CWD</th><th>CLD</th><th>Canc.</th><th>Llam.</th><th>Conect.</th><th>% Cierre</th></tr></thead>
+    <tbody>
+    ${rows.map(r=>`<tr><td>${r.nombre}</td><td>${r.demosOut}</td><td>${r.demosIn}</td><td><b>${r.totalDemos}</b></td><td>${r.totalCwd}</td><td>${r.cld}</td><td>${r.canceladas}</td><td>${r.hechas}</td><td>${r.conectadas}</td><td>${r.demoToCwd.toFixed(1)}%</td></tr>`).join('')}
+    <tr class="row-total"><td>TOTAL</td><td>${tot('demosOut')}</td><td>${tot('demosIn')}</td><td>${tot('totalDemos')}</td><td>${tot('totalCwd')}</td><td>${tot('cld')}</td><td>${tot('canceladas')}</td><td>${tot('hechas')}</td><td>${tot('conectadas')}</td><td>—</td></tr>
+    </tbody>`;
+}
+
+function renderMgrSdrSelector(){
+  const sel=document.getElementById('mgr-sdr-selector');
+  if(!mgrIndividualSdr&&allSdrs.length)mgrIndividualSdr=allSdrs[0].id;
+  sel.innerHTML=allSdrs.map(s=>`<button class="mgr-sdr-chip ${mgrIndividualSdr===s.id?'active':''}" onclick="selectMgrSdr(${s.id})">${s.nombre}</button>`).join('');
+  renderMgrIndividual();
+}
+function selectMgrSdr(id){mgrIndividualSdr=id;renderMgrSdrSelector();}
+
+function renderMgrIndividual(){
+  if(!mgrIndividualSdr)return;
+  const s=sdrStats(mgrIndividualSdr);
+  const sdr=allSdrs.find(x=>x.id===mgrIndividualSdr);
+  const obj=getObjForMonth();
+  const bar=(label,a,o)=>{
+    const pct=o>0?Math.min(100,Math.round(a/o*100)):0;
+    const color=o===0?'rojo':a>=o*0.85?(a>=o?'verde':'amarillo'):'rojo';
+    return`<div class="obj-bar-block"><div class="obj-bar-top"><div class="obj-bar-label">${label}</div><div class="obj-bar-nums"><b>${a}</b> / ${o}</div></div><div class="battery"><div class="battery-fill ${color}" style="width:${pct}%"><span class="battery-pct">${pct>8?pct+'%':''}</span></div></div></div>`;
+  };
+  document.getElementById('mgr-individual-content').innerHTML=`
+    <div class="stats-row" style="grid-template-columns:repeat(5,1fr);">
+      <div class="stat-card accent"><div class="stat-num">${s.totalDemos}</div><div class="stat-label">Demos</div></div>
+      <div class="stat-card"><div class="stat-num">${s.totalCwd}</div><div class="stat-label">Ganadas</div></div>
+      <div class="stat-card"><div class="stat-num">${s.cld}</div><div class="stat-label">Perdidas</div></div>
+      <div class="stat-card"><div class="stat-num">${s.hechas}</div><div class="stat-label">Llamadas</div></div>
+      <div class="stat-card"><div class="stat-num">${s.ratioConexion.toFixed(0)}%</div><div class="stat-label">Ratio conexión</div></div>
+    </div>
+    <div class="objetivos-panel">
+      <div class="obj-head"><div class="obj-title">🎯 ${sdr.nombre} — ${mgrMonthLabel()}</div></div>
+      <div class="obj-group-label">📅 Demos agendadas</div>
+      <div class="obj-bars">${bar('🎯 Outbound',s.demosOut,obj?.demos_objetivo_outbound||0)}${bar('📥 Inbound',s.demosIn,obj?.demos_objetivo_inbound||0)}</div>
+      <div class="obj-group-label">💰 Ventas cerradas (CWD)</div>
+      <div class="obj-bars">${bar('🎯 Outbound',s.cwdOut,obj?.cwd_objetivo_outbound||0)}${bar('📥 Inbound',s.cwdIn,obj?.cwd_objetivo_inbound||0)}</div>
+      <div class="proyeccion-box"><div class="proy-icon">📞</div><div class="proy-content"><div class="proy-title">Métricas de llamadas</div><div class="proy-text">Hechas: <b>${s.hechas}</b> · Conectadas: <b>${s.conectadas}</b> (${s.ratioConexion.toFixed(1)}%)<br>Llamadas por demo: <b>${s.callsPerDemo.toFixed(1)}</b> · Conectadas por demo: <b>${s.connectedPerDemo.toFixed(1)}</b> · Demo→CWD: <b>${s.demoToCwd.toFixed(1)}%</b></div></div></div>
+    </div>`;
+}
+
+function renderLlamadasTable(){
+  document.getElementById('llamadas-month-label').textContent=mgrMonthLabel();
+  const m=mgrTargetMonth();
+  const t=document.getElementById('llamadas-table');
+  t.innerHTML=`
+    <thead><tr><th>SDR</th><th>Llamadas hechas</th><th>Conectadas</th><th>% Conexión</th><th>Demos</th><th>Llam/demo</th><th></th></tr></thead>
+    <tbody>${allSdrs.map(s=>{
+      const st=sdrStats(s.id);
+      const llam=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
+      return`<tr>
+        <td>${s.nombre}</td>
+        <td><input type="number" min="0" id="ll-h-${s.id}" value="${llam?.llamadas_hechas||0}"/></td>
+        <td><input type="number" min="0" id="ll-c-${s.id}" value="${llam?.llamadas_conectadas||0}"/></td>
+        <td>${st.ratioConexion.toFixed(1)}%</td>
+        <td>${st.totalDemos}</td>
+        <td>${st.callsPerDemo.toFixed(1)}</td>
+        <td><button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="saveLlamadas(${s.id})">Guardar</button></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+async function saveLlamadas(sdrId){
+  const m=mgrTargetMonth();
+  const hechas=parseInt(document.getElementById('ll-h-'+sdrId).value)||0;
+  const conectadas=parseInt(document.getElementById('ll-c-'+sdrId).value)||0;
+  try{
+    const existing=allLlamadas.find(l=>l.sdr_id===sdrId&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
+    if(existing){
+      await sb(`llamadas?id=eq.${existing.id}`,{method:'PATCH',body:JSON.stringify({llamadas_hechas:hechas,llamadas_conectadas:conectadas,updated_at:new Date().toISOString()})});
+    }else{
+      await sb('llamadas',{method:'POST',body:JSON.stringify({sdr_id:sdrId,mes:m.getMonth()+1,anio:m.getFullYear(),llamadas_hechas:hechas,llamadas_conectadas:conectadas})});
+    }
+    showToast('✓ Llamadas guardadas');
+    await loadManagerData();renderManager();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderObjetivosForm(){
+  document.getElementById('obj-month-label-mgr').textContent=mgrMonthLabel();
+  const obj=getObjForMonth();
+  document.getElementById('obj-in-demos-out').value=obj?.demos_objetivo_outbound||0;
+  document.getElementById('obj-in-demos-in').value=obj?.demos_objetivo_inbound||0;
+  document.getElementById('obj-in-cwd-out').value=obj?.cwd_objetivo_outbound||0;
+  document.getElementById('obj-in-cwd-in').value=obj?.cwd_objetivo_inbound||0;
+}
+
+async function saveObjetivosGlobal(){
+  const m=mgrTargetMonth();
+  const payload={
+    demos_objetivo_outbound:parseInt(document.getElementById('obj-in-demos-out').value)||0,
+    demos_objetivo_inbound:parseInt(document.getElementById('obj-in-demos-in').value)||0,
+    cwd_objetivo_outbound:parseInt(document.getElementById('obj-in-cwd-out').value)||0,
+    cwd_objetivo_inbound:parseInt(document.getElementById('obj-in-cwd-in').value)||0
+  };
+  try{
+    for(const s of allSdrs){
+      const existing=objetivos.find(o=>o.sdr_id===s.id&&o.mes===m.getMonth()+1&&o.anio===m.getFullYear());
+      if(existing){
+        await sb(`objetivos?id=eq.${existing.id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      }else{
+        await sb('objetivos',{method:'POST',body:JSON.stringify({sdr_id:s.id,mes:m.getMonth()+1,anio:m.getFullYear(),...payload})});
+      }
+    }
+    showToast('✓ Objetivos aplicados a todo el equipo');
+    await loadManagerData();renderManager();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderMensajesList(){
+  document.getElementById('mensajes-list').innerHTML=allSdrs.map(s=>{
+    return`<div class="msg-row">
+      <div class="msg-row-name">${s.nombre}</div>
+      <input id="msg-${s.id}" placeholder="Mensaje personalizado para hoy..." value="${(mensajesHoy[s.id]||'').replace(/"/g,'&quot;')}"/>
+      <button onclick="saveMensaje(${s.id})">Guardar</button>
+    </div>`;
+  }).join('');
+}
+
+let mensajesHoy={};
+async function loadMensajesHoy(){
+  const today=todayStr();
+  const msgs=await sb(`mensaje_dia?fecha=eq.${today}&select=*`);
+  mensajesHoy={};
+  (msgs||[]).forEach(m=>{if(m.sdr_id)mensajesHoy[m.sdr_id]=m.mensaje;});
+}
+
+async function saveMensaje(sdrId){
+  const today=todayStr();
+  const mensaje=document.getElementById('msg-'+sdrId).value.trim();
+  try{
+    await sb(`mensaje_dia?fecha=eq.${today}&sdr_id=eq.${sdrId}`,{method:'DELETE'});
+    if(mensaje){
+      await sb('mensaje_dia',{method:'POST',body:JSON.stringify({mensaje,fecha:today,sdr_id:sdrId,creado_por:currentUser.id})});
+    }
+    mensajesHoy[sdrId]=mensaje;
+    showToast('✓ Mensaje guardado');
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderNoticiasList(){
+  const el=document.getElementById('noticias-list');
+  const active=(noticias||[]).filter(n=>n.activa);
+  if(!active.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;">No hay avisos publicados.</div>';return;}
+  el.innerHTML=active.map(n=>`<div class="noticia-item"><span class="noticia-text">${n.mensaje}</span><button onclick="deleteNoticia(${n.id})">🗑️</button></div>`).join('');
+}
+async function addNoticia(){
+  const msg=document.getElementById('noticia-input').value.trim();
+  if(!msg)return;
+  try{await sb('noticias',{method:'POST',body:JSON.stringify({mensaje:msg})});document.getElementById('noticia-input').value='';showToast('✓ Aviso publicado');await loadManagerData();renderManager();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+async function deleteNoticia(id){
+  try{await sb(`noticias?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activa:false})});showToast('✓ Aviso quitado');await loadManagerData();renderManager();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderGestionLists(){
+  document.getElementById('comerciales-manage').innerHTML=comerciales.map(c=>`<div class="manage-chip ${c.activo?'':'inactive'}">${c.nombre}<button onclick="toggleComercial(${c.id},${!c.activo})" title="${c.activo?'Desactivar':'Activar'}">${c.activo?'✕':'↺'}</button></div>`).join('');
+  document.getElementById('ciudades-manage').innerHTML=ciudades.map(c=>`<div class="manage-chip ${c.activa?'':'inactive'}">${c.nombre}<button onclick="toggleCiudad(${c.id},${!c.activa})" title="${c.activa?'Desactivar':'Activar'}">${c.activa?'✕':'↺'}</button></div>`).join('');
+}
+async function addComercial(){
+  const nombre=document.getElementById('comercial-input').value.trim();
+  if(!nombre)return;
+  try{await sb('comerciales',{method:'POST',body:JSON.stringify({nombre})});document.getElementById('comercial-input').value='';showToast('✓ Comercial añadido');await loadManagerData();renderManager();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+async function toggleComercial(id,activo){
+  try{await sb(`comerciales?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activo})});await loadManagerData();renderManager();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+async function addCiudad(){
+  const nombre=document.getElementById('ciudad-input').value.trim();
+  if(!nombre)return;
+  try{await sb('ciudades',{method:'POST',body:JSON.stringify({nombre})});document.getElementById('ciudad-input').value='';showToast('✓ Ciudad añadida');await loadManagerData();renderManager();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+async function toggleCiudad(id,activa){
+  try{await sb(`ciudades?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activa})});await loadManagerData();renderManager();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function setMgrTab(tab,btn){
+  document.querySelectorAll('.mgr-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mgr-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mgrtab-'+tab).classList.add('active');
+  btn.classList.add('active');
+}
+function setMgrMonth(offset,btn){
+  mgrMonthOffset=offset;
+  document.querySelectorAll('#manager-app .month-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderManager();
+}
+
+// ── EXCEL EXPORT ──
+function exportExcel(){
+  const{start,end}=mgrMonthRange();
+  const monthDemos=allDemos.filter(d=>{const c=(d.created_at||'').split('T')[0];return c>=start&&c<=end;});
+  // Sheet 1: all demos
+  const demoRows=monthDemos.map(d=>({
+    SDR:allSdrs.find(s=>s.id===d.sdr_id)?.nombre||'—',
+    Oportunidad:d.sf_nombre||'',
+    Comercial:comercialName(d.comercial_id),
+    Ciudad:ciudadName(d.ciudad_id),
+    Fecha:d.fecha||'',
+    Canal:d.canal||'',
+    Modalidad:d.tipo||'',
+    Estado:d.estado||'',
+    Outcome:outcomeLabel(d.outcome)||'',
+    Notas:d.notas||'',
+    Creada:(d.created_at||'').split('T')[0]
+  }));
+  // Sheet 2: resumen por SDR
+  const resumen=allSdrs.map(s=>{
+    const st=sdrStats(s.id);
+    return{SDR:s.nombre,'Demos Out':st.demosOut,'Demos In':st.demosIn,'Total demos':st.totalDemos,'CWD Out':st.cwdOut,'CWD In':st.cwdIn,'CLD':st.cld,Canceladas:st.canceladas,'Llamadas':st.hechas,'Conectadas':st.conectadas,'% Conexión':st.ratioConexion.toFixed(1)+'%','% Cierre':st.demoToCwd.toFixed(1)+'%'};
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(demoRows),'Demos');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(resumen),'Resumen por SDR');
+  XLSX.writeFile(wb,`SDR_Hub_${mgrMonthLabel().replace(' ','_')}.xlsx`);
+  showToast('✓ Excel descargado');
+}
+
 
 // ── DATA LOADERS ──
 async function loadComerciales(){comerciales=await sb('comerciales?activo=eq.true&select=*&order=nombre.asc')||[];}
 async function loadCiudades(){ciudades=await sb('ciudades?activa=eq.true&select=*&order=nombre.asc')||[];}
 async function loadMessage(){
   const today=todayStr();
-  const msgs=await sb(`mensaje_dia?fecha=eq.${today}&select=*`);
+  const msgs=await sb(`mensaje_dia?fecha=eq.${today}&sdr_id=eq.${currentUser.id}&select=*`);
   document.getElementById('message-text').textContent=(msgs&&msgs.length)?msgs[0].mensaje:'Cada llamada es una oportunidad. Hoy puede ser el día de tu mejor demo. 💪';
+}
+async function loadNoticias(){
+  noticias=await sb('noticias?activa=eq.true&select=*&order=created_at.desc')||[];
+  const banner=document.getElementById('news-banner');
+  if(noticias.length){
+    document.getElementById('news-items').innerHTML=noticias.map(n=>`<div class="news-item">• ${n.mensaje}</div>`).join('');
+    banner.classList.add('show');
+  }else{banner.classList.remove('show');}
 }
 async function loadDemos(){
   demos=await sb(`demos?sdr_id=eq.${currentUser.id}&select=*&order=fecha.asc`)||[];
@@ -750,6 +1326,8 @@ function getFilteredDemos(){
     case'manana':result=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada');break;
     case'semana':result=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada');break;
     case'todas':result=demos.filter(d=>d.estado!=='cancelada');break;
+    case'ganadas':result=demos.filter(d=>d.outcome==='cerrado_ganado');break;
+    case'perdidas':result=demos.filter(d=>d.outcome==='cerrado_perdido');break;
     case'reagendar':result=demos.filter(d=>d.estado==='cancelada');break;
     case'viejas':{
       const cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-1);
@@ -804,10 +1382,14 @@ function renderObjetivos(){
   });
   const objOut=mObj?(mObj.demos_objetivo_outbound||0):0;
   const objIn=mObj?(mObj.demos_objetivo_inbound||0):0;
+  const objCwdOut=mObj?(mObj.cwd_objetivo_outbound||0):0;
+  const objCwdIn=mObj?(mObj.cwd_objetivo_inbound||0):0;
 
   const created=demosCreatedThisMonth();
   const actualOut=created.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
   const actualIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
+  const actualCwdOut=created.filter(d=>d.canal==='outbound'&&d.outcome==='cerrado_ganado').length;
+  const actualCwdIn=created.filter(d=>d.canal==='inbound'&&d.outcome==='cerrado_ganado').length;
 
   // Restore panel structure if it was replaced (e.g. coming back from future month)
   if(!document.getElementById('out-fill')){restoreObjPanel();}
@@ -815,6 +1397,8 @@ function renderObjetivos(){
 
   renderBar('out',actualOut,objOut);
   renderBar('in',actualIn,objIn);
+  renderBar('cwdout',actualCwdOut,objCwdOut);
+  renderBar('cwdin',actualCwdIn,objCwdIn);
   renderProyeccion(actualOut,objOut,actualIn,objIn);
 }
 
@@ -826,6 +1410,7 @@ function demosWithDateInMonth(){
 function restoreObjPanel(){
   document.getElementById('objetivos-panel').innerHTML=`
     <div class="obj-head"><div class="obj-title">🎯 Progreso del mes</div><div class="obj-month-label" id="obj-month-label">${monthLabel()}</div></div>
+    <div class="obj-group-label">📅 Demos agendadas</div>
     <div class="obj-bars">
       <div class="obj-bar-block">
         <div class="obj-bar-top"><div class="obj-bar-label">🎯 Outbound</div><div class="obj-bar-nums"><b id="out-actual">0</b> / <span id="out-obj">0</span></div></div>
@@ -834,6 +1419,17 @@ function restoreObjPanel(){
       <div class="obj-bar-block">
         <div class="obj-bar-top"><div class="obj-bar-label">📥 Inbound</div><div class="obj-bar-nums"><b id="in-actual">0</b> / <span id="in-obj">0</span></div></div>
         <div class="battery"><div class="obj-target-line" id="in-target-line" style="left:0%"></div><div class="battery-fill rojo" id="in-fill" style="width:0%"><span class="battery-pct" id="in-pct"></span></div></div>
+      </div>
+    </div>
+    <div class="obj-group-label">💰 Ventas cerradas (CWD)</div>
+    <div class="obj-bars">
+      <div class="obj-bar-block">
+        <div class="obj-bar-top"><div class="obj-bar-label">🎯 Outbound</div><div class="obj-bar-nums"><b id="cwdout-actual">0</b> / <span id="cwdout-obj">0</span></div></div>
+        <div class="battery"><div class="obj-target-line" id="cwdout-target-line" style="left:0%"></div><div class="battery-fill rojo" id="cwdout-fill" style="width:0%"><span class="battery-pct" id="cwdout-pct"></span></div></div>
+      </div>
+      <div class="obj-bar-block">
+        <div class="obj-bar-top"><div class="obj-bar-label">📥 Inbound</div><div class="obj-bar-nums"><b id="cwdin-actual">0</b> / <span id="cwdin-obj">0</span></div></div>
+        <div class="battery"><div class="obj-target-line" id="cwdin-target-line" style="left:0%"></div><div class="battery-fill rojo" id="cwdin-fill" style="width:0%"><span class="battery-pct" id="cwdin-pct"></span></div></div>
       </div>
     </div>
     <div class="proyeccion-box"><div class="proy-icon" id="proy-icon">📊</div><div class="proy-content"><div class="proy-title" id="proy-title">Proyección a fin de mes</div><div class="proy-text" id="proy-text">—</div><div class="proy-aviso" id="proy-aviso" style="display:none;"></div></div></div>`;
@@ -986,12 +1582,13 @@ function renderStats(){
   const sem=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   const monthByDate=demos.filter(d=>d.fecha>=start&&d.fecha<=end);
   const ejec=monthByDate.filter(d=>d.estado==='ejecutada').length;
+  const ganadas=monthByDate.filter(d=>d.outcome==='cerrado_ganado').length;
   const canc=monthByDate.filter(d=>d.estado==='cancelada').length;
   const totalAgendadas=monthByDate.filter(d=>d.estado!=='reagendada').length;
   const ratio=totalAgendadas>0?Math.round(canc/totalAgendadas*100)+'%':'—';
   document.getElementById('stat-hoy').textContent=hoy;
   document.getElementById('stat-semana').textContent=sem;
-  document.getElementById('stat-ejecutadas').textContent=ejec;
+  document.getElementById('stat-ganadas').textContent=ganadas;
   document.getElementById('stat-canceladas').textContent=canc;
   document.getElementById('stat-ratio').textContent=ratio;
 }
@@ -1002,6 +1599,8 @@ function renderCounts(){
   document.getElementById('c-manana').textContent=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada').length;
   document.getElementById('c-semana').textContent=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
+  document.getElementById('c-ganadas').textContent=demos.filter(d=>d.outcome==='cerrado_ganado').length;
+  document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido').length;
   document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada').length;
   const cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-1);const cutStr=cutoff.toISOString().split('T')[0];
   document.getElementById('c-viejas').textContent=demos.filter(d=>d.fecha<cutStr&&['agendada','reagendada'].includes(d.estado)&&['interesado','necesita_seguimiento'].includes(d.outcome)).length;
@@ -1020,6 +1619,8 @@ function renderList(){
       manana:['⏭️','Nada para mañana todavía','Las demos de mañana se mostrarán aquí.'],
       semana:['🗓️','Semana despejada','No hay demos agendadas esta semana.'],
       todas:['📋','Aún no hay demos','Pulsa "Nueva demo" para registrar la primera.'],
+      ganadas:['💰','Aún no hay ventas cerradas','Cuando marques una demo como "Cerrado ganado", aparecerá aquí.'],
+      perdidas:['❌','Sin demos perdidas','Las demos marcadas como "Cerrado perdido" se mostrarán aquí.'],
       reagendar:['🎉','Nada pendiente de reagendar','Las demos canceladas aparecerán aquí para que las recuperes.'],
       viejas:['✓','Todo al día','No hay demos antiguas con interés pendientes de seguimiento.']
     };
