@@ -841,19 +841,26 @@ async function sb(path,opts={}){
 }
 
 // ── DATES ──
-function todayStr(){return new Date().toISOString().split('T')[0];}
+// Returns YYYY-MM-DD in LOCAL time (not UTC) — critical for Madrid timezone
+function localDateStr(d=new Date()){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return`${y}-${m}-${day}`;
+}
+function todayStr(){return localDateStr();}
 // Use fecha_agendamiento if set, otherwise fall back to created_at date
-function demoAgendadoDate(d){return d.fecha_agendamiento||(d.created_at||'').split('T')[0]||todayStr();}
-function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
+function demoAgendadoDate(d){return d.fecha_agendamiento||(d.created_at?localDateStr(new Date(d.created_at)):'')||todayStr();}
+function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return localDateStr(d);}
 function weekDates(){
   const d=new Date();const day=d.getDay();const diff=day===0?-6:1-day;
   const monday=new Date(d);monday.setDate(d.getDate()+diff);
-  const dates=[];for(let i=0;i<7;i++){const x=new Date(monday);x.setDate(monday.getDate()+i);dates.push(x.toISOString().split('T')[0]);}
+  const dates=[];for(let i=0;i<7;i++){const x=new Date(monday);x.setDate(monday.getDate()+i);dates.push(localDateStr(x));}
   return dates;
 }
 function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-');const months=['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return`${parseInt(d)} ${months[parseInt(m)]}`;}
 function fmtDateLong(s){const d=new Date();const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]}`;}
-function monthStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];}
+function monthStart(){const d=new Date();return localDateStr(new Date(d.getFullYear(),d.getMonth(),1));}
 
 // ── MONTH NAVIGATION ──
 function getTargetMonth(){
@@ -864,7 +871,7 @@ function monthRange(){
   const m=getTargetMonth();
   const start=new Date(m.getFullYear(),m.getMonth(),1);
   const end=new Date(m.getFullYear(),m.getMonth()+1,0);
-  return{start:start.toISOString().split('T')[0],end:end.toISOString().split('T')[0]};
+  return{start:localDateStr(start),end:localDateStr(end)};
 }
 function monthLabel(){
   const m=getTargetMonth();
@@ -874,7 +881,7 @@ function monthLabel(){
 function isWorkday(date){
   const day=date.getDay();
   if(day===0||day===6)return false;
-  const s=date.toISOString().split('T')[0];
+  const s=localDateStr(date);
   return!FESTIVOS_2026.includes(s);
 }
 function workdaysInMonth(){
@@ -1008,7 +1015,7 @@ function showLoadingMgr(s){document.getElementById('loading').style.display=s?'f
 
 // Use mgr month offset for manager views
 function mgrTargetMonth(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+mgrMonthOffset,1);}
-function mgrMonthRange(){const m=mgrTargetMonth();return{start:new Date(m.getFullYear(),m.getMonth(),1).toISOString().split('T')[0],end:new Date(m.getFullYear(),m.getMonth()+1,0).toISOString().split('T')[0]};}
+function mgrMonthRange(){const m=mgrTargetMonth();return{start:localDateStr(new Date(m.getFullYear(),m.getMonth(),1)),end:localDateStr(new Date(m.getFullYear(),m.getMonth()+1,0))};}
 function mgrMonthLabel(){const m=mgrTargetMonth();const mo=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${mo[m.getMonth()]} ${m.getFullYear()}`;}
 
 function setMgrPeriod(period,btn){
@@ -1023,13 +1030,13 @@ function setMgrPeriod(period,btn){
 
 function mgrPeriodDates(){
   const now=new Date();
-  const today=now.toISOString().split('T')[0];
+  const today=localDateStr(now);
   if(mgrPeriod==='hoy') return{start:today,end:today};
   if(mgrPeriod==='semana'){
     const day=now.getDay();
     const mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));
     const sun=new Date(mon);sun.setDate(mon.getDate()+6);
-    return{start:mon.toISOString().split('T')[0],end:sun.toISOString().split('T')[0]};
+    return{start:localDateStr(mon),end:localDateStr(sun)};
   }
   return mgrMonthRange(); // mes (default)
 }
@@ -1796,7 +1803,7 @@ function getFilteredDemos(){
     case'viejas':{
       // Follow up: executed demos with pending outcome, 7+ days after the demo date
       const cutoff=new Date();cutoff.setDate(cutoff.getDate()-7);
-      const cutStr=cutoff.toISOString().split('T')[0];
+      const cutStr=localDateStr(cutoff);
       result=demos.filter(d=>
         d.estado==='ejecutada'&&
         ['interesado','necesita_seguimiento'].includes(d.outcome)&&
@@ -1843,7 +1850,7 @@ function renderXMonthPanel(){
   const {start}=monthRange();
   // Demos from BEFORE this month that are still unresolved
   const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);
-  const cutStr7=cutoff7.toISOString().split('T')[0];
+  const cutStr7=localDateStr(cutoff7);
 
   const pendingFollow=demos.filter(d=>{
     const agendado=demoAgendadoDate(d);
@@ -2229,7 +2236,7 @@ function renderCounts(){
   document.getElementById('c-ganadas').textContent=demos.filter(d=>d.outcome==='cerrado_ganado').length;
   document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido').length;
   document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada').length;
-  const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);const cutStr7=cutoff7.toISOString().split('T')[0];
+  const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);const cutStr7=localDateStr(cutoff7);
   document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.fecha||'')<=cutStr7).length;
 }
 
