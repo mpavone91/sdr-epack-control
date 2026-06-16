@@ -1255,7 +1255,13 @@ async function loadCiudades(){ciudades=await sb('ciudades?activa=eq.true&select=
 async function loadMessage(){
   const today=todayStr();
   const msgs=await sb(`mensaje_dia?fecha=eq.${today}&sdr_id=eq.${currentUser.id}&select=*`);
-  document.getElementById('message-text').textContent=(msgs&&msgs.length)?msgs[0].mensaje:'Cada llamada es una oportunidad. Hoy puede ser el día de tu mejor demo. 💪';
+  const banner=document.querySelector('.message-banner');
+  if(msgs&&msgs.length){
+    document.getElementById('message-text').textContent=msgs[0].mensaje;
+    banner.style.display='flex';
+  }else{
+    banner.style.display='none';
+  }
 }
 async function loadNoticias(){
   noticias=await sb('noticias?activa=eq.true&select=*&order=created_at.desc')||[];
