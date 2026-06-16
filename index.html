@@ -602,10 +602,25 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <input class="form-input" type="date" id="f-fecha"/>
         </div>
         <div class="form-group">
+          <label class="form-label">Hora</label>
+          <input class="form-input" type="time" id="f-hora"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
           <label class="form-label">Modalidad</label>
-          <select class="form-select" id="f-tipo">
+          <select class="form-select" id="f-tipo" onchange="togglePlataforma()">
             <option value="presencial">Presencial</option>
             <option value="online">Online</option>
+          </select>
+        </div>
+        <div class="form-group" id="plataforma-group" style="display:none;">
+          <label class="form-label">Plataforma online</label>
+          <select class="form-select" id="f-plataforma">
+            <option value="teams">Microsoft Teams</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="meet">Google Meet</option>
+            <option value="zoom">Zoom</option>
           </select>
         </div>
       </div>
@@ -1238,7 +1253,10 @@ function openDemoModal(demo=null){
     document.getElementById('f-comercial').value=demo.comercial_id||'';
     document.getElementById('f-ciudad').value=demo.ciudad_id||'';
     document.getElementById('f-fecha').value=demo.fecha||'';
+    document.getElementById('f-hora').value=demo.hora||'';
     document.getElementById('f-tipo').value=demo.tipo||'presencial';
+    document.getElementById('f-plataforma').value=demo.plataforma||'teams';
+    togglePlataforma();
     document.getElementById('f-estado').value=demo.estado||'agendada';
     document.getElementById('f-outcome').value=demo.outcome||'';
     document.getElementById('f-notas').value=demo.notas||'';
@@ -1250,7 +1268,10 @@ function openDemoModal(demo=null){
     document.getElementById('f-sf-url').value='';
     document.getElementById('f-sf-nombre').value='';
     document.getElementById('f-fecha').value=todayStr();
+    document.getElementById('f-hora').value='';
     document.getElementById('f-tipo').value='presencial';
+    document.getElementById('f-plataforma').value='teams';
+    togglePlataforma();
     document.getElementById('f-estado').value='agendada';
     document.getElementById('f-outcome').value='';
     document.getElementById('f-notas').value='';
@@ -1260,6 +1281,10 @@ function openDemoModal(demo=null){
   modal.classList.add('active');
 }
 function closeDemoModal(){document.getElementById('demo-modal').classList.remove('active');}
+function togglePlataforma(){
+  const tipo=document.getElementById('f-tipo').value;
+  document.getElementById('plataforma-group').style.display=tipo==='online'?'block':'none';
+}
 function setCanal(canal){
   selectedCanal=canal;
   document.getElementById('f-canal').value=canal;
@@ -1277,26 +1302,39 @@ async function saveDemo(){
   const id=document.getElementById('edit-demo-id').value;
   const rawUrl=document.getElementById('f-sf-url').value.trim();
   const sfName=document.getElementById('f-sf-nombre').value.trim()||parseSfName(rawUrl)||'Sin nombre';
+  const comercialVal=document.getElementById('f-comercial').value;
+  const ciudadVal=document.getElementById('f-ciudad').value;
+  const tipo=document.getElementById('f-tipo').value;
   const payload={
     sdr_id:currentUser.id,
-    sf_url:extractCleanUrl(rawUrl),
+    sf_url:extractCleanUrl(rawUrl)||null,
     sf_nombre:sfName,
-    comercial_id:document.getElementById('f-comercial').value||null,
-    ciudad_id:document.getElementById('f-ciudad').value||null,
+    comercial_id:comercialVal?parseInt(comercialVal):null,
+    ciudad_id:ciudadVal?parseInt(ciudadVal):null,
     fecha:document.getElementById('f-fecha').value||null,
-    tipo:document.getElementById('f-tipo').value,
-    canal:document.getElementById('f-canal').value,
-    estado:document.getElementById('f-estado').value,
+    hora:document.getElementById('f-hora').value||null,
+    tipo:tipo,
+    plataforma:tipo==='online'?(document.getElementById('f-plataforma').value||null):null,
+    canal:document.getElementById('f-canal').value||'outbound',
+    estado:document.getElementById('f-estado').value||'agendada',
     outcome:document.getElementById('f-outcome').value||null,
     notas:document.getElementById('f-notas').value||null
   };
   if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
   try{
-    if(id){await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(payload)});showToast('✓ Demo actualizada');}
-    else{await sb('demos',{method:'POST',body:JSON.stringify(payload)});showToast('✓ Demo creada');}
+    if(id){
+      await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      showToast('✓ Demo actualizada');
+    }else{
+      await sb('demos',{method:'POST',body:JSON.stringify(payload)});
+      showToast('✓ Demo creada');
+    }
     closeDemoModal();
     await loadDemos();
-  }catch(e){showToast('❌ Error al guardar');console.error(e);}
+  }catch(e){
+    showToast('❌ Error al guardar');
+    console.error('saveDemo error:',e);
+  }
 }
 
 // ── ESTADO CHANGE (inline) ──
@@ -1378,21 +1416,41 @@ function demosCreatedThisMonth(){
 
 function renderObjetivos(){
   const panel=document.getElementById('objetivos-panel');
-  document.getElementById('obj-month-label').textContent=monthLabel();
+  const futureMsg=document.getElementById('obj-future-msg');
 
-  // Future month: show only preview of agendadas
   if(isFutureMonth()){
-    panel.innerHTML=`
-      <div class="obj-head"><div class="obj-title">🔮 Adelanto del mes</div><div class="obj-month-label">${monthLabel()}</div></div>
-      <div class="proyeccion-box">
-        <div class="proy-icon">📅</div>
-        <div class="proy-content">
-          <div class="proy-title" style="color:var(--teal)">Demos ya agendadas para ${monthLabel()}</div>
-          <div class="proy-text">Tienes <b>${demosWithDateInMonth().length} demos</b> agendadas con fecha en este mes. El objetivo y el progreso empezarán de cero cuando llegue el mes — lo que cuenta son las demos que crees durante ${monthLabel()}.</div>
-        </div>
+    // Show future message, hide bars
+    if(!futureMsg){
+      const div=document.createElement('div');
+      div.id='obj-future-msg';
+      div.className='proyeccion-box';
+      div.style.marginBottom='0';
+      panel.appendChild(div);
+    }
+    document.getElementById('obj-future-msg').innerHTML=`
+      <div class="proy-icon">📅</div>
+      <div class="proy-content">
+        <div class="proy-title" style="color:var(--teal)">Demos ya agendadas para ${monthLabel()}</div>
+        <div class="proy-text">Tienes <b>${demosWithDateInMonth().length} demos</b> agendadas con fecha en este mes. El objetivo y el progreso empezarán de cero cuando llegue el mes — lo que cuenta son las demos que crees durante ${monthLabel()}.</div>
       </div>`;
+    document.getElementById('obj-future-msg').style.display='flex';
+    // Hide the bars and proyeccion
+    const barsEl=panel.querySelector('.obj-group-label');
+    panel.querySelectorAll('.obj-group-label,.obj-bars,.proyeccion-box:not(#obj-future-msg)').forEach(el=>el.style.display='none');
+    document.getElementById('obj-month-label').textContent=monthLabel();
+    const titleEl=panel.querySelector('.obj-title');
+    if(titleEl)titleEl.textContent='🔮 Adelanto del mes';
     return;
   }
+
+  // Show everything, hide future msg
+  if(futureMsg)futureMsg.style.display='none';
+  panel.querySelectorAll('.obj-group-label,.obj-bars').forEach(el=>el.style.display='');
+  const proyBox=panel.querySelector('.proyeccion-box:not(#obj-future-msg)');
+  if(proyBox)proyBox.style.display='';
+  const titleEl=panel.querySelector('.obj-title');
+  if(titleEl)titleEl.textContent='🎯 Progreso del mes';
+  document.getElementById('obj-month-label').textContent=monthLabel();
 
   const mObj=objetivos.find(o=>{
     const m=getTargetMonth();
@@ -1408,10 +1466,6 @@ function renderObjetivos(){
   const actualIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
   const actualCwdOut=created.filter(d=>d.canal==='outbound'&&d.outcome==='cerrado_ganado').length;
   const actualCwdIn=created.filter(d=>d.canal==='inbound'&&d.outcome==='cerrado_ganado').length;
-
-  // Restore panel structure if it was replaced (e.g. coming back from future month)
-  if(!document.getElementById('out-fill')){restoreObjPanel();}
-  else{document.getElementById('obj-month-label').textContent=monthLabel();}
 
   renderBar('out',actualOut,objOut);
   renderBar('in',actualIn,objIn);
@@ -1663,9 +1717,10 @@ function renderList(){
           ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
         </div>
         <div class="demo-meta">
-          <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}</span>
+          <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
           <span class="demo-meta-item">👤 ${comercialName(d.comercial_id)}</span>
           <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
+          ${d.tipo==='online'&&d.plataforma?`<span class="demo-meta-item">${{teams:'💻 Teams',whatsapp:'💬 WhatsApp',meet:'🎥 Meet',zoom:'📹 Zoom'}[d.plataforma]||d.plataforma}</span>`:''}
           ${d.notas?`<span class="demo-meta-item">📝 ${d.notas.length>40?d.notas.slice(0,40)+'…':d.notas}</span>`:''}
         </div>
       </div>
