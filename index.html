@@ -242,8 +242,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="login-logo-text">SDR Hub</div>
     </div>
     <p class="login-sub">Tu centro de control de demos · ePackPro</p>
-    <label class="login-label">Email</label>
-    <input class="login-input" type="email" id="login-email" placeholder="tu.nombre@epackpro.com" autocomplete="username"/>
+    <label class="login-label">¿Quién eres?</label>
+    <select class="login-input" id="login-name">
+      <option value="">Selecciona tu nombre...</option>
+    </select>
     <label class="login-label">PIN de acceso</label>
     <div class="pin-inputs">
       <input class="pin-box" type="password" inputmode="numeric" maxlength="1" id="pin1"/>
@@ -536,18 +538,27 @@ function setupPinInputs(){
     el.addEventListener('input',()=>{if(el.value&&i<3)document.getElementById(pins[i+1]).focus();});
     el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(pins[i-1]).focus();if(e.key==='Enter')doLogin();});
   });
-  document.getElementById('login-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pin1').focus();});
+  document.getElementById('login-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pin1').focus();});
+}
+
+async function loadLoginNames(){
+  try{
+    const users=await sb('sdr_users?activo=eq.true&select=id,nombre,rol&order=nombre.asc');
+    const sel=document.getElementById('login-name');
+    sel.innerHTML='<option value="">Selecciona tu nombre...</option>'+
+      (users||[]).map(u=>`<option value="${u.id}">${u.nombre}${u.rol==='manager'?' (Manager)':''}</option>`).join('');
+  }catch(e){console.error(e);}
 }
 
 async function doLogin(){
-  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const userId=document.getElementById('login-name').value;
   const pin=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');
   const errEl=document.getElementById('login-error');
-  if(!email||pin.length!==4){errEl.textContent='Introduce tu email y los 4 dígitos del PIN.';return;}
+  if(!userId||pin.length!==4){errEl.textContent='Selecciona tu nombre e introduce los 4 dígitos del PIN.';return;}
   errEl.textContent='';
   try{
-    const users=await sb(`sdr_users?email=eq.${encodeURIComponent(email)}&select=*`);
-    if(!users||!users.length){errEl.textContent='No encontramos ese email.';return;}
+    const users=await sb(`sdr_users?id=eq.${userId}&select=*`);
+    if(!users||!users.length){errEl.textContent='Usuario no encontrado.';return;}
     const user=users[0];
     if(user.pin!==pin){errEl.textContent='PIN incorrecto. Inténtalo de nuevo.';clearPins();return;}
     if(!user.activo){errEl.textContent='Tu cuenta está desactivada. Habla con tu manager.';return;}
@@ -563,7 +574,7 @@ function logout(){
   currentUser=null;
   document.getElementById('app').classList.remove('active');
   document.getElementById('login-screen').style.display='flex';
-  clearPins();document.getElementById('login-email').value='';
+  clearPins();document.getElementById('login-name').value='';
 }
 
 async function enterApp(){
@@ -673,30 +684,62 @@ async function saveDemo(){
   const rawUrl=document.getElementById('f-sf-url').value.trim();
   const sfName=document.getElementById('sf-preview').dataset.name||parseSfName(rawUrl)||'Sin nombre';
   const payload={
-    sdr_id:currentUser.id,sf_url:extractCleanUrl(rawUrl),sf_nombre:sfName,
-    comercial_id:document.getElementById('f-comercial').value?parseInt(document.getElementById('f-comercial').value):null,
-    ciudad_id:document.getElementById('f-ciudad').value?parseInt(document.getElementById('f-ciudad').value):null,
+    sdr_id:currentUser.id,
+    sf_url:extractCleanUrl(rawUrl),
+    sf_nombre:sfName,
+    comercial_id:document.getElementById('f-comercial').value||null,
+    ciudad_id:document.getElementById('f-ciudad').value||null,
     fecha:document.getElementById('f-fecha').value||null,
-    tipo:document.getElementById('f-tipo').value,canal:document.getElementById('f-canal').value,
+    tipo:document.getElementById('f-tipo').value,
+    canal:document.getElementById('f-canal').value,
     estado:document.getElementById('f-estado').value,
     outcome:document.getElementById('f-outcome').value||null,
     notas:document.getElementById('f-notas').value||null
   };
   if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
-  if(id){const i=demos.findIndex(d=>d.id==id);if(i>=0)demos[i]={...demos[i],...payload};showToast('✓ Demo actualizada (preview)');}
-  else{payload.id=Math.max(0,...demos.map(d=>d.id))+1;payload.created_at=new Date().toISOString();demos.push(payload);showToast('✓ Demo creada (preview)');}
-  closeDemoModal();render();
+  try{
+    if(id){await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(payload)});showToast('✓ Demo actualizada');}
+    else{await sb('demos',{method:'POST',body:JSON.stringify(payload)});showToast('✓ Demo creada');}
+    closeDemoModal();
+    await loadDemos();
+  }catch(e){showToast('❌ Error al guardar');console.error(e);}
 }
-async function changeEstado(id,estado){const i=demos.findIndex(d=>d.id===id);if(i>=0)demos[i].estado=estado;showToast('✓ Estado actualizado (preview)');render();}
+
+// ── ESTADO CHANGE (inline) ──
+async function changeEstado(id,estado){
+  try{
+    const patch={estado};
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast('✓ Estado actualizado');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── REAGENDAR ──
 async function reagendar(id){
-  const demo=demos.find(d=>d.id===id);if(!demo)return;
+  const demo=demos.find(d=>d.id===id);
+  if(!demo)return;
   const nuevaFecha=prompt('Nueva fecha para la demo reagendada (YYYY-MM-DD):',todayStr());
   if(!nuevaFecha||!/^\d{4}-\d{2}-\d{2}$/.test(nuevaFecha))return;
-  demo.estado='reagendada';
-  demos.push({id:Math.max(0,...demos.map(d=>d.id))+1,sdr_id:currentUser.id,sf_url:demo.sf_url,sf_nombre:demo.sf_nombre,comercial_id:demo.comercial_id,ciudad_id:demo.ciudad_id,fecha:nuevaFecha,tipo:demo.tipo,canal:demo.canal,estado:'agendada',demo_padre_id:demo.id,outcome:null,notas:null,created_at:new Date().toISOString()});
-  showToast('✓ Demo reagendada para '+fmtDate(nuevaFecha));render();
+  try{
+    // Mark original as reagendada
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'reagendada'})});
+    // Create new demo with same comercial/ciudad, new date
+    await sb('demos',{method:'POST',body:JSON.stringify({
+      sdr_id:currentUser.id,sf_url:demo.sf_url,sf_nombre:demo.sf_nombre,
+      comercial_id:demo.comercial_id,ciudad_id:demo.ciudad_id,
+      fecha:nuevaFecha,tipo:demo.tipo,estado:'agendada',demo_padre_id:demo.id
+    })});
+    showToast('✓ Demo reagendada para '+fmtDate(nuevaFecha));
+    await loadDemos();
+  }catch(e){showToast('❌ Error al reagendar');console.error(e);}
 }
-async function deleteDemo(id){if(!confirm('¿Eliminar esta demo? No se puede deshacer.'))return;demos=demos.filter(d=>d.id!==id);showToast('✓ Demo eliminada (preview)');render();}
+
+async function deleteDemo(id){
+  if(!confirm('¿Eliminar esta demo? No se puede deshacer.'))return;
+  try{await sb(`demos?id=eq.${id}`,{method:'DELETE'});showToast('✓ Demo eliminada');await loadDemos();}
+  catch(e){showToast('❌ Error');console.error(e);}
+}
 
 // ── FILTERING ──
 function getFilteredDemos(){
@@ -1034,63 +1077,17 @@ function setView(view,btn){
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2800);}
 
-// ── INIT (PREVIEW MODE — MOCK DATA) ──
-function init(){
+// ── INIT ──
+async function init(){
   setupPinInputs();
+  const saved=sessionStorage.getItem('sdr_user');
   document.getElementById('loading').style.display='none';
-  currentUser={id:2,nombre:'Roberto',email:'roberto@epackpro.com',rol:'sdr'};
-  comerciales=[
-    {id:1,nombre:'Alfredo'},{id:2,nombre:'Iván'},{id:3,nombre:'Pastor'},
-    {id:4,nombre:'David'},{id:5,nombre:'Guillermo'},{id:6,nombre:'Benjamín'},
-    {id:7,nombre:'Daniel'},{id:8,nombre:'Curro'},{id:9,nombre:'Belén'},
-    {id:10,nombre:'Elena'},{id:11,nombre:'Carlos Polastri'},{id:12,nombre:'Carlos Pariente'}
-  ];
-  ciudades=[
-    {id:1,nombre:'Madrid'},{id:2,nombre:'Barcelona'},{id:3,nombre:'Sevilla'},
-    {id:4,nombre:'Málaga'},{id:5,nombre:'Alicante'}
-  ];
-
-  // Objetivos: junio 2026 → outbound 20, inbound 10
-  objetivos=[
-    {sdr_id:2,mes:6,anio:2026,demos_objetivo_outbound:20,demos_objetivo_inbound:10},
-    {sdr_id:2,mes:5,anio:2026,demos_objetivo_outbound:20,demos_objetivo_inbound:10}
-  ];
-
-  const d=new Date();
-  const iso=(off)=>{const x=new Date(d);x.setDate(d.getDate()+off);return x.toISOString().split('T')[0];};
-  const isoCreated=(off)=>{const x=new Date(d);x.setDate(d.getDate()+off);return x.toISOString();};
-  const monthsAgo=(m)=>{const x=new Date(d);x.setMonth(d.getMonth()-m);x.setDate(5);return x.toISOString().split('T')[0];};
-
-  // Mock demos — created this month (junio), with canal
-  demos=[
-    {id:1,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1k4zAAA/view',sf_nombre:'O00113990 - GASTROBAR A FER LA MA',comercial_id:2,ciudad_id:1,fecha:iso(0),tipo:'presencial',canal:'outbound',estado:'agendada',outcome:null,notas:'Cliente muy interesado',created_at:isoCreated(-1)},
-    {id:2,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1k5zAAA/view',sf_nombre:'O00114220 - RESTAURANTE EL OLIVO',comercial_id:4,ciudad_id:1,fecha:iso(0),tipo:'online',canal:'inbound',estado:'agendada',outcome:null,notas:null,created_at:isoCreated(-1)},
-    {id:3,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1k6zAAA/view',sf_nombre:'O00114301 - TABERNA LA PLAZA',comercial_id:3,ciudad_id:2,fecha:iso(1),tipo:'presencial',canal:'outbound',estado:'agendada',outcome:null,notas:null,created_at:isoCreated(-2)},
-    {id:4,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1k7zAAA/view',sf_nombre:'O00114455 - BAR CENTRAL',comercial_id:1,ciudad_id:1,fecha:iso(2),tipo:'online',canal:'outbound',estado:'agendada',outcome:null,notas:'Reagendar si no contesta',created_at:isoCreated(-2)},
-    {id:5,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1k8zAAA/view',sf_nombre:'O00113888 - MESÓN DON PEPE',comercial_id:1,ciudad_id:3,fecha:iso(-3),tipo:'presencial',canal:'outbound',estado:'ejecutada',outcome:'interesado',notas:'Pidió propuesta',created_at:isoCreated(-4)},
-    {id:6,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1k9zAAA/view',sf_nombre:'O00113777 - CERVECERÍA MODERNA',comercial_id:1,ciudad_id:1,fecha:iso(-5),tipo:'online',canal:'inbound',estado:'ejecutada',outcome:'cerrado_ganado',notas:'¡Firmado! 249€/año',created_at:isoCreated(-6)},
-    {id:7,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kAzAAA/view',sf_nombre:'O00113666 - PIZZERÍA NAPOLI',comercial_id:8,ciudad_id:4,fecha:iso(-2),tipo:'presencial',canal:'outbound',estado:'cancelada',outcome:null,notas:'No se presentó',created_at:isoCreated(-3)},
-    {id:8,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kBzAAA/view',sf_nombre:'O00113555 - ASADOR EL FUEGO',comercial_id:2,ciudad_id:2,fecha:iso(-4),tipo:'presencial',canal:'outbound',estado:'cancelada',outcome:null,notas:null,created_at:isoCreated(-5)},
-    {id:9,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kCzAAA/view',sf_nombre:'O00112990 - HOTEL MARINA',comercial_id:9,ciudad_id:5,fecha:monthsAgo(2),tipo:'presencial',canal:'outbound',estado:'agendada',outcome:'necesita_seguimiento',notas:'Seguir',created_at:monthsAgo(2)+'T10:00:00'},
-    {id:10,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kDzAAA/view',sf_nombre:'O00112880 - GASTRO MARKET',comercial_id:10,ciudad_id:1,fecha:monthsAgo(2),tipo:'online',canal:'inbound',estado:'agendada',outcome:'interesado',notas:'Interesados en costes',created_at:monthsAgo(2)+'T10:00:00'},
-    {id:11,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kEzAAA/view',sf_nombre:'O00114600 - CAFÉ DEL ARTE',comercial_id:2,ciudad_id:1,fecha:iso(3),tipo:'online',canal:'inbound',estado:'agendada',outcome:null,notas:null,created_at:isoCreated(0)},
-    {id:12,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kFzAAA/view',sf_nombre:'O00114700 - BRASERÍA LA BRASA',comercial_id:2,ciudad_id:1,fecha:iso(4),tipo:'presencial',canal:'outbound',estado:'agendada',outcome:null,notas:null,created_at:isoCreated(0)},
-    {id:13,sdr_id:2,sf_url:'https://chr-numerique.lightning.force.com/lightning/r/Opportunity/006cy00000e1kGzAAA/view',sf_nombre:'O00114800 - TAPAS Y VINOS',comercial_id:1,ciudad_id:1,fecha:iso(5),tipo:'online',canal:'outbound',estado:'agendada',outcome:null,notas:null,created_at:isoCreated(-1)}
-  ];
-
-  enterAppPreview();
+  if(saved){
+    try{currentUser=JSON.parse(saved);await enterApp();return;}catch(e){}
+  }
+  await loadLoginNames();
+  document.getElementById('login-screen').style.display='flex';
 }
-
-async function enterAppPreview(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').classList.add('active');
-  document.getElementById('user-name').textContent=currentUser.nombre;
-  document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
-  document.getElementById('today-date').textContent=fmtDateLong();
-  document.getElementById('message-text').textContent='El que persigue dos liebres no atrapa ninguna. Enfócate en la demo que tienes hoy. 🎯';
-  render();
-}
-
 init();
 </script>
 </body>
