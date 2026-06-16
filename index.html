@@ -1018,24 +1018,24 @@ function renderObjetivosForm(){
 
 async function saveObjetivosGlobal(){
   const m=mgrTargetMonth();
-  const payload={
+  const payload=allSdrs.map(s=>({
+    sdr_id:s.id,
+    mes:m.getMonth()+1,
+    anio:m.getFullYear(),
     demos_objetivo_outbound:parseInt(document.getElementById('obj-in-demos-out').value)||0,
     demos_objetivo_inbound:parseInt(document.getElementById('obj-in-demos-in').value)||0,
     cwd_objetivo_outbound:parseInt(document.getElementById('obj-in-cwd-out').value)||0,
     cwd_objetivo_inbound:parseInt(document.getElementById('obj-in-cwd-in').value)||0
-  };
+  }));
   try{
-    for(const s of allSdrs){
-      const existing=objetivos.find(o=>o.sdr_id===s.id&&o.mes===m.getMonth()+1&&o.anio===m.getFullYear());
-      if(existing){
-        await sb(`objetivos?id=eq.${existing.id}`,{method:'PATCH',body:JSON.stringify(payload)});
-      }else{
-        await sb('objetivos',{method:'POST',body:JSON.stringify({sdr_id:s.id,mes:m.getMonth()+1,anio:m.getFullYear(),...payload})});
-      }
-    }
+    await sb('objetivos',{
+      method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(payload)
+    });
     showToast('✓ Objetivos aplicados a todo el equipo');
     await loadManagerData();renderManager();
-  }catch(e){showToast('❌ Error');console.error(e);}
+  }catch(e){showToast('❌ Error guardando objetivos');console.error(e);}
 }
 
 function renderMensajesList(){
