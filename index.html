@@ -156,6 +156,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 .toast{position:fixed;bottom:24px;right:24px;background:var(--teal-dark);color:white;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:500;z-index:200;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.2);border-left:3px solid var(--lime);}
 
+/* ── HORA DROPDOWN ── */
+.hora-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--lime);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:100;max-height:200px;overflow-y:auto;display:none;}
+.hora-dropdown.show{display:block;}
+.hora-option{padding:9px 14px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--text);}
+.hora-option:hover{background:var(--lime-soft);color:var(--teal-dark);}
+
 /* ── CANAL TOGGLE ── */
 .canal-toggle{display:flex;gap:8px;}
 .canal-btn{flex:1;padding:11px;border:1.5px solid var(--border);background:var(--surface);border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
@@ -698,9 +704,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label class="form-label">Hora de la demo</label>
-          <input class="form-input" type="text" id="f-hora" placeholder="Ej: 10:30" maxlength="5" pattern="[0-9]{2}:[0-9]{2}"/>
+          <input class="form-input" type="text" id="f-hora" placeholder="Ej: 10:00" maxlength="5" autocomplete="off"
+            oninput="filterHoraOptions(this.value)" onfocus="showHoraDropdown()" onblur="hideHoraDropdown()"/>
+          <div class="hora-dropdown" id="hora-dropdown"></div>
         </div>
       <div class="form-row">
         <div class="form-group">
@@ -996,11 +1004,14 @@ function sdrDemosCreatedInMonth(sdrId){
 }
 
 function sdrStats(sdrId){
+  const{start,end}=mgrPeriodDates();
   const created=sdrDemosCreatedInMonth(sdrId);
   const demosOut=created.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
   const demosIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
-  const cwdOut=created.filter(d=>d.canal==='outbound'&&d.outcome==='cerrado_ganado').length;
-  const cwdIn=created.filter(d=>d.canal==='inbound'&&d.outcome==='cerrado_ganado').length;
+  // CWD counts by DEMO DATE (fecha), not creation date — a sale in June counts for June
+  const cwdByDate=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const cwdOut=cwdByDate.filter(d=>d.canal==='outbound').length;
+  const cwdIn=cwdByDate.filter(d=>d.canal==='inbound').length;
   const cld=created.filter(d=>d.outcome==='cerrado_perdido').length;
   const canceladas=created.filter(d=>d.estado==='cancelada').length;
   const ejecutadas=created.filter(d=>d.estado==='ejecutada').length;
@@ -1426,6 +1437,36 @@ function openDemoModal(demo=null){
   modal.classList.add('active');
 }
 function closeDemoModal(){document.getElementById('demo-modal').classList.remove('active');}
+// ── HORA DROPDOWN ──
+const HORA_OPTIONS=(()=>{
+  const opts=[];
+  for(let h=9;h<=18;h++){
+    for(const m of[0,15,30,45]){
+      if(h===18&&m>0)break;
+      opts.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+    }
+  }
+  return opts;
+})();
+
+function showHoraDropdown(){
+  filterHoraOptions(document.getElementById('f-hora').value);
+  document.getElementById('hora-dropdown').classList.add('show');
+}
+function hideHoraDropdown(){
+  setTimeout(()=>document.getElementById('hora-dropdown')?.classList.remove('show'),150);
+}
+function filterHoraOptions(val){
+  const dd=document.getElementById('hora-dropdown');
+  if(!dd)return;
+  const q=(val||'').trim();
+  const filtered=q?HORA_OPTIONS.filter(o=>o.startsWith(q)):HORA_OPTIONS;
+  dd.innerHTML=filtered.map(o=>`<div class="hora-option" onmousedown="selectHora('${o}')">${o}</div>`).join('');
+}
+function selectHora(val){
+  document.getElementById('f-hora').value=val;
+  document.getElementById('hora-dropdown').classList.remove('show');
+}
 function togglePlataforma(){
   const tipo=document.getElementById('f-tipo').value;
   document.getElementById('plataforma-group').style.display=tipo==='online'?'block':'none';
@@ -1725,8 +1766,11 @@ function renderObjetivos(){
   const created=demosCreatedThisMonth();
   const actualOut=created.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
   const actualIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
-  const actualCwdOut=created.filter(d=>d.canal==='outbound'&&d.outcome==='cerrado_ganado').length;
-  const actualCwdIn=created.filter(d=>d.canal==='inbound'&&d.outcome==='cerrado_ganado').length;
+  // CWD: count by demo date (fecha), not creation date
+  const{start,end}=monthRange();
+  const cwdThisMonth=demos.filter(d=>d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const actualCwdOut=cwdThisMonth.filter(d=>d.canal==='outbound').length;
+  const actualCwdIn=cwdThisMonth.filter(d=>d.canal==='inbound').length;
 
   renderBar('out',actualOut,objOut);
   renderBar('in',actualIn,objIn);
