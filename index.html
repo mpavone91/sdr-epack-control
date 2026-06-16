@@ -490,7 +490,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
       <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
       <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
-      <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Seguimiento <span class="count" id="c-viejas">0</span></button>
+      <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Follow up <span class="count" id="c-viejas">0</span></button>
     </div>
 
     <div class="demo-view active" id="view-content">
@@ -656,14 +656,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Fecha de la demo</label>
-          <input class="form-input" type="date" id="f-fecha"/>
+          <label class="form-label">Fecha en que se creó <span style="font-weight:400;color:var(--muted);">(cuándo llamaste)</span></label>
+          <input class="form-input" type="date" id="f-fecha-agendamiento"/>
+          <div class="form-hint">¿Cuándo hiciste la llamada y agendaste esta demo? Esto cuenta para tu objetivo mensual.</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Hora</label>
-          <input class="form-input" type="time" id="f-hora"/>
+          <label class="form-label">Fecha de la demo <span style="font-weight:400;color:var(--muted);">(cuándo es la visita)</span></label>
+          <input class="form-input" type="date" id="f-fecha"/>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Hora de la demo</label>
+          <input class="form-input" type="time" id="f-hora"/>
+        </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Modalidad</label>
@@ -757,6 +763,8 @@ async function sb(path,opts={}){
 
 // ── DATES ──
 function todayStr(){return new Date().toISOString().split('T')[0];}
+// Use fecha_agendamiento if set, otherwise fall back to created_at date
+function demoAgendadoDate(d){return d.fecha_agendamiento||(d.created_at||'').split('T')[0]||todayStr();}
 function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
 function weekDates(){
   const d=new Date();const day=d.getDay();const diff=day===0?-6:1-day;
@@ -1313,6 +1321,7 @@ function openDemoModal(demo=null){
     document.getElementById('edit-demo-id').value=demo.id;
     document.getElementById('f-sf-url').value=demo.sf_url||'';
     document.getElementById('f-sf-nombre').value=demo.sf_nombre||'';
+    document.getElementById('f-fecha-agendamiento').value=demo.fecha_agendamiento||demo.created_at?.split('T')[0]||'';
     document.getElementById('f-comercial').value=demo.comercial_id||'';
     document.getElementById('f-ciudad').value=demo.ciudad_id||'';
     document.getElementById('f-fecha').value=demo.fecha||'';
@@ -1330,6 +1339,7 @@ function openDemoModal(demo=null){
     document.getElementById('edit-demo-id').value='';
     document.getElementById('f-sf-url').value='';
     document.getElementById('f-sf-nombre').value='';
+    document.getElementById('f-fecha-agendamiento').value='';
     document.getElementById('f-fecha').value=todayStr();
     document.getElementById('f-hora').value='';
     document.getElementById('f-tipo').value='presencial';
@@ -1368,12 +1378,14 @@ async function saveDemo(){
   const comercialVal=document.getElementById('f-comercial').value;
   const ciudadVal=document.getElementById('f-ciudad').value;
   const tipo=document.getElementById('f-tipo').value;
+  const fechaAgendamiento=document.getElementById('f-fecha-agendamiento').value||todayStr();
   const payload={
     sdr_id:currentUser.id,
     sf_url:extractCleanUrl(rawUrl)||null,
     sf_nombre:sfName,
     comercial_id:comercialVal?parseInt(comercialVal):null,
     ciudad_id:ciudadVal?parseInt(ciudadVal):null,
+    fecha_agendamiento:fechaAgendamiento,
     fecha:document.getElementById('f-fecha').value||null,
     hora:document.getElementById('f-hora').value||null,
     tipo:tipo,
@@ -1452,12 +1464,13 @@ function getFilteredDemos(){
     case'perdidas':result=demos.filter(d=>d.outcome==='cerrado_perdido');break;
     case'reagendar':result=demos.filter(d=>d.estado==='cancelada');break;
     case'viejas':{
+      // Follow up: executed demos with pending outcome, 7+ days after the demo date
       const cutoff=new Date();cutoff.setDate(cutoff.getDate()-7);
       const cutStr=cutoff.toISOString().split('T')[0];
       result=demos.filter(d=>
         d.estado==='ejecutada'&&
         ['interesado','necesita_seguimiento'].includes(d.outcome)&&
-        (d.created_at||'').split('T')[0]<=cutStr
+        (d.fecha||'')<=cutStr
       );
       break;
     }
@@ -1490,16 +1503,16 @@ function renderXMonthPanel(){
   const cutStr7=cutoff7.toISOString().split('T')[0];
 
   const pendingFollow=demos.filter(d=>{
-    const created=(d.created_at||'').split('T')[0];
-    return created<start&&
+    const agendado=demoAgendadoDate(d);
+    return agendado<start&&
       d.estado==='ejecutada'&&
       ['interesado','necesita_seguimiento'].includes(d.outcome)&&
-      created<=cutStr7;
+      (d.fecha||'')<=cutStr7;
   });
 
   const pendingReagendar=demos.filter(d=>{
-    const created=(d.created_at||'').split('T')[0];
-    return created<start&&d.estado==='cancelada';
+    const agendado=demoAgendadoDate(d);
+    return agendado<start&&d.estado==='cancelada';
   });
 
   if(!pendingFollow.length&&!pendingReagendar.length){panel.style.display='none';return;}
@@ -1567,11 +1580,10 @@ async function changeEstadoOutcome(id,value){
 }
 
 function demosCreatedThisMonth(){
-  // Demos created in target month (by created_at), excluding cancelled
   const{start,end}=monthRange();
   return demos.filter(d=>{
-    const created=(d.created_at||'').split('T')[0];
-    return created>=start&&created<=end;
+    const agendado=demoAgendadoDate(d);
+    return agendado>=start&&agendado<=end;
   });
 }
 
@@ -1830,7 +1842,7 @@ function renderCounts(){
   const today=todayStr(),tomorrow=tomorrowStr(),week=weekDates();
   const todayDemos=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');
   document.getElementById('c-hoy').textContent=todayDemos.length;
-  document.getElementById('c-enlive').textContent=todayDemos.length;
+  document.getElementById('stat-hoy').textContent=todayDemos.length;
   document.getElementById('c-manana').textContent=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada').length;
   document.getElementById('c-semana').textContent=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
@@ -1838,7 +1850,7 @@ function renderCounts(){
   document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido').length;
   document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada').length;
   const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);const cutStr7=cutoff7.toISOString().split('T')[0];
-  document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.created_at||'').split('T')[0]<=cutStr7).length;
+  document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.fecha||'')<=cutStr7).length;
 }
 
 // ── LIVE / HORA LOGIC ──
@@ -1963,6 +1975,7 @@ function renderDemoCard(d,liveClass=''){
       </div>
       <div class="demo-meta">
         <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
+        ${d.fecha_agendamiento&&d.fecha_agendamiento!==todayStr()?`<span class="demo-meta-item" style="color:var(--lime-dark);font-weight:500;">📞 Creada el ${fmtDate(d.fecha_agendamiento)}</span>`:''}
         <span class="demo-meta-item">👤 ${comercialName(d.comercial_id)}</span>
         <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
         ${d.tipo==='online'&&d.plataforma?`<span class="demo-meta-item">${plataformaMap[d.plataforma]||d.plataforma}</span>`:''}
