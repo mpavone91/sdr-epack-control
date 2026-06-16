@@ -475,7 +475,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
 
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-num" id="stat-hoy">0</div><div class="stat-label">Demos hoy</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-hoy">0</div><div class="stat-label">Creadas hoy</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-semana">0</div><div class="stat-label">Esta semana</div></div>
       <div class="stat-card accent"><div class="stat-num" id="stat-ganadas">0</div><div class="stat-label">Ganadas (mes)</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-canceladas">0</div><div class="stat-label">Canceladas (mes)</div></div>
@@ -1840,9 +1840,12 @@ function renderStats(){
 
 function renderCounts(){
   const today=todayStr(),tomorrow=tomorrowStr(),week=weekDates();
+  // stat-hoy = demos CREATED today (productivity metric)
+  const creadasHoy=demos.filter(d=>demoAgendadoDate(d)===today).length;
+  document.getElementById('stat-hoy').textContent=creadasHoy;
+  // c-hoy tab = demos with fecha=today (agenda)
   const todayDemos=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');
   document.getElementById('c-hoy').textContent=todayDemos.length;
-  document.getElementById('stat-hoy').textContent=todayDemos.length;
   document.getElementById('c-manana').textContent=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada').length;
   document.getElementById('c-semana').textContent=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
@@ -1885,25 +1888,36 @@ function sortByHora(list){
 function renderLiveBanner(){
   const today=todayStr();
   const now=madridNow();
-  // Demos that are past their hora but have no outcome yet
+
+  // All demos past their expected time with no outcome set
   const pending=demos.filter(d=>{
-    if(d.fecha!==today)return false;
-    if(d.estado==='cancelada')return false;
+    if(d.estado==='cancelada'||d.estado==='reagendada')return false;
     if(d.outcome)return false;
-    if(!d.hora)return false;
-    const[h,m]=d.hora.split(':').map(Number);
-    const demoTime=new Date(now);
-    demoTime.setHours(h,m,0,0);
-    return(now-demoTime)/60000>30; // 30+ min past
+    // Demos from previous days always pending
+    if(d.fecha&&d.fecha<today)return true;
+    // Today's demos: past their hora by 30+ min, or no hora and it's past noon
+    if(d.fecha===today){
+      if(!d.hora){
+        // No hora defined — show reminder if it's past 17:00
+        return now.getHours()>=17;
+      }
+      const[h,m]=d.hora.split(':').map(Number);
+      const demoTime=new Date(now);
+      demoTime.setHours(h,m,0,0);
+      return(now-demoTime)/60000>30;
+    }
+    return false;
   });
+
   const banner=document.getElementById('live-banner');
   const items=document.getElementById('live-banner-items');
   if(!pending.length){banner.classList.remove('show');return;}
   banner.classList.add('show');
   items.innerHTML=pending.map(d=>`
     <div class="live-banner-item">
-      <span class="live-banner-item-name">🕐 ${d.hora} · ${d.sf_nombre||'Sin nombre'}</span>
+      <span class="live-banner-item-name">${d.fecha<today?`📅 ${fmtDate(d.fecha)} · `:'🕐 '+(d.hora||'Hoy')+' · '}${d.sf_nombre||'Sin nombre'}</span>
       <div class="live-banner-btns">
+        <button class="live-quick-btn ej" onclick="openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})">✏️ Actualizar</button>
         <button class="live-quick-btn ej" onclick="quickOutcome(${d.id},'ejecutada','interesado')">✓ Ejecutada</button>
         <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
       </div>
