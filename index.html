@@ -261,7 +261,35 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .noticia-item button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;}
 .noticia-item button:hover{color:var(--red);}
 
-/* ── NEWS BANNER (SDR view) ── */
+/* ── LIVE BANNER ── */
+.live-banner{margin:0 24px 0;border-radius:14px;padding:14px 20px;display:none;border:1px solid;}
+.live-banner.show{display:block;}
+.live-banner.warning{background:#fff8e8;border-color:#f0c060;}
+.live-banner-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8a5e00;margin-bottom:8px;}
+.live-banner-items{display:flex;flex-direction:column;gap:6px;}
+.live-banner-item{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.live-banner-item-name{font-size:13.5px;font-weight:600;color:#5a3e00;}
+.live-banner-btns{display:flex;gap:6px;}
+.live-quick-btn{padding:5px 12px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.live-quick-btn.ej{background:var(--green);color:white;}
+.live-quick-btn.ca{background:var(--red);color:white;}
+
+/* ── LIVE VIEW ── */
+.live-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:6px 0 10px;display:flex;align-items:center;gap:8px;}
+.live-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.live-section-label.pasada{color:var(--muted);}
+.live-section-label.proxima{color:var(--amber);}
+.live-section-label.ahora{color:var(--green);}
+.live-section-label.despues{color:var(--blue);}
+.demo-card.live-pasada{opacity:0.6;}
+.demo-card.live-proxima{border-left:3px solid var(--amber);background:var(--amber-soft);}
+.demo-card.live-ahora{border-left:3px solid var(--green);background:var(--green-soft);}
+.live-hora-badge{font-size:13px;font-weight:700;padding:4px 10px;border-radius:7px;white-space:nowrap;}
+.live-hora-badge.pasada{background:#f0f0f0;color:var(--muted);}
+.live-hora-badge.proxima{background:var(--amber-soft);color:var(--amber);}
+.live-hora-badge.ahora{background:var(--green-soft);color:var(--green);}
+.live-hora-badge.despues{background:var(--blue-soft);color:var(--blue);}
+.live-clock{font-size:13px;color:var(--muted);font-weight:500;}
 .news-banner{margin:0 24px 0;background:var(--amber-soft);border:1px solid var(--amber-border,#f0d58a);border-radius:14px;padding:14px 20px;display:none;}
 .news-banner.show{display:block;}
 .news-banner-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--amber);margin-bottom:6px;}
@@ -337,6 +365,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   <div class="news-banner" id="news-banner">
     <div class="news-banner-title">📰 Tablón del equipo</div>
     <div id="news-items"></div>
+  </div>
+
+  <div class="live-banner warning" id="live-banner">
+    <div class="live-banner-title">⏰ Demos pendientes de confirmar</div>
+    <div class="live-banner-items" id="live-banner-items"></div>
   </div>
 
   <div class="content">
@@ -425,7 +458,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
 
     <div class="view-tabs">
-      <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
+      <button class="view-tab" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
+      <button class="view-tab" onclick="setView('enlive',this)">🔴 En vivo <span class="count" id="c-enlive">0</span></button>
       <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
       <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
       <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
@@ -1379,6 +1413,7 @@ function getFilteredDemos(){
   let result;
   switch(currentView){
     case'hoy':result=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');break;
+    case'enlive':result=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');break;
     case'manana':result=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada');break;
     case'semana':result=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada');break;
     case'todas':result=demos.filter(d=>d.estado!=='cancelada');break;
@@ -1402,6 +1437,7 @@ function render(){
   renderStats();
   renderComerciales();
   renderCounts();
+  renderLiveBanner();
   renderList();
 }
 
@@ -1667,7 +1703,9 @@ function renderStats(){
 
 function renderCounts(){
   const today=todayStr(),tomorrow=tomorrowStr(),week=weekDates();
-  document.getElementById('c-hoy').textContent=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada').length;
+  const todayDemos=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');
+  document.getElementById('c-hoy').textContent=todayDemos.length;
+  document.getElementById('c-enlive').textContent=todayDemos.length;
   document.getElementById('c-manana').textContent=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada').length;
   document.getElementById('c-semana').textContent=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
@@ -1678,12 +1716,161 @@ function renderCounts(){
   document.getElementById('c-viejas').textContent=demos.filter(d=>d.fecha<cutStr&&['agendada','reagendada'].includes(d.estado)&&['interesado','necesita_seguimiento'].includes(d.outcome)).length;
 }
 
+// ── LIVE / HORA LOGIC ──
+let liveInterval=null;
+
+function madridNow(){
+  // Use device time — SDRs are in Madrid so device time = Madrid time
+  return new Date();
+}
+
+function demoStatus(d){
+  if(!d.hora)return'nohora';
+  const now=madridNow();
+  const[h,m]=d.hora.split(':').map(Number);
+  const demoTime=new Date(now);
+  demoTime.setHours(h,m,0,0);
+  const diff=(demoTime-now)/60000; // minutes
+  if(diff>30)return'despues';
+  if(diff>0)return'proxima';
+  if(diff>-60)return'ahora'; // within 1h after start = "en curso"
+  return'pasada';
+}
+
+function sortByHora(list){
+  return [...list].sort((a,b)=>{
+    const ta=a.hora||'99:99', tb=b.hora||'99:99';
+    if(ta===tb)return 0;
+    return ta.localeCompare(tb);
+  });
+}
+
+function renderLiveBanner(){
+  const today=todayStr();
+  const now=madridNow();
+  // Demos that are past their hora but have no outcome yet
+  const pending=demos.filter(d=>{
+    if(d.fecha!==today)return false;
+    if(d.estado==='cancelada')return false;
+    if(d.outcome)return false;
+    if(!d.hora)return false;
+    const[h,m]=d.hora.split(':').map(Number);
+    const demoTime=new Date(now);
+    demoTime.setHours(h,m,0,0);
+    return(now-demoTime)/60000>30; // 30+ min past
+  });
+  const banner=document.getElementById('live-banner');
+  const items=document.getElementById('live-banner-items');
+  if(!pending.length){banner.classList.remove('show');return;}
+  banner.classList.add('show');
+  items.innerHTML=pending.map(d=>`
+    <div class="live-banner-item">
+      <span class="live-banner-item-name">🕐 ${d.hora} · ${d.sf_nombre||'Sin nombre'}</span>
+      <div class="live-banner-btns">
+        <button class="live-quick-btn ej" onclick="quickOutcome(${d.id},'ejecutada','interesado')">✓ Ejecutada</button>
+        <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
+      </div>
+    </div>`).join('');
+}
+
+async function quickOutcome(id,estado,outcome){
+  try{
+    const patch={estado};
+    if(outcome)patch.outcome=outcome;
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast('✓ Demo actualizada');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderLiveView(){
+  const today=todayStr();
+  const todayDemos=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');
+  const sorted=sortByHora(todayDemos);
+  const list=document.getElementById('demo-list');
+
+  if(!sorted.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Sin demos hoy</div><div class="empty-text">No tienes demos agendadas para hoy.</div></div>`;
+    return;
+  }
+
+  // Group by status
+  const groups={ahora:[],proxima:[],despues:[],pasada:[],nohora:[]};
+  sorted.forEach(d=>groups[demoStatus(d)].push(d));
+
+  const now=madridNow();
+  const horaStr=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+  const sections=[
+    {key:'ahora',label:'🟢 En curso ahora',cls:'ahora'},
+    {key:'proxima',label:'🟡 Próximas — en los próximos 30 min',cls:'proxima'},
+    {key:'despues',label:'🔵 Más tarde',cls:'despues'},
+    {key:'nohora',label:'⚪ Sin hora definida',cls:'despues'},
+    {key:'pasada',label:'⚫ Pasadas',cls:'pasada'}
+  ];
+
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:13px;font-weight:600;color:var(--teal-dark);">Demos de hoy</span><span class="live-clock" id="live-clock">🕐 ${horaStr}</span></div>`;
+
+  sections.forEach(({key,label,cls})=>{
+    if(!groups[key].length)return;
+    html+=`<div class="live-section-label ${cls}">${label}</div>`;
+    html+=groups[key].map(d=>renderDemoCard(d,cls)).join('');
+  });
+
+  list.innerHTML=html;
+}
+
+function renderDemoCard(d,liveClass=''){
+  const sfLink=d.sf_url?`<a href="${d.sf_url}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
+  const isReagendar=currentView==='reagendar';
+  const cardClass=isReagendar?'reagendar':liveClass?`live-${liveClass}`:'';
+  const horaDisplay=d.hora?`<span class="live-hora-badge ${liveClass||'despues'}">${d.hora}</span>`:'';
+  const plataformaMap={teams:'💻 Teams',whatsapp:'💬 WhatsApp',meet:'🎥 Meet',zoom:'📹 Zoom'};
+  return`
+  <div class="demo-card ${cardClass}">
+    <div class="demo-main">
+      <div class="demo-top">
+        ${horaDisplay}
+        <span class="demo-name">${sfLink}</span>
+        <span class="badge ${d.tipo}">${d.tipo==='presencial'?'📍 Presencial':'💻 Online'}</span>
+        <span class="badge ${d.canal||'outbound'}">${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>
+        ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
+      </div>
+      <div class="demo-meta">
+        <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
+        <span class="demo-meta-item">👤 ${comercialName(d.comercial_id)}</span>
+        <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
+        ${d.tipo==='online'&&d.plataforma?`<span class="demo-meta-item">${plataformaMap[d.plataforma]||d.plataforma}</span>`:''}
+        ${d.notas?`<span class="demo-meta-item">📝 ${d.notas.length>40?d.notas.slice(0,40)+'…':d.notas}</span>`:''}
+      </div>
+    </div>
+    <div class="demo-right">
+      ${isReagendar
+        ?`<button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>`
+        :`<select class="select-mini" onchange="changeEstado(${d.id},this.value)">
+            <option value="agendada" ${d.estado==='agendada'?'selected':''}>Agendada</option>
+            <option value="ejecutada" ${d.estado==='ejecutada'?'selected':''}>Ejecutada</option>
+            <option value="cancelada" ${d.estado==='cancelada'?'selected':''}>Cancelada</option>
+            ${d.estado==='reagendada'?'<option value="reagendada" selected>Reagendada</option>':''}
+          </select>`}
+      <div class="demo-actions">
+        <button class="icon-btn" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="Editar">✏️</button>
+        <button class="icon-btn" onclick="deleteDemo(${d.id})" title="Eliminar">🗑️</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 function comercialName(id){const c=comerciales.find(x=>x.id===id);return c?c.nombre:'—';}
 function ciudadName(id){const c=ciudades.find(x=>x.id===id);return c?c.nombre:'—';}
 function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Necesita seguimiento',no_interesado:'No interesado',cerrado_ganado:'Cerrado ganado',cerrado_perdido:'Cerrado perdido'}[o]||'';}
 
 function renderList(){
   const list=document.getElementById('demo-list');
+
+  // Live view handled separately
+  if(currentView==='enlive'){renderLiveView();return;}
+
   const filtered=getFilteredDemos();
   if(!filtered.length){
     const empties={
@@ -1700,53 +1887,33 @@ function renderList(){
     list.innerHTML=`<div class="empty"><div class="empty-icon">${e[0]}</div><div class="empty-title">${e[1]}</div><div class="empty-text">${e[2]}</div></div>`;
     return;
   }
-  // Sort: reagendar/viejas by date desc, others by date asc
-  const sorted=[...filtered].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
-  list.innerHTML=sorted.map(d=>{
-    const isReagendar=currentView==='reagendar';
-    const isVieja=currentView==='viejas';
-    const cardClass=isReagendar?'reagendar':isVieja?'vieja':'';
-    const sfLink=d.sf_url?`<a href="${d.sf_url}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
-    return`
-    <div class="demo-card ${cardClass}">
-      <div class="demo-main">
-        <div class="demo-top">
-          <span class="demo-name">${sfLink}</span>
-          <span class="badge ${d.tipo}">${d.tipo==='presencial'?'📍 Presencial':'💻 Online'}</span>
-          <span class="badge ${d.canal||'outbound'}">${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>
-          ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
-        </div>
-        <div class="demo-meta">
-          <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
-          <span class="demo-meta-item">👤 ${comercialName(d.comercial_id)}</span>
-          <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
-          ${d.tipo==='online'&&d.plataforma?`<span class="demo-meta-item">${{teams:'💻 Teams',whatsapp:'💬 WhatsApp',meet:'🎥 Meet',zoom:'📹 Zoom'}[d.plataforma]||d.plataforma}</span>`:''}
-          ${d.notas?`<span class="demo-meta-item">📝 ${d.notas.length>40?d.notas.slice(0,40)+'…':d.notas}</span>`:''}
-        </div>
-      </div>
-      <div class="demo-right">
-        ${isReagendar
-          ?`<button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>`
-          :`<select class="select-mini" onchange="changeEstado(${d.id},this.value)">
-              <option value="agendada" ${d.estado==='agendada'?'selected':''}>Agendada</option>
-              <option value="ejecutada" ${d.estado==='ejecutada'?'selected':''}>Ejecutada</option>
-              <option value="cancelada" ${d.estado==='cancelada'?'selected':''}>Cancelada</option>
-              ${d.estado==='reagendada'?'<option value="reagendada" selected>Reagendada</option>':''}
-            </select>`}
-        <div class="demo-actions">
-          <button class="icon-btn" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="Editar">✏️</button>
-          <button class="icon-btn" onclick="deleteDemo(${d.id})" title="Eliminar">🗑️</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  // Sort by fecha then hora
+  const sorted=[...filtered].sort((a,b)=>{
+    const fd=(a.fecha||'').localeCompare(b.fecha||'');
+    if(fd!==0)return fd;
+    return(a.hora||'99:99').localeCompare(b.hora||'99:99');
+  });
+  const isReagendar=currentView==='reagendar';
+  const isVieja=currentView==='viejas';
+  list.innerHTML=sorted.map(d=>renderDemoCard(d,isVieja?'vieja':'')).join('');
 }
 
 function setView(view,btn){
   currentView=view;
   document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
+  // Start/stop live interval
+  if(view==='enlive'){
+    if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
+  }else{
+    if(liveInterval){clearInterval(liveInterval);liveInterval=null;}
+  }
   renderList();
+}
+
+function updateLiveClock(){
+  const el=document.getElementById('live-clock');
+  if(el){const now=madridNow();el.textContent='🕐 '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2800);}
