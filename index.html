@@ -279,7 +279,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .noticia-item button:hover{color:var(--red);}
 
 /* ── SEARCH + CANAL FILTER ── */
-.list-controls{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
 .search-wrap{flex:1;min-width:200px;position:relative;display:flex;align-items:center;}
 .search-icon{position:absolute;left:12px;font-size:14px;pointer-events:none;}
 .search-input{width:100%;padding:10px 36px 10px 34px;border:1.5px solid var(--border);border-radius:10px;font-size:13.5px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);}
@@ -288,6 +287,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .canal-filter-wrap{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;}
 .canal-filter-btn{padding:7px 14px;border:none;background:none;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
 .canal-filter-btn.active{background:var(--teal-dark);color:#fff;}
+.btn-ghost-red{padding:6px 12px;border:1px solid #f0c0c0;background:#fef5f5;color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.btn-ghost-red:hover{background:var(--red);color:white;border-color:var(--red);}
+.btn-ghost-amber{padding:6px 12px;border:1px solid #f0d58a;background:#fff8e8;color:var(--amber);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.btn-ghost-amber:hover{background:var(--amber);color:white;border-color:var(--amber);}
+.badge.cancelada-badge{background:#fde8e8;color:var(--red);}
+.badge.perdida-badge{background:#f0f0f0;color:#888;}
 
 /* ── CROSS-MONTH REMINDERS ── */
 .xmonth-panel{background:#fff8e8;border:1px solid #f0c060;border-radius:14px;padding:20px 24px;margin-bottom:20px;}
@@ -539,6 +544,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
       <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
       <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Follow up <span class="count" id="c-viejas">0</span></button>
+      <button class="view-tab" onclick="setView('papelera',this)">🗑️ Papelera <span class="count" id="c-papelera">0</span></button>
     </div>
 
     <div class="demo-view active" id="view-content">
@@ -790,7 +796,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             <option value="">Sin definir</option>
             <option value="interesado">Interesado</option>
             <option value="necesita_seguimiento">Necesita seguimiento</option>
-            <option value="no_interesado">No interesado</option>
             <option value="cerrado_ganado">Cerrado ganado</option>
             <option value="cerrado_perdido">Cerrado perdido</option>
           </select>
@@ -1799,15 +1804,17 @@ function getFilteredDemos(){
     case'todas':result=demos.filter(d=>d.estado!=='cancelada');break;
     case'ganadas':result=demos.filter(d=>d.outcome==='cerrado_ganado');break;
     case'perdidas':result=demos.filter(d=>d.outcome==='cerrado_perdido');break;
-    case'reagendar':result=demos.filter(d=>d.estado==='cancelada');break;
+    case'reagendar':result=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido');break;
+    case'papelera':result=demos.filter(d=>d.descartada||d.outcome==='cerrado_perdido');break;
     case'viejas':{
-      // Follow up: executed demos with pending outcome, 7+ days after the demo date
+      // Follow up: executed demos with pending outcome, 7+ days after the demo date, not snoozed
       const cutoff=new Date();cutoff.setDate(cutoff.getDate()-7);
       const cutStr=localDateStr(cutoff);
       result=demos.filter(d=>
         d.estado==='ejecutada'&&
         ['interesado','necesita_seguimiento'].includes(d.outcome)&&
-        (d.fecha||'')<=cutStr
+        (d.fecha||'')<=cutStr&&
+        (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today)
       );
       break;
     }
@@ -1852,17 +1859,19 @@ function renderXMonthPanel(){
   const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);
   const cutStr7=localDateStr(cutoff7);
 
+  const today=todayStr();
   const pendingFollow=demos.filter(d=>{
     const agendado=demoAgendadoDate(d);
     return agendado<start&&
       d.estado==='ejecutada'&&
       ['interesado','necesita_seguimiento'].includes(d.outcome)&&
-      (d.fecha||'')<=cutStr7;
+      (d.fecha||'')<=cutStr7&&
+      (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today);
   });
 
   const pendingReagendar=demos.filter(d=>{
     const agendado=demoAgendadoDate(d);
-    return agendado<start&&d.estado==='cancelada';
+    return agendado<start&&d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido';
   });
 
   if(!pendingFollow.length&&!pendingReagendar.length){panel.style.display='none';return;}
@@ -1882,11 +1891,11 @@ function renderXMonthPanel(){
           <div class="xmonth-item-actions">
             <span class="xmonth-badge ${d.outcome}">${outcomeLabel(d.outcome)}</span>
             <select class="select-mini" onchange="changeEstadoOutcome(${d.id},this.value)" style="font-size:11px;padding:4px 8px;">
-              <option value="">Actualizar...</option>
+              <option value="">Resolver...</option>
               <option value="cerrado_ganado">✅ Ganado</option>
               <option value="cerrado_perdido">❌ Perdido</option>
-              <option value="no_interesado">👎 No interesado</option>
             </select>
+            <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})" style="padding:4px 10px;font-size:11px;">⏰ Aplazar</button>
           </div>
         </div>`).join('')}
     </div>`;
@@ -1904,7 +1913,7 @@ function renderXMonthPanel(){
           <div class="xmonth-item-actions">
             <span class="xmonth-badge cancelada">Cancelada</span>
             <button class="btn-primary" style="padding:5px 12px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
-            <button class="icon-btn" onclick="changeEstadoOutcome(${d.id},'descartada')" title="Descartar" style="font-size:12px;">🗑️</button>
+            <button class="btn-ghost-red" onclick="descartarDemo(${d.id})" style="padding:5px 10px;font-size:11px;">🗑️ Descartar</button>
           </div>
         </div>`).join('')}
     </div>`;
@@ -1917,14 +1926,43 @@ async function changeEstadoOutcome(id,value){
   if(!value)return;
   try{
     let patch={};
-    if(value==='cerrado_ganado'||value==='cerrado_perdido'||value==='no_interesado'){
-      patch={outcome:value};
-    }else if(value==='descartada'){
-      // Mark as lost so it leaves the panel
+    if(value==='cerrado_ganado'){
+      patch={outcome:'cerrado_ganado'};
+    }else if(value==='cerrado_perdido'){
       patch={outcome:'cerrado_perdido'};
     }
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
     showToast('✓ Demo actualizada');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// Descartar: cancelled demo that won't be rescheduled → goes to papelera, still counts as cancelled
+async function descartarDemo(id){
+  if(!confirm('¿Descartar esta demo? Irá a la papelera y seguirá contando en el ratio de cancelación, pero no aparecerá para reagendar.'))return;
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({descartada:true})});
+    showToast('✓ Demo movida a la papelera');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// Aplazar seguimiento: snooze a follow-up by N weeks
+async function aplazarSeguimiento(id){
+  const opcion=prompt('¿Cuánto tiempo aplazar el seguimiento?\n\nEscribe:\n1 = 1 semana\n2 = 2 semanas\nO una fecha concreta (YYYY-MM-DD)','1');
+  if(!opcion)return;
+  let fecha;
+  if(opcion==='1'||opcion==='2'){
+    const d=new Date();d.setDate(d.getDate()+parseInt(opcion)*7);
+    fecha=localDateStr(d);
+  }else if(/^\d{4}-\d{2}-\d{2}$/.test(opcion)){
+    fecha=opcion;
+  }else{
+    showToast('⚠️ Opción no válida');return;
+  }
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
+    showToast('✓ Seguimiento aplazado hasta '+fmtDate(fecha));
     await loadDemos();
   }catch(e){showToast('❌ Error');console.error(e);}
 }
@@ -2235,9 +2273,11 @@ function renderCounts(){
   document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
   document.getElementById('c-ganadas').textContent=demos.filter(d=>d.outcome==='cerrado_ganado').length;
   document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido').length;
-  document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada').length;
+  document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
+  const papeleraEl=document.getElementById('c-papelera');
+  if(papeleraEl)papeleraEl.textContent=demos.filter(d=>d.descartada||d.outcome==='cerrado_perdido').length;
   const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);const cutStr7=localDateStr(cutoff7);
-  document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.fecha||'')<=cutStr7).length;
+  document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.fecha||'')<=cutStr7&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today)).length;
 }
 
 // ── LIVE / HORA LOGIC ──
@@ -2382,7 +2422,21 @@ function renderDemoCard(d,liveClass=''){
     </div>
     <div class="demo-right">
       ${isReagendar
-        ?`<button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>`
+        ?`<div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
+            <button class="btn-ghost-red" onclick="descartarDemo(${d.id})">🗑️ Descartar</button>
+          </div>`
+        :currentView==='viejas'
+        ?`<div style="display:flex;flex-direction:column;gap:6px;">
+            <select class="select-mini" onchange="changeEstadoOutcome(${d.id},this.value)" style="font-size:12px;">
+              <option value="">Resolver...</option>
+              <option value="cerrado_ganado">✅ Ganado</option>
+              <option value="cerrado_perdido">❌ Perdido</option>
+            </select>
+            <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})">⏰ Aplazar</button>
+          </div>`
+        :currentView==='papelera'
+        ?`<span class="badge ${d.estado==='cancelada'?'cancelada-badge':'perdida-badge'}">${d.estado==='cancelada'?'🗑️ Cancelada':'❌ Perdida'}</span>`
         :`<select class="select-mini" onchange="changeEstado(${d.id},this.value)">
             <option value="agendada" ${d.estado==='agendada'?'selected':''}>Agendada</option>
             <option value="ejecutada" ${d.estado==='ejecutada'?'selected':''}>Ejecutada</option>
@@ -2417,6 +2471,7 @@ function renderList(){
       ganadas:['💰','Aún no hay ventas cerradas','Cuando marques una demo como "Cerrado ganado", aparecerá aquí.'],
       perdidas:['❌','Sin demos perdidas','Las demos marcadas como "Cerrado perdido" se mostrarán aquí.'],
       reagendar:['🎉','Nada pendiente de reagendar','Las demos canceladas aparecerán aquí para que las recuperes.'],
+      papelera:['🗑️','Papelera vacía','Aquí van las demos canceladas que descartaste y las perdidas. Siguen contando en tus métricas.'],
       viejas:['✓','Todo al día','No hay demos antiguas con interés pendientes de seguimiento.']
     };
     const e=empties[currentView]||empties.todas;
