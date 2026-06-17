@@ -203,6 +203,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .proy-title.rojo{color:var(--red);}
 .proy-title.amarillo{color:var(--amber);}
 .proy-title.verde{color:var(--green);}
+.proy-title.fiesta{color:#9333ea;}
+.proy-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.proy-card{border-radius:12px;padding:16px 18px;border:1px solid var(--border);}
+.proy-card.rojo{background:#fef5f5;border-color:#f0c0c0;}
+.proy-card.amarillo{background:#fff8e8;border-color:#f0d58a;}
+.proy-card.verde{background:#eefaf933;border-color:#a8e0c0;}
+.proy-card.fiesta{background:linear-gradient(135deg,#f3e8ff,#fae8ff);border-color:#d8b4fe;}
+.proy-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.proy-card-emoji{font-size:20px;}
+.proy-card-canal{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+.proy-card-canal.rojo{color:var(--red);}
+.proy-card-canal.amarillo{color:#b8860b;}
+.proy-card-canal.verde{color:var(--green);}
+.proy-card-canal.fiesta{color:#9333ea;}
+.proy-card-pct{margin-left:auto;font-family:'Fraunces',serif;font-size:22px;font-weight:700;}
+.proy-card-pct.rojo{color:var(--red);}
+.proy-card-pct.amarillo{color:#b8860b;}
+.proy-card-pct.verde{color:var(--green);}
+.proy-card-pct.fiesta{color:#9333ea;}
+.proy-card-msg{font-size:12.5px;line-height:1.5;color:var(--text);}
+.proy-card-msg b{color:var(--teal-dark);}
 .proy-text{font-size:13px;color:var(--muted);line-height:1.6;}
 .proy-text b{color:var(--text);}
 .proy-aviso{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12.5px;color:var(--amber);}
@@ -498,14 +519,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           </div>
         </div>
       </div>
-      <div class="proyeccion-box">
-        <div class="proy-icon" id="proy-icon">📊</div>
-        <div class="proy-content">
-          <div class="proy-title" id="proy-title">Proyección a fin de mes</div>
-          <div class="proy-text" id="proy-text">—</div>
-          <div class="proy-aviso" id="proy-aviso" style="display:none;"></div>
-        </div>
-      </div>
+      <div id="proy-container"></div>
     </div>
 
     <div class="stats-row">
@@ -2039,38 +2053,22 @@ function demosCreatedThisMonth(){
 
 function renderObjetivos(){
   const panel=document.getElementById('objetivos-panel');
-  const futureMsg=document.getElementById('obj-future-msg');
+  const proyContainer=document.getElementById('proy-container');
 
   if(isFutureMonth()){
-    // Show future message, hide bars
-    if(!futureMsg){
-      const div=document.createElement('div');
-      div.id='obj-future-msg';
-      div.className='proyeccion-box';
-      div.style.marginBottom='0';
-      panel.appendChild(div);
+    // Hide bars and projection, show future preview
+    panel.querySelectorAll('.obj-group-label,.obj-bars').forEach(el=>el.style.display='none');
+    if(proyContainer){
+      proyContainer.innerHTML=`<div class="proyeccion-box"><div class="proy-icon">📅</div><div class="proy-content"><div class="proy-title" style="color:var(--teal)">Demos ya agendadas para ${monthLabel()}</div><div class="proy-text">Tienes <b>${demosWithDateInMonth().length} demos</b> agendadas con fecha en este mes. El objetivo y el progreso empezarán de cero cuando llegue el mes — lo que cuenta son las demos que crees durante ${monthLabel()}.</div></div></div>`;
     }
-    document.getElementById('obj-future-msg').innerHTML=`
-      <div class="proy-icon">📅</div>
-      <div class="proy-content">
-        <div class="proy-title" style="color:var(--teal)">Demos ya agendadas para ${monthLabel()}</div>
-        <div class="proy-text">Tienes <b>${demosWithDateInMonth().length} demos</b> agendadas con fecha en este mes. El objetivo y el progreso empezarán de cero cuando llegue el mes — lo que cuenta son las demos que crees durante ${monthLabel()}.</div>
-      </div>`;
-    document.getElementById('obj-future-msg').style.display='flex';
-    // Hide the bars and proyeccion
-    const barsEl=panel.querySelector('.obj-group-label');
-    panel.querySelectorAll('.obj-group-label,.obj-bars,.proyeccion-box:not(#obj-future-msg)').forEach(el=>el.style.display='none');
     document.getElementById('obj-month-label').textContent=monthLabel();
     const titleEl=panel.querySelector('.obj-title');
     if(titleEl)titleEl.textContent='🔮 Adelanto del mes';
     return;
   }
 
-  // Show everything, hide future msg
-  if(futureMsg)futureMsg.style.display='none';
+  // Show everything
   panel.querySelectorAll('.obj-group-label,.obj-bars').forEach(el=>el.style.display='');
-  const proyBox=panel.querySelector('.proyeccion-box:not(#obj-future-msg)');
-  if(proyBox)proyBox.style.display='';
   const titleEl=panel.querySelector('.obj-title');
   if(titleEl)titleEl.textContent='🎯 Progreso del mes';
   document.getElementById('obj-month-label').textContent=monthLabel();
@@ -2161,88 +2159,65 @@ function renderProyeccion(actualOut,objOut,actualIn,objIn){
   const wTotal=workdaysInMonth();
   const wElapsed=isPastMonth()?wTotal:workdaysElapsed();
   const wRestantes=wTotal-wElapsed;
+  const container=document.getElementById('proy-container');
+  if(!container)return;
 
-  // Past month: show final result
+  // Past month: final result
   if(isPastMonth()){
-    const totalActual=actualOut+actualIn;
-    const totalObj=objOut+objIn;
-    const pct=totalObj>0?Math.round(totalActual/totalObj*100):0;
-    const icon=document.getElementById('proy-icon');
-    const title=document.getElementById('proy-title');
-    const text=document.getElementById('proy-text');
-    icon.textContent=pct>=86?'🏆':pct>=70?'✅':'📉';
-    title.textContent=`Resultado de ${monthLabel()}`;
-    title.className='proy-title '+(pct>=86?'verde':pct>=70?'amarillo':'rojo');
-    text.innerHTML=`Cerraste el mes con <b>${totalActual} demos</b> de un objetivo de <b>${totalObj}</b> (${pct}%). Outbound: ${actualOut}/${objOut} · Inbound: ${actualIn}/${objIn}.`;
-    document.getElementById('proy-aviso').style.display='none';
+    const card=(canal,emoji,actual,obj)=>{
+      const pct=obj>0?Math.round(actual/obj*100):0;
+      const c=colorFor(pct);
+      return`<div class="proy-card ${c}"><div class="proy-card-head"><span class="proy-card-emoji">${emoji}</span><span class="proy-card-canal ${c}">${canal}</span><span class="proy-card-pct ${c}">${pct}%</span></div><div class="proy-card-msg">Cerró con <b>${actual}/${obj}</b> demos.</div></div>`;
+    };
+    container.innerHTML=`<div class="proy-grid">${card('Outbound','🎯',actualOut,objOut)}${card('Inbound','📥',actualIn,objIn)}</div>`;
     return;
   }
 
-  // No objectives set yet
+  // No objectives
   if((objOut+objIn)===0){
-    document.getElementById('proy-icon').textContent='📊';
-    document.getElementById('proy-title').textContent='Proyección a fin de mes';
-    document.getElementById('proy-title').className='proy-title';
-    document.getElementById('proy-text').innerHTML='Tu manager aún no ha cargado los objetivos de este mes.';
-    document.getElementById('proy-aviso').style.display='none';
+    container.innerHTML=`<div class="proyeccion-box"><div class="proy-icon">📊</div><div class="proy-content"><div class="proy-text">Tu manager aún no ha cargado los objetivos de este mes.</div></div></div>`;
     return;
   }
   if(wElapsed===0){
-    document.getElementById('proy-icon').textContent='🚀';
-    document.getElementById('proy-title').textContent='¡El mes acaba de empezar!';
-    document.getElementById('proy-title').className='proy-title verde';
-    document.getElementById('proy-text').innerHTML='Cada demo cuenta desde el primer día. ¡A por todas!';
-    document.getElementById('proy-aviso').style.display='none';
+    container.innerHTML=`<div class="proyeccion-box"><div class="proy-icon">🚀</div><div class="proy-content"><div class="proy-title verde">¡El mes acaba de empezar!</div><div class="proy-text">Cada demo cuenta desde el primer día. ¡A por todas!</div></div></div>`;
     return;
   }
 
-  // Projections per canal
-  const ritmoOut=wElapsed>0?actualOut/wElapsed:0;
-  const ritmoIn=wElapsed>0?actualIn/wElapsed:0;
-  const proyOut=Math.round(ritmoOut*wTotal);
-  const proyIn=Math.round(ritmoIn*wTotal);
-  const pctPrOut=objOut>0?Math.round(proyOut/objOut*100):0;
-  const pctPrIn=objIn>0?Math.round(proyIn/objIn*100):0;
-  const pctPrTotal=((objOut+objIn)>0)?Math.round((proyOut+proyIn)/(objOut+objIn)*100):0;
+  const canceladas=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
 
-  // Estado basado en proyección total
-  let estado,color,emoji,titulo,msg,aviso;
-  if(pctPrTotal>=86){
-    estado='excelente';color='verde';emoji='🚀';
-    titulo='Excelente — vas muy por delante';
-    msg=`Tu ritmo actual proyecta <b>${proyOut+proyIn} demos</b> a fin de mes (${pctPrTotal}% del objetivo). Outbound: proyección <b>${proyOut}/${objOut}</b> (${pctPrOut}%) · Inbound: <b>${proyIn}/${objIn}</b> (${pctPrIn}%).`;
-    aviso='✅ Sigue así, no pierdas el foco. Cada demo que cierres ahora es un colchón para la semana que viene.';
-  }else if(pctPrTotal>=70){
-    estado='bien';color='amarillo';emoji='👍';
-    titulo='Dentro del rango — puedes ir a más';
-    msg=`Tu ritmo proyecta <b>${proyOut+proyIn} demos</b> a fin de mes (${pctPrTotal}% del objetivo). Outbound: <b>${proyOut}/${objOut}</b> (${pctPrOut}%) · Inbound: <b>${proyIn}/${objIn}</b> (${pctPrIn}%).`;
-    aviso=`💡 Estás en la zona correcta pero tienes potencial para llegar al 100%. ${wRestantes} días hábiles por delante — un empujón extra marca la diferencia.`;
-  }else{
-    estado='critico';color='rojo';emoji='⚠️';
-    titulo='Crítico — necesitas acelerar';
-    msg=`Tu ritmo proyecta solo <b>${proyOut+proyIn} demos</b> a fin de mes (${pctPrTotal}% del objetivo). Outbound: <b>${proyOut}/${objOut}</b> (${pctPrOut}%) · Inbound: <b>${proyIn}/${objIn}</b> (${pctPrIn}%).`;
-    const faltanOut=Math.max(0,objOut-actualOut);
-    const faltanIn=Math.max(0,objIn-actualIn);
-    const porDiaOut=wRestantes>0?Math.ceil(faltanOut/wRestantes):faltanOut;
-    const porDiaIn=wRestantes>0?Math.ceil(faltanIn/wRestantes):faltanIn;
-    aviso=`🔴 Para llegar al objetivo necesitas ~<b>${porDiaOut} outbound</b> y ~<b>${porDiaIn} inbound</b> por día hábil los próximos ${wRestantes} días.`;
-  }
+  const makeCard=(canal,emoji,actual,obj)=>{
+    const ritmo=wElapsed>0?actual/wElapsed:0;
+    const proy=Math.round(ritmo*wTotal);
+    const pct=obj>0?Math.round(proy/obj*100):0;
+    const c=colorFor(pct);
+    const faltan=Math.max(0,obj-actual);
+    const porDia=wRestantes>0?Math.ceil(faltan/wRestantes):faltan;
+    let msg;
+    if(pct>100){
+      msg=`🎉 ¡Increíble! Proyectas <b>${proy}</b> (objetivo ${obj}). Vas a reventar la meta. Llevas ${actual} y a este ritmo te sobra. ¡Una fiesta!`;
+    }else if(pct>=80){
+      msg=`Proyectas <b>${proy}/${obj}</b>. Vas muy bien encaminado, mantén el ritmo y llegas seguro. Llevas ${actual} en ${wElapsed} días hábiles.`;
+    }else if(pct>=70){
+      msg=`Proyectas <b>${proy}/${obj}</b>. Estás cerca pero te falta un empujón. Haz ~<b>${porDia}/día hábil</b> los próximos ${wRestantes} días para llegar.`;
+    }else{
+      msg=`Proyectas solo <b>${proy}/${obj}</b>. Necesitas acelerar: ~<b>${porDia} ${canal.toLowerCase()}/día hábil</b> los próximos ${wRestantes} días para alcanzar el objetivo.`;
+    }
+    const emojiHead=pct>100?'🎉':pct>=80?'🚀':pct>=70?'👍':'⚠️';
+    return`<div class="proy-card ${c}"><div class="proy-card-head"><span class="proy-card-emoji">${emojiHead}</span><span class="proy-card-canal ${c}">${emoji} ${canal}</span><span class="proy-card-pct ${c}">${pct}%</span></div><div class="proy-card-msg">${msg}</div></div>`;
+  };
 
-  document.getElementById('proy-icon').textContent=emoji;
-  document.getElementById('proy-title').textContent=titulo;
-  document.getElementById('proy-title').className='proy-title '+color;
-  document.getElementById('proy-text').innerHTML=msg;
-
-  // Aviso reagendar
-  const canceladas=demos.filter(d=>d.estado==='cancelada').length;
-  const avisoEl=document.getElementById('proy-aviso');
-  avisoEl.style.display='block';
-  avisoEl.style.color=color==='rojo'?'var(--red)':color==='amarillo'?'var(--amber)':'var(--green)';
-  let avisoHtml=aviso;
+  let html=`<div class="proy-grid">${makeCard('Outbound','🎯',actualOut,objOut)}${makeCard('Inbound','📥',actualIn,objIn)}</div>`;
   if(canceladas>0){
-    avisoHtml+=`<br>🔄 Tienes <b>${canceladas} demo${canceladas>1?'s':''} cancelada${canceladas>1?'s':''}</b> pendiente${canceladas>1?'s':''} de reagendar — recupéralas.`;
+    html+=`<div class="proy-aviso" style="display:block;margin-top:12px;color:var(--amber);">🔄 Tienes <b>${canceladas} demo${canceladas>1?'s':''} cancelada${canceladas>1?'s':''}</b> pendiente${canceladas>1?'s':''} de reagendar — recupéralas para sumar.</div>`;
   }
-  avisoEl.innerHTML=avisoHtml;
+  container.innerHTML=html;
+}
+
+function colorFor(pct){
+  if(pct>100)return'fiesta';
+  if(pct>=80)return'verde';
+  if(pct>=70)return'amarillo';
+  return'rojo';
 }
 
 function renderComerciales(){
