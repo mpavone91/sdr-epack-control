@@ -1827,11 +1827,21 @@ async function reagendar(id){
   try{
     // Mark original as reagendada
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'reagendada'})});
-    // Create new demo with same comercial/ciudad, new date
+    // Create new demo preserving ALL key fields (canal, hora, plataforma, etc.)
     await sb('demos',{method:'POST',body:JSON.stringify({
-      sdr_id:currentUser.id,sf_url:demo.sf_url,sf_nombre:demo.sf_nombre,
-      comercial_id:demo.comercial_id,ciudad_id:demo.ciudad_id,
-      fecha:nuevaFecha,tipo:demo.tipo,estado:'agendada',demo_padre_id:demo.id
+      sdr_id:currentUser.id,
+      sf_url:demo.sf_url,
+      sf_nombre:demo.sf_nombre,
+      comercial_id:demo.comercial_id,
+      ciudad_id:demo.ciudad_id,
+      fecha:nuevaFecha,
+      hora:demo.hora||null,
+      tipo:demo.tipo,
+      plataforma:demo.plataforma||null,
+      canal:demo.canal||'outbound',
+      fecha_agendamiento:demo.fecha_agendamiento||todayStr(),
+      estado:'agendada',
+      demo_padre_id:demo.id
     })});
     showToast('✓ Demo reagendada para '+fmtDate(nuevaFecha));
     await loadDemos();
