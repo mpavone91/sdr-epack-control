@@ -192,6 +192,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .battery-fill.rojo{background:linear-gradient(90deg,#e23d3d,#f06565);}
 .battery-fill.amarillo{background:linear-gradient(90deg,#e8a317,#f5c542);}
 .battery-fill.verde{background:linear-gradient(90deg,#1fa856,#3ed47e);}
+.battery-fill.fiesta{background:linear-gradient(90deg,#9333ea,#c026d3,#9333ea);background-size:200% 100%;animation:fiestaShimmer 2s linear infinite;}
+@keyframes fiestaShimmer{0%{background-position:0% 0;}100%{background-position:200% 0;}}
 .battery-pct{font-size:12px;font-weight:700;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.2);}
 .obj-target-line{position:absolute;top:0;bottom:0;width:2px;background:var(--teal-dark);opacity:0.35;z-index:2;}
 
@@ -362,6 +364,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .live-quick-btn{padding:5px 12px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
 .live-quick-btn.ej{background:var(--green);color:white;}
 .live-quick-btn.ca{background:var(--red);color:white;}
+.live-quick-btn.re{background:var(--amber);color:white;}
 
 /* ── LIVE VIEW ── */
 .live-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:6px 0 10px;display:flex;align-items:center;gap:8px;}
@@ -2274,10 +2277,11 @@ function restoreObjPanel(){
 function renderBar(prefix,actual,obj){
   document.getElementById(prefix+'-actual').textContent=actual;
   document.getElementById(prefix+'-obj').textContent=obj;
-  const pct=obj>0?Math.min(100,Math.round(actual/obj*100)):0;
+  const realPct=obj>0?Math.round(actual/obj*100):0;
+  const barWidth=Math.min(100,realPct);
   const fill=document.getElementById(prefix+'-fill');
-  fill.style.width=pct+'%';
-  document.getElementById(prefix+'-pct').textContent=pct>8?pct+'%':'';
+  fill.style.width=barWidth+'%';
+  document.getElementById(prefix+'-pct').textContent=realPct>8?realPct+'%':'';
 
   // Expected progress line (by workdays)
   const wTotal=workdaysInMonth();
@@ -2289,6 +2293,7 @@ function renderBar(prefix,actual,obj){
   const expectedDemos=obj>0?(obj*wElapsed/wTotal):0;
   let color='rojo';
   if(obj===0){color='rojo';}
+  else if(actual>=obj){color='fiesta';}
   else if(actual>=expectedDemos*1.1){color='verde';}
   else if(actual>=expectedDemos*0.85){color='amarillo';}
   else{color='rojo';}
@@ -2518,8 +2523,8 @@ function renderLiveBanner(){
     <div class="live-banner-item">
       <span class="live-banner-item-name">${d.fecha<today?`📅 ${fmtDate(d.fecha)} · `:'🕐 '+(d.hora||'Hoy')+' · '}${d.sf_nombre||'Sin nombre'}</span>
       <div class="live-banner-btns">
-        <button class="live-quick-btn ej" onclick="openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})">✏️ Actualizar</button>
         <button class="live-quick-btn ej" onclick="quickOutcome(${d.id},'ejecutada','interesado')">✓ Ejecutada</button>
+        <button class="live-quick-btn re" onclick="reagendarConHora(${d.id})">🔄 Reagendar</button>
         <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
       </div>
     </div>`).join('');
@@ -2533,6 +2538,29 @@ async function quickOutcome(id,estado,outcome){
     showToast('✓ Demo actualizada');
     await loadDemos();
   }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// Reschedule the SAME demo to a new date/time (no new demo created, stays in agendadas)
+async function reagendarConHora(id){
+  const demo=demos.find(d=>d.id===id);
+  if(!demo)return;
+  const nuevaFecha=prompt('Nueva fecha de la demo (YYYY-MM-DD):',demo.fecha||todayStr());
+  if(!nuevaFecha||!/^\d{4}-\d{2}-\d{2}$/.test(nuevaFecha))return;
+  const nuevaHora=prompt('Nueva hora (ej: 10:30). Déjalo vacío si no aplica:',demo.hora||'');
+  let horaVal=null;
+  if(nuevaHora&&nuevaHora.trim()){
+    if(/^\d{1,2}:\d{2}$/.test(nuevaHora.trim())){horaVal=nuevaHora.trim().padStart(5,'0');}
+    else{showToast('⚠️ Hora no válida, usa formato 10:30');return;}
+  }
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({
+      fecha:nuevaFecha,
+      hora:horaVal,
+      estado:'agendada'
+    })});
+    showToast('✓ Demo reagendada para '+fmtDate(nuevaFecha)+(horaVal?' a las '+horaVal:''));
+    await loadDemos();
+  }catch(e){showToast('❌ Error al reagendar');console.error(e);}
 }
 
 function renderLiveView(){
