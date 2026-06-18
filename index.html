@@ -244,6 +244,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .com-stat.ca b{color:var(--red);}
 .com-stat.pe b{color:var(--blue);}
 
+/* ── CANCEL BREAKDOWN ── */
+.cancel-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px;}
+.cancel-panel-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--teal-dark);margin-bottom:14px;}
+.cancel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cancel-card{border:1px solid var(--border);border-radius:11px;padding:14px 16px;background:var(--surface-2);}
+.cancel-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cancel-card-canal{font-size:13px;font-weight:700;color:var(--teal-dark);}
+.cancel-card-ratio{font-family:'Fraunces',serif;font-size:22px;font-weight:700;}
+.cancel-card-ratio.bajo{color:var(--green);}
+.cancel-card-ratio.medio{color:var(--amber);}
+.cancel-card-ratio.alto{color:var(--red);}
+.cancel-card-count{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.cancel-card-modalidad{display:flex;gap:14px;border-top:1px dashed var(--border);padding-top:10px;}
+.cancel-mod{font-size:12px;color:var(--muted);}
+.cancel-mod b{display:block;font-size:15px;font-family:'Fraunces',serif;color:var(--text);}
+
 /* ── MANAGER BLOCKS ── */
 .mgr-block{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;}
 .mgr-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
@@ -530,6 +546,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="stat-card"><div class="stat-num" id="stat-ratio">—</div><div class="stat-label">Ratio cancelación</div></div>
     </div>
 
+    <!-- DESGLOSE CANCELACIÓN -->
+    <div class="cancel-panel" id="cancel-panel">
+      <div class="cancel-panel-title">📉 Desglose de cancelación</div>
+      <div class="cancel-grid" id="cancel-grid"></div>
+    </div>
+
     <!-- COMERCIALES (arriba, compacto) -->
     <div class="comerciales-section" id="comerciales-section" style="margin-bottom:16px;">
       <div class="com-section-title" style="font-size:14px;margin-bottom:10px;">👥 Por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
@@ -645,6 +667,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <div class="mgr-block-title">📊 Presencial vs Online por SDR</div>
         </div>
         <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-modalidad-table"></table></div>
+      </div>
+
+      <!-- Desglose cancelación -->
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">📉 Desglose de cancelación por SDR</div>
+          <div class="mgr-block-sub">Ratio por canal y modalidad — dónde se concentran las cancelaciones</div>
+        </div>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-cancel-table"></table></div>
       </div>
 
     </div>
@@ -1047,6 +1078,7 @@ function setMgrPeriod(period,btn){
   renderMgrRanking();
   renderMgrComerciales();
   renderMgrModalidad();
+  renderMgrCancel();
 }
 
 function mgrPeriodDates(){
@@ -1109,6 +1141,7 @@ function renderManager(){
   renderMgrRanking();
   renderMgrComerciales();
   renderMgrModalidad();
+  renderMgrCancel();
   renderMgrSdrSelector();
   renderLlamadasTable();
   renderObjetivosForm();
@@ -1301,6 +1334,69 @@ function renderMgrModalidad(){
       <td>TOTAL</td>
       <td>${rows.reduce((a,b)=>a+b.pres,0)}</td><td>${rows.reduce((a,b)=>a+b.presEjec,0)}</td><td>${pct(rows.reduce((a,b)=>a+b.presCwd,0),rows.reduce((a,b)=>a+b.presEjec,0))}</td>
       <td>${rows.reduce((a,b)=>a+b.onl,0)}</td><td>${rows.reduce((a,b)=>a+b.onlEjec,0)}</td><td>${pct(rows.reduce((a,b)=>a+b.onlCwd,0),rows.reduce((a,b)=>a+b.onlEjec,0))}</td>
+    </tr>
+    </tbody>`;
+}
+
+function renderMgrCancel(){
+  const{start,end}=mgrPeriodDates();
+  const rows=allSdrs.map(s=>{
+    const d=allDemos.filter(x=>{
+      const ag=x.fecha_agendamiento||(x.created_at?localDateStr(new Date(x.created_at)):'');
+      return x.sdr_id===s.id&&ag>=start&&ag<=end;
+    });
+    const calc=(canal)=>{
+      const ch=d.filter(x=>(x.canal||'outbound')===canal);
+      const activas=ch.filter(x=>x.estado!=='cancelada'&&x.estado!=='reagendada').length;
+      const canc=ch.filter(x=>x.estado==='cancelada');
+      const total=activas+canc.length;
+      return{
+        ratio:total>0?Math.round(canc.length/total*100):0,
+        count:canc.length,
+        pres:canc.filter(x=>x.tipo==='presencial').length,
+        onl:canc.filter(x=>x.tipo==='online').length
+      };
+    };
+    return{nombre:s.nombre,out:calc('outbound'),inb:calc('inbound')};
+  });
+  const pill=(r)=>{const c=r>=30?'rojo':r>=15?'amarillo':'verde';return`<span class="pct-pill ${c}">${r}%</span>`;};
+  const t=document.getElementById('mgr-cancel-table');
+  // Totals
+  const sumOut={count:0,pres:0,onl:0,act:0};
+  const sumIn={count:0,pres:0,onl:0,act:0};
+  allSdrs.forEach(s=>{
+    const d=allDemos.filter(x=>{
+      const ag=x.fecha_agendamiento||(x.created_at?localDateStr(new Date(x.created_at)):'');
+      return x.sdr_id===s.id&&ag>=start&&ag<=end;
+    });
+    ['outbound','inbound'].forEach(canal=>{
+      const ch=d.filter(x=>(x.canal||'outbound')===canal);
+      const canc=ch.filter(x=>x.estado==='cancelada');
+      const act=ch.filter(x=>x.estado!=='cancelada'&&x.estado!=='reagendada').length;
+      const tgt=canal==='outbound'?sumOut:sumIn;
+      tgt.count+=canc.length;tgt.act+=act;
+      tgt.pres+=canc.filter(x=>x.tipo==='presencial').length;
+      tgt.onl+=canc.filter(x=>x.tipo==='online').length;
+    });
+  });
+  const ratioOut=(sumOut.count+sumOut.act)>0?Math.round(sumOut.count/(sumOut.count+sumOut.act)*100):0;
+  const ratioIn=(sumIn.count+sumIn.act)>0?Math.round(sumIn.count/(sumIn.count+sumIn.act)*100):0;
+  t.innerHTML=`
+    <thead><tr>
+      <th>SDR</th>
+      <th>🎯 Out canc.</th><th>Ratio</th><th>📍/💻</th>
+      <th>📥 In canc.</th><th>Ratio</th><th>📍/💻</th>
+    </tr></thead>
+    <tbody>
+    ${rows.map(r=>`<tr>
+      <td>${r.nombre}</td>
+      <td><span class="num">${r.out.count}</span></td><td>${pill(r.out.ratio)}</td><td style="font-size:11px;color:var(--muted);">${r.out.pres} / ${r.out.onl}</td>
+      <td><span class="num">${r.inb.count}</span></td><td>${pill(r.inb.ratio)}</td><td style="font-size:11px;color:var(--muted);">${r.inb.pres} / ${r.inb.onl}</td>
+    </tr>`).join('')}
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td>${sumOut.count}</td><td>${ratioOut}%</td><td style="font-size:11px;">${sumOut.pres} / ${sumOut.onl}</td>
+      <td>${sumIn.count}</td><td>${ratioIn}%</td><td style="font-size:11px;">${sumIn.pres} / ${sumIn.onl}</td>
     </tr>
     </tbody>`;
 }
@@ -1917,11 +2013,55 @@ function getFilteredDemos(){
 function render(){
   renderObjetivos();
   renderStats();
+  renderCancelPanel();
   renderComerciales();
   renderCounts();
   renderLiveBanner();
   renderXMonthPanel();
   renderList();
+}
+
+function renderCancelPanel(){
+  const panel=document.getElementById('cancel-panel');
+  const grid=document.getElementById('cancel-grid');
+  const{start,end}=monthRange();
+  // Demos created this month, by canal (include cancelled for ratio)
+  const monthDemos=demos.filter(d=>{
+    const ag=demoAgendadoDate(d);
+    return ag>=start&&ag<=end;
+  });
+
+  const calc=(canal)=>{
+    const ch=monthDemos.filter(d=>(d.canal||'outbound')===canal);
+    const activas=ch.filter(d=>d.estado!=='cancelada'&&d.estado!=='reagendada').length;
+    const canc=ch.filter(d=>d.estado==='cancelada');
+    const total=activas+canc.length;
+    const ratio=total>0?Math.round(canc.length/total*100):0;
+    const cancPres=canc.filter(d=>d.tipo==='presencial').length;
+    const cancOnl=canc.filter(d=>d.tipo==='online').length;
+    return{cancCount:canc.length,ratio,cancPres,cancOnl};
+  };
+
+  const out=calc('outbound');
+  const inb=calc('inbound');
+
+  if(out.cancCount===0&&inb.cancCount===0){panel.style.display='none';return;}
+  panel.style.display='block';
+
+  const ratioClass=(r)=>r>=30?'alto':r>=15?'medio':'bajo';
+  const card=(canal,emoji,data)=>`
+    <div class="cancel-card">
+      <div class="cancel-card-head">
+        <span class="cancel-card-canal">${emoji} ${canal}</span>
+        <span class="cancel-card-ratio ${ratioClass(data.ratio)}">${data.ratio}%</span>
+      </div>
+      <div class="cancel-card-count">${data.cancCount} cancelada${data.cancCount!==1?'s':''} este mes</div>
+      <div class="cancel-card-modalidad">
+        <div class="cancel-mod"><b>${data.cancPres}</b>📍 Presencial</div>
+        <div class="cancel-mod"><b>${data.cancOnl}</b>💻 Online</div>
+      </div>
+    </div>`;
+  grid.innerHTML=card('Outbound','🎯',out)+card('Inbound','📥',inb);
 }
 
 function renderXMonthPanel(){
