@@ -947,9 +947,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
       <div class="form-group">
         <label class="form-label">Emoji</label>
-        <div class="kudos-emoji-row" id="kudos-emoji-row">
-          ${'🎉|🔥|💪|🚀|👏|⭐|💎|🏆|🙌|💯'.split('|').map(e=>`<button type="button" class="kudos-emoji-btn" onclick="selectKudosEmoji('${e}',this)">${e}</button>`).join('')}
-        </div>
+        <div class="kudos-emoji-row" id="kudos-emoji-row"></div>
       </div>
 
       <div class="form-group">
@@ -2066,10 +2064,11 @@ function openKudosModal(sdrId,nombre){
   document.getElementById('kudos-modal-title').textContent=sdrId?`🎉 Enviar kudos a ${nombre}`:'🎉 Enviar kudos al equipo';
   document.getElementById('kudos-mensaje').value='';
   kudosSelectedEmoji='🎉';
-  // Reset emoji selection
-  document.querySelectorAll('.kudos-emoji-btn').forEach(b=>b.classList.remove('selected'));
-  const first=document.querySelector('.kudos-emoji-btn');
-  if(first)first.classList.add('selected');
+  // Render emojis
+  const emojis=['🎉','🔥','💪','🚀','👏','⭐','💎','🏆','🙌','💯'];
+  document.getElementById('kudos-emoji-row').innerHTML=emojis.map((e,i)=>
+    `<button type="button" class="kudos-emoji-btn${i===0?' selected':''}" onclick="selectKudosEmoji('${e}',this)">${e}</button>`
+  ).join('');
   // Render templates
   const templates=sdrId?KUDOS_TEMPLATES_IND:KUDOS_TEMPLATES_GRUPO;
   document.getElementById('kudos-templates').innerHTML=templates.map(t=>`<button type="button" class="kudos-template" onclick="useKudosTemplate(this)">${t}</button>`).join('');
