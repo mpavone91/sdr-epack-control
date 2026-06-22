@@ -305,6 +305,52 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .mgr-nav-btn{padding:10px 16px;border:1px solid var(--border);background:var(--surface);border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
 .mgr-nav-btn:hover{border-color:var(--lime);color:var(--text);}
 .mgr-nav-btn.active{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+.resumen-subnav{padding:8px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.resumen-subnav:hover{border-color:var(--lime);color:var(--text);}
+.resumen-subnav.active{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+.resumen-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:16px;}
+.resumen-block-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--teal-dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.resumen-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.resumen-kpi{background:var(--surface-2);border-radius:10px;padding:14px;text-align:center;}
+.resumen-kpi-num{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--teal-dark);}
+.resumen-kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:4px;}
+.resumen-kpi-delta{font-size:11px;font-weight:700;margin-top:4px;}
+.resumen-kpi-delta.up{color:var(--green);}
+.resumen-kpi-delta.down{color:var(--red);}
+.resumen-kpi-delta.flat{color:var(--muted);}
+.resumen-podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.podium-card{border-radius:12px;padding:14px;text-align:center;}
+.podium-card.gold{background:linear-gradient(135deg,#fffbe6,#fff4c4);border:1px solid #f0d480;}
+.podium-card.silver{background:linear-gradient(135deg,#f5f5f5,#e8e8e8);border:1px solid #c8c8c8;}
+.podium-card.bronze{background:linear-gradient(135deg,#fdf0e0,#f5d8b8);border:1px solid #d8a878;}
+.podium-medal{font-size:28px;margin-bottom:4px;}
+.podium-name{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;}
+.podium-stats{font-size:12px;color:var(--muted);line-height:1.5;}
+.alerta-item{background:#fff8e8;border:1px solid #f0d58a;border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:10px;}
+.alerta-item.critico{background:#fef5f5;border-color:#f0c0c0;}
+.alerta-item.bueno{background:#eefaf9;border-color:#a8e0c0;}
+.alerta-text{color:var(--text);}
+.alerta-tag{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;}
+.alerta-tag.warn{background:#f0d58a;color:#7a4e00;}
+.alerta-tag.crit{background:#f0c0c0;color:#7a2020;}
+.alerta-tag.good{background:#a8e0c0;color:#1a4a2a;}
+.btn-copy{padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-copy:hover{background:var(--lime-soft);border-color:var(--lime);}
+.btn-copy.primary{background:var(--teal-dark);color:#fff;border-color:var(--teal-dark);}
+.btn-copy.primary:hover{background:var(--teal);}
+.resumen-text-area{width:100%;min-height:280px;padding:16px;font-family:'Inter',sans-serif;font-size:13px;line-height:1.7;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--text);resize:vertical;}
+.resumen-text-area:focus{outline:none;border-color:var(--lime);background:var(--surface);}
+.email-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center;padding:20px;}
+.email-modal-bg.show{display:flex;}
+.email-modal{background:var(--surface);border-radius:16px;max-width:780px;width:100%;max-height:90vh;overflow-y:auto;padding:24px 28px;}
+.email-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.email-modal-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);}
+.email-modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0 8px;}
+.email-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.email-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.email-card-name{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--teal-dark);}
+.email-card-subject{font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;}
+.email-card-body{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;max-height:240px;overflow-y:auto;font-family:'Inter',sans-serif;}
 .mgr-tab{display:none;}
 .mgr-tab.active{display:block;}
 .mgr-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;}
@@ -659,6 +705,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="mgr-nav">
       <button class="mgr-nav-btn active" onclick="setMgrTab('equipo',this)">📊 Visión equipo</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('individual',this)">👤 Por SDR</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('resumenes',this)">📅 Resúmenes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('llamadas',this)">📞 Llamadas</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('objetivos',this)">🎯 Objetivos</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('mensajes',this)">💬 Mensajes y tablón</button>
@@ -725,6 +772,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="mgr-tab" id="mgrtab-individual">
       <div class="mgr-sdr-selector" id="mgr-sdr-selector"></div>
       <div id="mgr-individual-content"></div>
+    </div>
+
+    <!-- TAB: RESÚMENES -->
+    <div class="mgr-tab" id="mgrtab-resumenes">
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <button class="resumen-subnav active" id="rsubn-sem" onclick="setResumenTipo('semanal',this)">📊 Resumen semanal</button>
+        <button class="resumen-subnav" id="rsubn-mes" onclick="setResumenTipo('mensual',this)">📆 Resumen mensual</button>
+      </div>
+      <div id="resumen-content"></div>
     </div>
 
     <!-- TAB: LLAMADAS -->
@@ -1695,6 +1751,577 @@ function setMgrTab(tab,btn){
   document.querySelectorAll('.mgr-nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('mgrtab-'+tab).classList.add('active');
   btn.classList.add('active');
+  if(tab==='resumenes')renderResumen();
+}
+
+// ── RESÚMENES ──
+let resumenTipo='semanal';
+function setResumenTipo(tipo,btn){
+  resumenTipo=tipo;
+  document.querySelectorAll('.resumen-subnav').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderResumen();
+}
+
+// Get the week range (Mon-Sun) of last completed week
+function getLastWeekRange(){
+  const now=new Date();
+  const day=now.getDay();
+  // Days since last Monday: if today is Monday=0, we want previous Mon-Sun
+  const daysToPrevMon=day===0?13:6+day;
+  const daysToPrevSun=day===0?7:day;
+  const mon=new Date(now);mon.setDate(now.getDate()-daysToPrevMon);
+  const sun=new Date(now);sun.setDate(now.getDate()-daysToPrevSun);
+  return{start:localDateStr(mon),end:localDateStr(sun),startObj:mon,endObj:sun};
+}
+
+function getPrevWeekRange(weekStart){
+  const mon=new Date(weekStart);mon.setDate(mon.getDate()-7);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{start:localDateStr(mon),end:localDateStr(sun)};
+}
+
+function getThisWeekRange(){
+  const now=new Date();
+  const day=now.getDay();
+  const diff=day===0?-6:1-day;
+  const mon=new Date(now);mon.setDate(now.getDate()+diff);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{start:localDateStr(mon),end:localDateStr(sun)};
+}
+
+function getLastMonthRange(){
+  const now=new Date();
+  const m=new Date(now.getFullYear(),now.getMonth()-1,1);
+  return{start:localDateStr(new Date(m.getFullYear(),m.getMonth(),1)),end:localDateStr(new Date(m.getFullYear(),m.getMonth()+1,0)),label:`${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][m.getMonth()]} ${m.getFullYear()}`,month:m.getMonth()+1,year:m.getFullYear()};
+}
+
+function getPrevMonthRange(mObj){
+  const m=new Date(mObj.year,mObj.month-2,1);
+  return{start:localDateStr(new Date(m.getFullYear(),m.getMonth(),1)),end:localDateStr(new Date(m.getFullYear(),m.getMonth()+1,0))};
+}
+
+function calcStatsForRange(start,end){
+  // Demos by fecha_agendamiento (creation date) for the period
+  const periodDemos=allDemos.filter(d=>{
+    const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return ag>=start&&ag<=end;
+  });
+  const totalDemos=periodDemos.filter(d=>d.estado!=='cancelada').length;
+  const out=periodDemos.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
+  const inb=periodDemos.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
+  const ejec=periodDemos.filter(d=>d.estado==='ejecutada').length;
+  const canc=periodDemos.filter(d=>d.estado==='cancelada').length;
+  // CWD by demo date
+  const cwd=allDemos.filter(d=>d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+  const pctCanc=(totalDemos+canc)>0?Math.round(canc/(totalDemos+canc)*100):0;
+  const pctCierre=ejec>0?Math.round(cwd/ejec*100):0;
+  const pctEjec=totalDemos>0?Math.round(ejec/totalDemos*100):0;
+  return{totalDemos,out,inb,ejec,canc,cwd,pctCanc,pctCierre,pctEjec};
+}
+
+function calcStatsForSdrRange(sdrId,start,end){
+  const sDemos=allDemos.filter(d=>{
+    const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return d.sdr_id===sdrId&&ag>=start&&ag<=end;
+  });
+  const totalDemos=sDemos.filter(d=>d.estado!=='cancelada').length;
+  const out=sDemos.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
+  const inb=sDemos.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
+  const ejec=sDemos.filter(d=>d.estado==='ejecutada').length;
+  const canc=sDemos.filter(d=>d.estado==='cancelada').length;
+  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+  const pctCanc=(totalDemos+canc)>0?Math.round(canc/(totalDemos+canc)*100):0;
+  const pctCierre=ejec>0?Math.round(cwd/ejec*100):0;
+  const pctEjec=totalDemos>0?Math.round(ejec/totalDemos*100):0;
+  return{totalDemos,out,inb,ejec,canc,cwd,pctCanc,pctCierre,pctEjec};
+}
+
+function fmtRangeShort(start,end){
+  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const[sy,sm,sd]=start.split('-');
+  const[ey,em,ed]=end.split('-');
+  if(sm===em)return`${parseInt(sd)}–${parseInt(ed)} ${months[parseInt(sm)-1]}`;
+  return`${parseInt(sd)} ${months[parseInt(sm)-1]} – ${parseInt(ed)} ${months[parseInt(em)-1]}`;
+}
+
+function deltaStr(curr,prev){
+  if(prev===0&&curr===0)return'<span class="resumen-kpi-delta flat">—</span>';
+  if(prev===0)return`<span class="resumen-kpi-delta up">+${curr} nuevo</span>`;
+  const d=curr-prev;
+  const pct=Math.round(d/prev*100);
+  if(d===0)return'<span class="resumen-kpi-delta flat">= vs anterior</span>';
+  if(d>0)return`<span class="resumen-kpi-delta up">📈 +${d} (+${pct}%)</span>`;
+  return`<span class="resumen-kpi-delta down">📉 ${d} (${pct}%)</span>`;
+}
+
+function renderResumen(){
+  if(resumenTipo==='semanal')renderResumenSemanal();
+  else renderResumenMensual();
+}
+
+function renderResumenSemanal(){
+  const range=getLastWeekRange();
+  const prev=getPrevWeekRange(range.startObj);
+  const thisWeek=getThisWeekRange();
+  const stats=calcStatsForRange(range.start,range.end);
+  const prevStats=calcStatsForRange(prev.start,prev.end);
+
+  // Per-SDR stats
+  const sdrRows=allSdrs.map(s=>({sdr:s,stats:calcStatsForSdrRange(s.id,range.start,range.end)}));
+  const podium=sdrRows.slice().sort((a,b)=>b.stats.totalDemos-a.stats.totalDemos).slice(0,3);
+
+  // Alertas
+  const alertas=[];
+  // SDRs por debajo de 60% del promedio del equipo
+  const avgDemos=sdrRows.length>0?stats.totalDemos/sdrRows.length:0;
+  sdrRows.forEach(r=>{
+    if(r.stats.totalDemos<avgDemos*0.6&&avgDemos>=3){
+      alertas.push({tipo:'critico',text:`${r.sdr.nombre} solo ${r.stats.totalDemos} demos (equipo: ${avgDemos.toFixed(1)} promedio)`,tag:'Bajo rendimiento',tagClass:'crit'});
+    }
+    if(r.stats.canc>=4){
+      alertas.push({tipo:'critico',text:`${r.sdr.nombre} tuvo ${r.stats.canc} canceladas esta semana`,tag:'Muchas canceladas',tagClass:'warn'});
+    }
+    if(r.stats.totalDemos>=avgDemos*1.5&&r.stats.totalDemos>=5){
+      alertas.push({tipo:'bueno',text:`${r.sdr.nombre} destacó con ${r.stats.totalDemos} demos (${r.stats.cwd} ganadas)`,tag:'Top performer',tagClass:'good'});
+    }
+  });
+
+  // Semana siguiente — demos ya agendadas
+  const proximas=allDemos.filter(d=>(d.fecha||'')>=thisWeek.start&&(d.fecha||'')<=thisWeek.end&&d.estado!=='cancelada').length;
+
+  const content=document.getElementById('resumen-content');
+  content.innerHTML=`
+    <div class="resumen-block">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+        <div>
+          <div class="resumen-block-title" style="margin-bottom:2px;">📊 Resumen semanal · ${fmtRangeShort(range.start,range.end)}</div>
+          <div style="font-size:13px;color:var(--muted);">Semana cerrada del lunes ${range.start.split('-')[2]} al domingo ${range.end.split('-')[2]}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">📈 KPIs del equipo</div>
+      <div class="resumen-kpi-grid">
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.totalDemos}</div>
+          <div class="resumen-kpi-label">Agendadas</div>
+          ${deltaStr(stats.totalDemos,prevStats.totalDemos)}
+        </div>
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.ejec}</div>
+          <div class="resumen-kpi-label">Ejecutadas</div>
+          ${deltaStr(stats.ejec,prevStats.ejec)}
+        </div>
+        <div class="resumen-kpi" style="background:#eefaf933;border:1px solid #a8e0c0;">
+          <div class="resumen-kpi-num" style="color:var(--green);">${stats.cwd}</div>
+          <div class="resumen-kpi-label">Ganadas</div>
+          ${deltaStr(stats.cwd,prevStats.cwd)}
+        </div>
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.canc}</div>
+          <div class="resumen-kpi-label">Canceladas</div>
+          ${deltaStr(stats.canc,prevStats.canc)}
+        </div>
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.pctCierre}%</div>
+          <div class="resumen-kpi-label">% Cierre</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">🏆 Top 3 SDRs</div>
+      <div class="resumen-podium">
+        ${podium.map((p,i)=>`
+          <div class="podium-card ${['gold','silver','bronze'][i]}">
+            <div class="podium-medal">${['🥇','🥈','🥉'][i]}</div>
+            <div class="podium-name">${p.sdr.nombre}</div>
+            <div class="podium-stats">${p.stats.totalDemos} demos · ${p.stats.ejec} ejecutadas · ${p.stats.cwd} ganadas</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">⚠️ Puntos a tratar en 1:1</div>
+      ${alertas.length===0
+        ?'<div style="color:var(--muted);font-size:13px;padding:10px 0;">Sin alertas — el equipo está estable.</div>'
+        :alertas.map(a=>`
+          <div class="alerta-item ${a.tipo}">
+            <span class="alerta-text">${a.text}</span>
+            <span class="alerta-tag ${a.tagClass}">${a.tag}</span>
+          </div>`).join('')}
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">📅 Semana que entra</div>
+      <div style="font-size:13.5px;color:var(--text);">
+        Demos ya agendadas para esta semana (lunes-domingo): <b>${proximas}</b>
+      </div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">📋 Resumen para enviar</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="btn-copy primary" onclick="copyResumen('semanal','es')">🇪🇸 Copiar resumen ES</button>
+        <button class="btn-copy primary" onclick="copyResumen('semanal','en')">🇬🇧 Copy summary EN (Alex)</button>
+        <button class="btn-copy" onclick="openEmailsModal('semanal')">📧 Generar emails individuales</button>
+      </div>
+      <textarea class="resumen-text-area" id="resumen-text-area-es" placeholder="Se generará al pulsar Copiar..."></textarea>
+    </div>`;
+
+  // Pre-fill the textarea with ES version
+  document.getElementById('resumen-text-area-es').value=buildResumenText('semanal','es');
+}
+
+function renderResumenMensual(){
+  const m=getLastMonthRange();
+  const prev=getPrevMonthRange(m);
+  const stats=calcStatsForRange(m.start,m.end);
+  const prevStats=calcStatsForRange(prev.start,prev.end);
+  const sdrRows=allSdrs.map(s=>({sdr:s,stats:calcStatsForSdrRange(s.id,m.start,m.end)})).sort((a,b)=>b.stats.totalDemos-a.stats.totalDemos);
+
+  // Auto-generated celebrar / preocupa
+  const celebrar=[];
+  const preocupa=[];
+  // Team-level
+  if(stats.totalDemos>prevStats.totalDemos)celebrar.push(`Equipo cerró el mes con ${stats.totalDemos} demos, ${stats.totalDemos-prevStats.totalDemos} más que el mes anterior.`);
+  if(stats.cwd>prevStats.cwd)celebrar.push(`${stats.cwd} ventas cerradas, ${stats.cwd-prevStats.cwd} más que el mes anterior.`);
+  if(stats.pctCierre>=20)celebrar.push(`Excelente % de cierre del equipo: ${stats.pctCierre}%.`);
+  if(stats.totalDemos<prevStats.totalDemos)preocupa.push(`Las demos cayeron de ${prevStats.totalDemos} a ${stats.totalDemos} respecto al mes anterior.`);
+  if(stats.pctCanc>=25)preocupa.push(`% de cancelación alto: ${stats.pctCanc}%. Revisar calidad del agendamiento.`);
+  if(stats.pctCierre<10&&stats.ejec>=10)preocupa.push(`% de cierre bajo: ${stats.pctCierre}%. Trabajar en cualificación.`);
+  // Per-SDR
+  sdrRows.forEach(r=>{
+    if(r.stats.totalDemos>=20&&r.stats.cwd>=3)celebrar.push(`${r.sdr.nombre} firmó un gran mes: ${r.stats.totalDemos} demos y ${r.stats.cwd} ventas.`);
+    if(r.stats.canc>=8)preocupa.push(`${r.sdr.nombre} tuvo ${r.stats.canc} canceladas. Sesión 1:1 para revisar agendamiento.`);
+    const avg=stats.totalDemos/sdrRows.length;
+    if(r.stats.totalDemos<avg*0.5&&avg>=10)preocupa.push(`${r.sdr.nombre} cerró con ${r.stats.totalDemos} demos vs promedio equipo ${avg.toFixed(0)}. Necesita apoyo.`);
+  });
+
+  const podium=sdrRows.slice(0,3);
+  const content=document.getElementById('resumen-content');
+  content.innerHTML=`
+    <div class="resumen-block">
+      <div class="resumen-block-title" style="margin-bottom:2px;">📆 Resumen mensual · ${m.label}</div>
+      <div style="font-size:13px;color:var(--muted);">Mes cerrado completo. Útil para tu reunión mensual con Alex.</div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">📈 KPIs del mes vs mes anterior</div>
+      <div class="resumen-kpi-grid">
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.totalDemos}</div>
+          <div class="resumen-kpi-label">Agendadas</div>
+          ${deltaStr(stats.totalDemos,prevStats.totalDemos)}
+        </div>
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.ejec}</div>
+          <div class="resumen-kpi-label">Ejecutadas</div>
+          ${deltaStr(stats.ejec,prevStats.ejec)}
+        </div>
+        <div class="resumen-kpi" style="background:#eefaf933;border:1px solid #a8e0c0;">
+          <div class="resumen-kpi-num" style="color:var(--green);">${stats.cwd}</div>
+          <div class="resumen-kpi-label">Ganadas</div>
+          ${deltaStr(stats.cwd,prevStats.cwd)}
+        </div>
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.pctCierre}%</div>
+          <div class="resumen-kpi-label">% Cierre</div>
+        </div>
+        <div class="resumen-kpi">
+          <div class="resumen-kpi-num">${stats.pctCanc}%</div>
+          <div class="resumen-kpi-label">% Cancelación</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">🏆 Top 3 SDRs del mes</div>
+      <div class="resumen-podium">
+        ${podium.map((p,i)=>`
+          <div class="podium-card ${['gold','silver','bronze'][i]}">
+            <div class="podium-medal">${['🥇','🥈','🥉'][i]}</div>
+            <div class="podium-name">${p.sdr.nombre}</div>
+            <div class="podium-stats">${p.stats.totalDemos} demos · ${p.stats.cwd} ganadas · ${p.stats.pctCierre}% cierre</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">🎉 Lo que celebrar</div>
+      ${celebrar.length===0?'<div style="color:var(--muted);font-size:13px;">—</div>':celebrar.map(t=>`<div class="alerta-item bueno"><span class="alerta-text">${t}</span><span class="alerta-tag good">✓</span></div>`).join('')}
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">⚠️ Lo que preocupa</div>
+      ${preocupa.length===0?'<div style="color:var(--muted);font-size:13px;">Sin puntos críticos. Buen mes.</div>':preocupa.map(t=>`<div class="alerta-item critico"><span class="alerta-text">${t}</span><span class="alerta-tag warn">!</span></div>`).join('')}
+    </div>
+
+    <div class="resumen-block">
+      <div class="resumen-block-title">📋 Resumen para enviar</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="btn-copy primary" onclick="copyResumen('mensual','es')">🇪🇸 Copiar resumen ES</button>
+        <button class="btn-copy primary" onclick="copyResumen('mensual','en')">🇬🇧 Copy summary EN (Alex)</button>
+        <button class="btn-copy" onclick="openEmailsModal('mensual')">📧 Generar emails individuales</button>
+      </div>
+      <textarea class="resumen-text-area" id="resumen-text-area-es" style="min-height:340px;"></textarea>
+    </div>`;
+
+  document.getElementById('resumen-text-area-es').value=buildResumenText('mensual','es');
+}
+
+function buildResumenText(tipo,lang){
+  if(tipo==='semanal')return buildResumenSemanalText(lang);
+  return buildResumenMensualText(lang);
+}
+
+function buildResumenSemanalText(lang){
+  const range=getLastWeekRange();
+  const prev=getPrevWeekRange(range.startObj);
+  const thisWeek=getThisWeekRange();
+  const stats=calcStatsForRange(range.start,range.end);
+  const prevStats=calcStatsForRange(prev.start,prev.end);
+  const sdrRows=allSdrs.map(s=>({sdr:s,stats:calcStatsForSdrRange(s.id,range.start,range.end)})).sort((a,b)=>b.stats.totalDemos-a.stats.totalDemos);
+  const proximas=allDemos.filter(d=>(d.fecha||'')>=thisWeek.start&&(d.fecha||'')<=thisWeek.end&&d.estado!=='cancelada').length;
+  const delta=(c,p)=>{if(p===0)return c>0?'+'+c+' new':'=';const d=c-p;if(d===0)return'=';return(d>0?'+':'')+d+' ('+(d>0?'+':'')+Math.round(d/p*100)+'%)';};
+
+  if(lang==='es'){
+    return`📊 RESUMEN SEMANAL — ${fmtRangeShort(range.start,range.end)}
+
+📈 KPIs DEL EQUIPO
+• Demos agendadas: ${stats.totalDemos} (${delta(stats.totalDemos,prevStats.totalDemos)} vs semana anterior)
+• Ejecutadas: ${stats.ejec} (${delta(stats.ejec,prevStats.ejec)})
+• Ganadas: ${stats.cwd} (${delta(stats.cwd,prevStats.cwd)})
+• Canceladas: ${stats.canc} (${delta(stats.canc,prevStats.canc)})
+• % Cierre: ${stats.pctCierre}%
+
+🏆 RANKING SDR
+${sdrRows.map((r,i)=>`${i+1}. ${r.sdr.nombre} — ${r.stats.totalDemos} demos · ${r.stats.ejec} ejec · ${r.stats.cwd} ganadas`).join('\n')}
+
+📅 SEMANA QUE ENTRA
+${proximas} demos ya agendadas en el calendario del equipo.
+
+Saludos,
+Massimo`;
+  }
+  return`📊 WEEKLY SUMMARY — ${fmtRangeShort(range.start,range.end)}
+
+📈 TEAM KPIs
+• Demos booked: ${stats.totalDemos} (${delta(stats.totalDemos,prevStats.totalDemos)} vs previous week)
+• Executed: ${stats.ejec} (${delta(stats.ejec,prevStats.ejec)})
+• Closed-won: ${stats.cwd} (${delta(stats.cwd,prevStats.cwd)})
+• Cancelled: ${stats.canc} (${delta(stats.canc,prevStats.canc)})
+• Close rate: ${stats.pctCierre}%
+
+🏆 SDR RANKING
+${sdrRows.map((r,i)=>`${i+1}. ${r.sdr.nombre} — ${r.stats.totalDemos} demos · ${r.stats.ejec} executed · ${r.stats.cwd} won`).join('\n')}
+
+📅 WEEK AHEAD
+${proximas} demos already booked in the team's calendar.
+
+Best,
+Massimo`;
+}
+
+function buildResumenMensualText(lang){
+  const m=getLastMonthRange();
+  const prev=getPrevMonthRange(m);
+  const stats=calcStatsForRange(m.start,m.end);
+  const prevStats=calcStatsForRange(prev.start,prev.end);
+  const sdrRows=allSdrs.map(s=>({sdr:s,stats:calcStatsForSdrRange(s.id,m.start,m.end)})).sort((a,b)=>b.stats.totalDemos-a.stats.totalDemos);
+  const delta=(c,p)=>{if(p===0)return c>0?'+'+c+' new':'=';const d=c-p;if(d===0)return'=';return(d>0?'+':'')+d+' ('+(d>0?'+':'')+Math.round(d/p*100)+'%)';};
+
+  // Auto-generate celebrar / preocupa
+  const celebrar=[],preocupa=[];
+  if(stats.totalDemos>prevStats.totalDemos)celebrar.push(`Equipo cerró con ${stats.totalDemos} demos, ${stats.totalDemos-prevStats.totalDemos} más que el mes anterior.`);
+  if(stats.cwd>prevStats.cwd)celebrar.push(`${stats.cwd} ventas cerradas (${stats.cwd-prevStats.cwd} más que el mes anterior).`);
+  if(stats.pctCierre>=20)celebrar.push(`Excelente % de cierre: ${stats.pctCierre}%.`);
+  if(stats.totalDemos<prevStats.totalDemos)preocupa.push(`Las demos cayeron de ${prevStats.totalDemos} a ${stats.totalDemos}.`);
+  if(stats.pctCanc>=25)preocupa.push(`% de cancelación alto: ${stats.pctCanc}%.`);
+  sdrRows.forEach(r=>{
+    if(r.stats.totalDemos>=20&&r.stats.cwd>=3)celebrar.push(`${r.sdr.nombre}: ${r.stats.totalDemos} demos y ${r.stats.cwd} ventas — gran mes.`);
+    if(r.stats.canc>=8)preocupa.push(`${r.sdr.nombre} con ${r.stats.canc} canceladas — sesión 1:1 pendiente.`);
+  });
+
+  if(lang==='es'){
+    return`📆 RESUMEN MENSUAL — ${m.label}
+
+📈 KPIs DEL MES (vs mes anterior)
+• Demos agendadas: ${stats.totalDemos} (${delta(stats.totalDemos,prevStats.totalDemos)})
+• Ejecutadas: ${stats.ejec} (${delta(stats.ejec,prevStats.ejec)})
+• Ganadas: ${stats.cwd} (${delta(stats.cwd,prevStats.cwd)})
+• % Cierre: ${stats.pctCierre}%
+• % Cancelación: ${stats.pctCanc}%
+
+🏆 RANKING SDR
+${sdrRows.map((r,i)=>`${i+1}. ${r.sdr.nombre} — ${r.stats.totalDemos} demos · ${r.stats.cwd} ganadas · ${r.stats.pctCierre}% cierre`).join('\n')}
+
+🎉 LO QUE CELEBRAR
+${celebrar.length?celebrar.map(t=>'• '+t).join('\n'):'—'}
+
+⚠️ LO QUE PREOCUPA Y A TRABAJAR
+${preocupa.length?preocupa.map(t=>'• '+t).join('\n'):'Sin puntos críticos. Buen mes.'}
+
+📌 PLAN PARA EL MES SIGUIENTE
+[Aquí puedes añadir lo que vais a trabajar concretamente]
+
+Saludos,
+Massimo`;
+  }
+  const celebEN=[],worryEN=[];
+  if(stats.totalDemos>prevStats.totalDemos)celebEN.push(`Team closed with ${stats.totalDemos} demos, ${stats.totalDemos-prevStats.totalDemos} more than the previous month.`);
+  if(stats.cwd>prevStats.cwd)celebEN.push(`${stats.cwd} closed-won (${stats.cwd-prevStats.cwd} more than previous month).`);
+  if(stats.pctCierre>=20)celebEN.push(`Excellent close rate: ${stats.pctCierre}%.`);
+  if(stats.totalDemos<prevStats.totalDemos)worryEN.push(`Demos dropped from ${prevStats.totalDemos} to ${stats.totalDemos}.`);
+  if(stats.pctCanc>=25)worryEN.push(`High cancellation rate: ${stats.pctCanc}%.`);
+  sdrRows.forEach(r=>{
+    if(r.stats.totalDemos>=20&&r.stats.cwd>=3)celebEN.push(`${r.sdr.nombre}: ${r.stats.totalDemos} demos and ${r.stats.cwd} wins — great month.`);
+    if(r.stats.canc>=8)worryEN.push(`${r.sdr.nombre} with ${r.stats.canc} cancellations — 1:1 session pending.`);
+  });
+  return`📆 MONTHLY SUMMARY — ${m.label}
+
+📈 MONTH KPIs (vs previous month)
+• Demos booked: ${stats.totalDemos} (${delta(stats.totalDemos,prevStats.totalDemos)})
+• Executed: ${stats.ejec} (${delta(stats.ejec,prevStats.ejec)})
+• Closed-won: ${stats.cwd} (${delta(stats.cwd,prevStats.cwd)})
+• Close rate: ${stats.pctCierre}%
+• Cancellation rate: ${stats.pctCanc}%
+
+🏆 SDR RANKING
+${sdrRows.map((r,i)=>`${i+1}. ${r.sdr.nombre} — ${r.stats.totalDemos} demos · ${r.stats.cwd} won · ${r.stats.pctCierre}% close rate`).join('\n')}
+
+🎉 WHAT TO CELEBRATE
+${celebEN.length?celebEN.map(t=>'• '+t).join('\n'):'—'}
+
+⚠️ AREAS OF CONCERN
+${worryEN.length?worryEN.map(t=>'• '+t).join('\n'):'No critical points. Good month.'}
+
+📌 NEXT MONTH FOCUS
+[Add specific focus areas here]
+
+Best,
+Massimo`;
+}
+
+async function copyResumen(tipo,lang){
+  const text=buildResumenText(tipo,lang);
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast(lang==='es'?'✓ Resumen copiado al portapapeles':'✓ Summary copied to clipboard');
+  }catch(e){
+    // Fallback: put it in the textarea and tell user to copy manually
+    const ta=document.getElementById('resumen-text-area-es');
+    if(ta){ta.value=text;ta.select();}
+    showToast('⚠️ Copia el texto del cuadro manualmente');
+  }
+}
+
+function buildSdrEmail(sdr,tipo,range,prevRange){
+  const s=calcStatsForSdrRange(sdr.id,range.start,range.end);
+  const ps=calcStatsForSdrRange(sdr.id,prevRange.start,prevRange.end);
+  const periodo=tipo==='semanal'?'esta semana':'este mes';
+  const periodoAnt=tipo==='semanal'?'la semana pasada':'el mes pasado';
+
+  // Detect positives
+  const positivos=[];
+  if(s.cwd>0)positivos.push(`🎉 Has cerrado ${s.cwd} venta${s.cwd>1?'s':''} ${periodo}. ¡Eso es lo que cuenta!`);
+  if(s.totalDemos>ps.totalDemos&&ps.totalDemos>0)positivos.push(`Has agendado más demos que ${periodoAnt} (${s.totalDemos} vs ${ps.totalDemos}). Vas en la dirección correcta.`);
+  if(s.pctCierre>=20&&s.ejec>=3)positivos.push(`Tu ratio de cierre es excelente: ${s.pctCierre}%. La calidad de tus demos es alta.`);
+  if(s.totalDemos>=15&&tipo==='semanal')positivos.push(`Volumen brutal de demos esta semana (${s.totalDemos}). Sigue así.`);
+
+  // Detect things to improve
+  const mejoras=[];
+  if(s.canc>=4)mejoras.push(`Has tenido ${s.canc} canceladas ${periodo}. Vamos a sentarnos a revisar juntos la cualificación, seguro que podemos afinar.`);
+  if(s.pctCierre<10&&s.ejec>=5)mejoras.push(`Tu % de cierre está en ${s.pctCierre}% — hay margen para mejorar. Cuenta conmigo para preparar mejor las demos.`);
+  if(s.totalDemos<ps.totalDemos&&ps.totalDemos>0&&tipo==='semanal'&&(ps.totalDemos-s.totalDemos)>=3)mejoras.push(`Bajaste un poco el ritmo respecto a ${periodoAnt} (${s.totalDemos} vs ${ps.totalDemos}). Si necesitas algo de mí para volver al ritmo, ya sabes dónde estoy.`);
+
+  const subject=tipo==='semanal'?`Tu semana en números — ${fmtRangeShort(range.start,range.end)}`:`Tu mes en números — ${range.label||fmtRangeShort(range.start,range.end)}`;
+
+  let body=`Hola ${sdr.nombre},\n\n`;
+  body+=`Te paso un resumen rápido de cómo te ha ido ${periodo}:\n\n`;
+  body+=`📊 Tus números\n`;
+  body+=`• Demos agendadas: ${s.totalDemos} (${s.out} outbound · ${s.inb} inbound)\n`;
+  body+=`• Demos ejecutadas: ${s.ejec}\n`;
+  body+=`• Ventas cerradas: ${s.cwd}\n`;
+  body+=`• Canceladas: ${s.canc}\n`;
+  if(s.ejec>0)body+=`• % de cierre: ${s.pctCierre}%\n`;
+  body+=`\n`;
+
+  if(positivos.length>0){
+    body+=`✅ Lo que destaco\n`;
+    positivos.forEach(p=>{body+=`• ${p}\n`;});
+    body+=`\n`;
+  }
+
+  if(mejoras.length>0){
+    body+=`💡 Áreas a trabajar juntos\n`;
+    mejoras.forEach(m=>{body+=`• ${m}\n`;});
+    body+=`\n`;
+  }
+
+  if(positivos.length===0&&mejoras.length===0){
+    body+=`Vas estable. Mantén el ritmo y, si surge algo o quieres comentar cualquier cosa, hablamos cuando quieras.\n\n`;
+  }
+
+  body+=`Recuerda que estoy aquí para apoyarte en lo que necesites. Si quieres tener una 1:1 para revisar cualquier cosa, dímelo y la agendamos.\n\n`;
+  body+=`Un abrazo,\nMassimo`;
+
+  return{subject,body};
+}
+
+function openEmailsModal(tipo){
+  const range=tipo==='semanal'?getLastWeekRange():getLastMonthRange();
+  const prevRange=tipo==='semanal'?getPrevWeekRange(range.startObj):getPrevMonthRange(range);
+  const emails=allSdrs.map(s=>({sdr:s,...buildSdrEmail(s,tipo,range,prevRange)}));
+
+  const bg=document.getElementById('emails-modal-bg')||(()=>{
+    const div=document.createElement('div');
+    div.id='emails-modal-bg';
+    div.className='email-modal-bg';
+    document.body.appendChild(div);
+    return div;
+  })();
+
+  bg.innerHTML=`
+    <div class="email-modal" onclick="event.stopPropagation()">
+      <div class="email-modal-head">
+        <div class="email-modal-title">📧 Emails ${tipo==='semanal'?'semanales':'mensuales'} para cada SDR</div>
+        <button class="email-modal-close" onclick="closeEmailsModal()">✕</button>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        Estos son borradores generados automáticamente para que los revises y edites antes de enviarlos. Pulsa "Copiar" en cada uno para llevártelo a tu Gmail/Outlook.
+      </div>
+      ${emails.map((e,i)=>`
+        <div class="email-card">
+          <div class="email-card-head">
+            <div class="email-card-name">📨 Para: ${e.sdr.nombre}</div>
+            <button class="btn-copy" onclick="copyEmailContent(${i})">📋 Copiar email</button>
+          </div>
+          <div class="email-card-subject">Asunto: ${e.subject}</div>
+          <textarea id="email-body-${i}" class="email-card-body" style="width:100%;min-height:160px;resize:vertical;">${e.body}</textarea>
+        </div>`).join('')}
+    </div>`;
+  bg.onclick=(ev)=>{if(ev.target===bg)closeEmailsModal();};
+  bg.classList.add('show');
+}
+
+async function copyEmailContent(idx){
+  const ta=document.getElementById('email-body-'+idx);
+  if(!ta)return;
+  try{
+    await navigator.clipboard.writeText(ta.value);
+    showToast('✓ Email copiado al portapapeles');
+  }catch(e){
+    ta.select();
+    showToast('⚠️ Selecciona y copia con Ctrl+C');
+  }
+}
+
+function closeEmailsModal(){
+  const bg=document.getElementById('emails-modal-bg');
+  if(bg)bg.classList.remove('show');
 }
 function setMgrMonth(offset,btn){
   mgrMonthOffset=offset;
