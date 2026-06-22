@@ -1480,21 +1480,56 @@ function renderLlamadasTable(){
   document.getElementById('llamadas-month-label').textContent=mgrMonthLabel();
   const m=mgrTargetMonth();
   const t=document.getElementById('llamadas-table');
+  const pctPill=(val,green,yellow)=>{
+    const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
+    return`<span class="pct-pill ${cls}">${val.toFixed(1)}%</span>`;
+  };
   t.innerHTML=`
-    <thead><tr><th>SDR</th><th>Llamadas hechas</th><th>Conectadas</th><th>% Conexión</th><th>Demos</th><th>Llam/demo</th><th></th></tr></thead>
+    <thead><tr>
+      <th>SDR</th>
+      <th>Llamadas hechas</th>
+      <th>Conectadas</th>
+      <th>% Conexión</th>
+      <th>Demos</th>
+      <th>Llam/demo</th>
+      <th>% Conect→Demo</th>
+      <th>Ganadas</th>
+      <th>% Demo→Ganada</th>
+      <th></th>
+    </tr></thead>
     <tbody>${allSdrs.map(s=>{
       const st=sdrStats(s.id);
       const llam=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
+      // % conectada a demo: demos / conectadas
+      const pctConectaDemo=st.conectadas>0?(st.totalDemos/st.conectadas*100):0;
+      // % demo a ganada: ganadas / demos ejecutadas
+      const pctDemoGanada=st.ejecutadas>0?(st.totalCwd/st.ejecutadas*100):0;
       return`<tr>
         <td>${s.nombre}</td>
         <td><input type="number" min="0" id="ll-h-${s.id}" value="${llam?.llamadas_hechas||0}"/></td>
         <td><input type="number" min="0" id="ll-c-${s.id}" value="${llam?.llamadas_conectadas||0}"/></td>
-        <td>${st.ratioConexion.toFixed(1)}%</td>
-        <td>${st.totalDemos}</td>
-        <td>${st.callsPerDemo.toFixed(1)}</td>
+        <td>${pctPill(st.ratioConexion,70,50)}</td>
+        <td><b>${st.totalDemos}</b></td>
+        <td class="mini-ratio">${st.callsPerDemo.toFixed(1)}</td>
+        <td>${pctPill(pctConectaDemo,10,5)}</td>
+        <td><b style="color:var(--green)">${st.totalCwd}</b></td>
+        <td>${pctPill(pctDemoGanada,20,10)}</td>
         <td><button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="saveLlamadas(${s.id})">Guardar</button></td>
       </tr>`;
-    }).join('')}</tbody>`;
+    }).join('')}
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td>${allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_hechas||0);},0)}</td>
+      <td>${allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_conectadas||0);},0)}</td>
+      <td>${(()=>{const h=allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_hechas||0);},0);const c=allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_conectadas||0);},0);return h>0?(c/h*100).toFixed(1)+'%':'—';})()}</td>
+      <td><b>${allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalDemos,0)}</b></td>
+      <td>—</td>
+      <td>${(()=>{const demos=allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalDemos,0);const conect=allSdrs.reduce((a,s)=>a+sdrStats(s.id).conectadas,0);return conect>0?(demos/conect*100).toFixed(1)+'%':'—';})()}</td>
+      <td><b style="color:var(--green)">${allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalCwd,0)}</b></td>
+      <td>${(()=>{const ejec=allSdrs.reduce((a,s)=>a+sdrStats(s.id).ejecutadas,0);const cwd=allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalCwd,0);return ejec>0?(cwd/ejec*100).toFixed(1)+'%':'—';})()}</td>
+      <td></td>
+    </tr>
+    </tbody>`;
 }
 
 async function saveLlamadas(sdrId){
