@@ -302,6 +302,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .delta-badge.up{background:#eafaf0;color:var(--green);}
 .delta-badge.down{background:#fde8e8;color:var(--red);}
 .delta-badge.flat{background:#f0f0f0;color:var(--muted);}
+/* KUDOS */
+.kudos-banner{margin:24px;border-radius:16px;padding:20px 26px;display:flex;align-items:center;gap:18px;background:linear-gradient(110deg,#fff4d6 0%,#ffeab8 100%);border:1px solid #f0d480;position:relative;overflow:hidden;animation:kudosShine 3s ease-in-out infinite;}
+.kudos-banner::after{content:'🎉';position:absolute;right:18px;top:-12px;font-size:90px;opacity:0.18;}
+.kudos-banner-emoji{font-size:36px;flex-shrink:0;}
+.kudos-banner-content{flex:1;z-index:1;}
+.kudos-banner-label{font-size:11px;font-weight:700;color:#8a5e00;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+.kudos-banner-text{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:#3a2a00;line-height:1.4;}
+.kudos-banner-meta{font-size:11.5px;color:#8a5e00;margin-top:6px;}
+.kudos-banner-close{background:rgba(0,0,0,0.06);border:none;color:#5a4400;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0;z-index:1;transition:all 0.15s;}
+.kudos-banner-close:hover{background:rgba(0,0,0,0.12);}
+@keyframes kudosShine{0%,100%{box-shadow:0 4px 12px rgba(240,212,128,0.3);}50%{box-shadow:0 6px 18px rgba(240,212,128,0.5);}}
+.kudos-emoji-row{display:flex;gap:6px;flex-wrap:wrap;}
+.kudos-emoji-btn{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);font-size:22px;cursor:pointer;transition:all 0.15s;}
+.kudos-emoji-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
+.kudos-emoji-btn.selected{border-color:var(--lime);background:var(--lime-soft);transform:scale(1.1);}
+.kudos-templates{display:flex;flex-direction:column;gap:6px;}
+.kudos-template{padding:9px 13px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;text-align:left;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.kudos-template:hover{border-color:var(--lime);background:var(--lime-soft);}
 .stat-delta{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:500;}
 .mgr-table .num{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
 
@@ -524,6 +542,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
   </div>
 
+  <div id="kudos-banner-wrap"></div>
+
   <div class="message-banner">
     <div class="message-icon">💡</div>
     <div>
@@ -732,6 +752,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <!-- Objetivos barras -->
       <div class="objetivos-panel" id="mgr-team-obj" style="margin-bottom:20px;"></div>
 
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <button class="btn-copy primary" onclick="openKudosModal(null,'todo el equipo')">🎉 Enviar kudos al equipo</button>
+      </div>
+
       <!-- Ranking SDR -->
       <div class="mgr-block">
         <div class="mgr-block-head">
@@ -851,6 +875,43 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL KUDOS -->
+<div class="modal-overlay" id="kudos-modal">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-head">
+      <div class="modal-title" id="kudos-modal-title">🎉 Enviar kudos</div>
+      <button class="modal-close" onclick="closeKudosModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="kudos-destinatario-id"/>
+      <input type="hidden" id="kudos-es-grupal"/>
+
+      <div class="form-group">
+        <label class="form-label">Emoji</label>
+        <div class="kudos-emoji-row" id="kudos-emoji-row">
+          ${'🎉|🔥|💪|🚀|👏|⭐|💎|🏆|🙌|💯'.split('|').map(e=>`<button type="button" class="kudos-emoji-btn" onclick="selectKudosEmoji('${e}',this)">${e}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mensaje rápido (plantillas)</label>
+        <div class="kudos-templates" id="kudos-templates"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">O escribe tu mensaje</label>
+        <textarea class="form-input" id="kudos-mensaje" rows="3" placeholder="Buen trabajo cerrando ese deal hoy…"></textarea>
+        <div class="form-hint">Verá este mensaje cuando entre a su panel.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeKudosModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveKudos()">🎉 Enviar kudos</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1124,7 +1185,7 @@ async function enterApp(){
   document.getElementById('user-name').textContent=currentUser.nombre;
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('today-date').textContent=fmtDateLong();
-  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias()]);
+  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
   if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
@@ -1586,6 +1647,9 @@ function renderMgrIndividual(){
   const presCwd=sdrCwd.filter(d=>d.tipo==='presencial').length;
   const onlCwd=sdrCwd.filter(d=>d.tipo==='online').length;
   document.getElementById('mgr-individual-content').innerHTML=`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px;gap:8px;">
+      <button class="btn-copy primary" onclick="openKudosModal(${sdr.id},'${sdr.nombre.replace(/'/g,"\\'")}')">🎉 Enviar kudos a ${sdr.nombre}</button>
+    </div>
     <div class="stats-row" style="grid-template-columns:repeat(6,1fr);margin-bottom:20px;">
       <div class="stat-card accent"><div class="stat-num">${s.totalDemos}</div><div class="stat-label">Agendadas</div></div>
       <div class="stat-card"><div class="stat-num">${s.ejecutadas}</div><div class="stat-label">Ejecutadas</div></div>
@@ -1798,6 +1862,110 @@ async function addCiudad(){
 async function toggleCiudad(id,activa){
   try{await sb(`ciudades?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activa})});await loadManagerData();renderManager();}
   catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── KUDOS ──
+const KUDOS_TEMPLATES_IND=[
+  '¡Genial cómo cerraste ese deal hoy! Sigue así 🚀',
+  'Volumen brutal de demos esta semana. Se nota la energía.',
+  'Buen trabajo recuperando demos canceladas. Es justo lo que necesitamos.',
+  'Tu ratio de conexión está excelente este mes. Sigue afinando ese discurso.',
+  'Excelente recuperación tras una semana floja. Sabía que ibas a remontar.',
+  'Tu actitud frente a los nos es ejemplar. Sigue así.'
+];
+const KUDOS_TEMPLATES_GRUPO=[
+  '¡Equipazo! Esta semana habéis estado a otro nivel 🔥',
+  'Brutal el ritmo del equipo este mes. Orgulloso de vosotros.',
+  'Lo que estáis haciendo con la prospección es para enmarcarlo.',
+  'Hemos cerrado el mes por encima de objetivo. Sois los mejores 💪',
+  'Cada uno aportando lo suyo y se nota en los resultados. Gracias equipo.'
+];
+let kudosSelectedEmoji='🎉';
+
+function openKudosModal(sdrId,nombre){
+  document.getElementById('kudos-destinatario-id').value=sdrId||'';
+  document.getElementById('kudos-es-grupal').value=sdrId?'0':'1';
+  document.getElementById('kudos-modal-title').textContent=sdrId?`🎉 Enviar kudos a ${nombre}`:'🎉 Enviar kudos al equipo';
+  document.getElementById('kudos-mensaje').value='';
+  kudosSelectedEmoji='🎉';
+  // Reset emoji selection
+  document.querySelectorAll('.kudos-emoji-btn').forEach(b=>b.classList.remove('selected'));
+  const first=document.querySelector('.kudos-emoji-btn');
+  if(first)first.classList.add('selected');
+  // Render templates
+  const templates=sdrId?KUDOS_TEMPLATES_IND:KUDOS_TEMPLATES_GRUPO;
+  document.getElementById('kudos-templates').innerHTML=templates.map(t=>`<button type="button" class="kudos-template" onclick="useKudosTemplate(this)">${t}</button>`).join('');
+  document.getElementById('kudos-modal').classList.add('show');
+}
+
+function closeKudosModal(){
+  document.getElementById('kudos-modal').classList.remove('show');
+}
+
+function selectKudosEmoji(emoji,btn){
+  kudosSelectedEmoji=emoji;
+  document.querySelectorAll('.kudos-emoji-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function useKudosTemplate(btn){
+  document.getElementById('kudos-mensaje').value=btn.textContent.trim();
+}
+
+async function saveKudos(){
+  const mensaje=document.getElementById('kudos-mensaje').value.trim();
+  if(!mensaje){showToast('⚠️ Escribe un mensaje');return;}
+  const sdrId=document.getElementById('kudos-destinatario-id').value;
+  const esGrupal=document.getElementById('kudos-es-grupal').value==='1';
+  const payload={
+    mensaje,
+    emoji:kudosSelectedEmoji,
+    es_grupal:esGrupal,
+    destinatario_id:esGrupal?null:parseInt(sdrId),
+    creado_por:'Massimo'
+  };
+  try{
+    await sb('kudos',{method:'POST',body:JSON.stringify(payload)});
+    showToast('✓ Kudos enviado'+(esGrupal?' al equipo':''));
+    closeKudosModal();
+  }catch(e){showToast('❌ Error enviando kudos');console.error(e);}
+}
+
+// SDR side: load and show kudos banner
+async function loadKudosForSdr(){
+  if(!currentUser||currentUser.rol!=='sdr')return;
+  try{
+    // Get unseen kudos: either personal or team-wide, not yet seen
+    const rows=await sb(`kudos?or=(destinatario_id.eq.${currentUser.id},es_grupal.eq.true)&visto=eq.false&order=created_at.desc`)||[];
+    renderKudosBanner(rows);
+  }catch(e){console.error('Error loading kudos:',e);}
+}
+
+function renderKudosBanner(kudos){
+  const wrap=document.getElementById('kudos-banner-wrap');
+  if(!wrap)return;
+  if(!kudos.length){wrap.innerHTML='';return;}
+  // Show the most recent unseen kudos
+  const k=kudos[0];
+  const tipo=k.es_grupal?'Kudos al equipo':'Kudos para ti';
+  const fecha=k.created_at?new Date(k.created_at).toLocaleDateString('es-ES',{day:'numeric',month:'long'}):'';
+  wrap.innerHTML=`
+    <div class="kudos-banner">
+      <div class="kudos-banner-emoji">${k.emoji||'🎉'}</div>
+      <div class="kudos-banner-content">
+        <div class="kudos-banner-label">${tipo} · de ${k.creado_por||'Massimo'}</div>
+        <div class="kudos-banner-text">${k.mensaje}</div>
+        <div class="kudos-banner-meta">${fecha}${kudos.length>1?` · +${kudos.length-1} más pendientes`:''}</div>
+      </div>
+      <button class="kudos-banner-close" onclick="markKudosSeen(${k.id})" title="Marcar como visto">✓</button>
+    </div>`;
+}
+
+async function markKudosSeen(id){
+  try{
+    await sb(`kudos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({visto:true})});
+    await loadKudosForSdr();
+  }catch(e){console.error(e);}
 }
 
 function setMgrTab(tab,btn){
