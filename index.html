@@ -2842,8 +2842,91 @@ function renderSdrMetrics(){
       </div>
     </div>`;
 }
+function comercialName(id){const c=comerciales.find(x=>x.id===id);return c?c.nombre:'—';}
 function ciudadName(id){const c=ciudades.find(x=>x.id===id);return c?c.nombre:'—';}
 function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Necesita seguimiento',no_interesado:'No interesado',cerrado_ganado:'Cerrado ganado',cerrado_perdido:'Cerrado perdido'}[o]||'';}
+
+async function renderSdrMetrics(){
+  const list=document.getElementById('demo-list');
+  const{start,end}=monthRange();
+  const m=getTargetMonth();
+
+  // Load all SDRs llamadas for this month (need to fetch from Supabase)
+  let allSdrUsers=[];
+  let allLlamadasData=[];
+  let allDemosData=[];
+  try{
+    allSdrUsers=await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre&order=nombre.asc`)||[];
+    allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
+    allDemosData=await sb(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento`)||[];
+  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error cargando métricas</div></div>';return;}
+
+  const pill=(val,green,yellow)=>{
+    const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
+    return`<span class="pct-pill ${cls}">${val.toFixed(1)}%</span>`;
+  };
+
+  const rows=allSdrUsers.map(s=>{
+    const llam=allLlamadasData.find(l=>l.sdr_id===s.id)||{llamadas_hechas:0,llamadas_conectadas:0};
+    const hechas=llam.llamadas_hechas||0;
+    const conectadas=llam.llamadas_conectadas||0;
+    const sDemos=allDemosData.filter(d=>{
+      const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+      return d.sdr_id===s.id&&ag>=start&&ag<=end&&d.estado!=='cancelada';
+    });
+    const totalDemos=sDemos.length;
+    const ejecutadas=sDemos.filter(d=>d.estado==='ejecutada').length;
+    const cwd=allDemosData.filter(d=>d.sdr_id===s.id&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+    const pctConexion=hechas>0?conectadas/hechas*100:0;
+    const pctConectaDemo=conectadas>0?totalDemos/conectadas*100:0;
+    const pctDemoGanada=ejecutadas>0?cwd/ejecutadas*100:0;
+    return{nombre:s.nombre,hechas,conectadas,pctConexion,totalDemos,pctConectaDemo,cwd,pctDemoGanada,isMe:s.id===currentUser.id};
+  });
+
+  list.innerHTML=`
+    <div style="margin-bottom:20px;">
+      <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;">📊 Métricas de actividad — ${monthLabel()}</div>
+      <div style="font-size:13px;color:var(--muted);">Tu rendimiento comparado con el resto del equipo. Las llamadas las actualiza el manager.</div>
+    </div>
+    <div class="mgr-block" style="overflow-x:auto;">
+      <table class="mgr-table">
+        <thead><tr>
+          <th>SDR</th>
+          <th>Llamadas hechas</th>
+          <th>Conectadas</th>
+          <th>% Conexión</th>
+          <th>Demos</th>
+          <th>% Conect→Demo</th>
+          <th>Ventas</th>
+          <th>% Demo→Venta</th>
+        </tr></thead>
+        <tbody>
+        ${rows.map(r=>`
+          <tr style="${r.isMe?'background:var(--lime-soft);font-weight:600;':''}">
+            <td>${r.nombre}${r.isMe?' 👈':''}</td>
+            <td>${r.hechas||'—'}</td>
+            <td>${r.conectadas||'—'}</td>
+            <td>${r.hechas>0?pill(r.pctConexion,70,50):'—'}</td>
+            <td><b>${r.totalDemos}</b></td>
+            <td>${r.conectadas>0?pill(r.pctConectaDemo,10,5):'—'}</td>
+            <td><b style="color:var(--green)">${r.cwd||'—'}</b></td>
+            <td>${r.ejecutadas>0?pill(r.pctDemoGanada,20,10):'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="proyeccion-box" style="margin-top:16px;">
+      <div class="proy-icon">💡</div>
+      <div class="proy-content">
+        <div class="proy-title" style="color:var(--teal-dark);">Cómo leer estos ratios</div>
+        <div class="proy-text">
+          <b>% Conexión ≥70%</b> → bueno, la gente coge el teléfono.<br>
+          <b>% Conect→Demo ≥10%</b> → verde. De cada 10 llamadas conectadas, 1 acaba en demo.<br>
+          <b>% Demo→Venta ≥20%</b> → excelente. 1 de cada 5 demos termina en venta.
+        </div>
+      </div>
+    </div>`;
+}
 
 function renderList(){
   const list=document.getElementById('demo-list');
