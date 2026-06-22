@@ -964,7 +964,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
 
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeKudosModal()">Cancelar</button>
+        <button class="btn-cancel" onclick="closeKudosModal()">Cancelar</button>
         <button class="btn-primary" onclick="saveKudos()">🎉 Enviar kudos</button>
       </div>
     </div>
@@ -2073,11 +2073,11 @@ function openKudosModal(sdrId,nombre){
   // Render templates
   const templates=sdrId?KUDOS_TEMPLATES_IND:KUDOS_TEMPLATES_GRUPO;
   document.getElementById('kudos-templates').innerHTML=templates.map(t=>`<button type="button" class="kudos-template" onclick="useKudosTemplate(this)">${t}</button>`).join('');
-  document.getElementById('kudos-modal').classList.add('show');
+  document.getElementById('kudos-modal').classList.add('active');
 }
 
 function closeKudosModal(){
-  document.getElementById('kudos-modal').classList.remove('show');
+  document.getElementById('kudos-modal').classList.remove('active');
 }
 
 function selectKudosEmoji(emoji,btn){
