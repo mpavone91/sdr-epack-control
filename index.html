@@ -72,6 +72,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .stat-card.accent{background:var(--teal-dark);border-color:var(--teal-dark);}
 .stat-card.accent .stat-num{color:var(--lime);}
 .stat-card.accent .stat-label{color:rgba(255,255,255,0.6);}
+.stat-card.clickable{cursor:pointer;transition:all 0.15s;position:relative;}
+.stat-card.clickable:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06);}
+.stat-card.clickable.expanded{box-shadow:0 4px 16px rgba(127,216,31,0.25);border-color:var(--lime);}
+.stat-card.clickable.expanded::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid var(--lime-soft);z-index:2;}
+.stat-card.clickable.expanded.accent::after{border-bottom-color:var(--teal-dark);}
+.btn-metrics-toggle{padding:8px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--teal-dark);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.btn-metrics-toggle:hover{background:var(--lime-soft);border-color:var(--lime);}
+.btn-metrics-toggle.active{background:var(--lime-soft);border-color:var(--lime);}
+.stat-expansion{background:var(--lime-soft);border:1px solid var(--lime);border-radius:14px;padding:16px 20px;margin-top:14px;animation:slideDown 0.2s ease;}
+.stat-expansion.accent{background:var(--teal-dark);border-color:var(--teal-dark);color:white;}
+.stat-expansion-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.stat-expansion-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--teal-dark);}
+.stat-expansion.accent .stat-expansion-title{color:var(--lime);}
+.stat-expansion-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);padding:0 4px;}
+.stat-expansion.accent .stat-expansion-close{color:rgba(255,255,255,0.5);}
+.stat-expansion-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;}
+.stat-mini-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;transition:all 0.15s;font-size:13px;}
+.stat-mini-item:hover{border-color:var(--lime);background:#fafffa;}
+.stat-mini-item-name{font-weight:600;color:var(--teal-dark);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.stat-mini-item-meta{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+.stat-expansion-footer{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);text-align:center;}
+.stat-expansion.accent .stat-expansion-footer{border-top-color:rgba(255,255,255,0.15);}
+.stat-expansion-footer button{background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;font-family:'Inter',sans-serif;}
+.stat-expansion.accent .stat-expansion-footer button{color:var(--lime);}
+.stat-expansion-empty{text-align:center;padding:14px;color:var(--muted);font-size:13px;}
+.stat-expansion.accent .stat-expansion-empty{color:rgba(255,255,255,0.5);}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
 
 /* ── TABS ── */
 .view-tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:22px;flex-wrap:nowrap;overflow-x:auto;width:100%;}
@@ -539,15 +566,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         </div>
       </div>
       <div id="proy-container"></div>
+
+      <!-- Metrics toggle button -->
+      <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+        <button class="btn-metrics-toggle" id="btn-metrics-toggle" onclick="toggleMetricsPanel()">
+          <span id="metrics-toggle-text">📊 Ver mis métricas de actividad</span>
+        </button>
+      </div>
+      <div id="metrics-panel-inline" style="display:none;margin-top:14px;"></div>
     </div>
 
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-num" id="stat-hoy">0</div><div class="stat-label">Creadas hoy</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-semana">0</div><div class="stat-label">Esta semana</div></div>
-      <div class="stat-card accent"><div class="stat-num" id="stat-ganadas">0</div><div class="stat-label">Ganadas (mes)</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-canceladas">0</div><div class="stat-label">Canceladas (mes)</div></div>
+      <div class="stat-card clickable" id="stat-card-hoy" onclick="toggleStatExpansion('hoy')"><div class="stat-num" id="stat-hoy">0</div><div class="stat-label">Creadas hoy</div></div>
+      <div class="stat-card clickable" id="stat-card-semana" onclick="toggleStatExpansion('semana')"><div class="stat-num" id="stat-semana">0</div><div class="stat-label">Esta semana</div></div>
+      <div class="stat-card accent clickable" id="stat-card-ganadas" onclick="toggleStatExpansion('ganadas')"><div class="stat-num" id="stat-ganadas">0</div><div class="stat-label">Ganadas (mes)</div></div>
+      <div class="stat-card clickable" id="stat-card-canceladas" onclick="toggleStatExpansion('canceladas')"><div class="stat-num" id="stat-canceladas">0</div><div class="stat-label">Canceladas (mes)</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-ratio">—</div><div class="stat-label">Ratio cancelación</div></div>
     </div>
+
+    <!-- Stat expansion panel -->
+    <div id="stat-expansion-panel" style="display:none;"></div>
 
     <!-- DESGLOSE CANCELACIÓN -->
     <div class="cancel-panel" id="cancel-panel">
@@ -580,7 +618,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
       <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
       <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
-      <button class="view-tab" onclick="setView('metricas',this)">📊 Mis métricas</button>
       <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
       <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
       <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
@@ -2698,168 +2735,41 @@ function renderDemoCard(d,liveClass=''){
   </div>`;
 }
 
-function renderSdrMetrics(){
-  const list=document.getElementById('demo-list');
-  const{start,end}=monthRange();
 
-  // Get llamadas for this SDR this month
-  const m=getTargetMonth();
-  // We need to load llamadas for the SDR — use the already-loaded objetivos as reference
-  // Llamadas are not loaded in SDR view, so we show what we have from demos
-  const monthDemos=demos.filter(d=>{
-    const ag=demoAgendadoDate(d);
-    return ag>=start&&ag<=end;
-  });
-  const totalDemos=monthDemos.filter(d=>d.estado!=='cancelada').length;
-  const demosOut=monthDemos.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
-  const demosIn=monthDemos.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
-  const ejecutadas=monthDemos.filter(d=>d.estado==='ejecutada').length;
-  const canceladas=monthDemos.filter(d=>d.estado==='cancelada').length;
-
-  // CWD by demo date
-  const cwdDemos=demos.filter(d=>d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
-  const cwdOut=cwdDemos.filter(d=>d.canal==='outbound').length;
-  const cwdIn=cwdDemos.filter(d=>d.canal==='inbound').length;
-  const totalCwd=cwdOut+cwdIn;
-
-  const pctCanc=(totalDemos+canceladas)>0?Math.round(canceladas/(totalDemos+canceladas)*100):0;
-  const pctCierre=ejecutadas>0?(totalCwd/ejecutadas*100):0;
-
-  // Get objetivos
-  const mObj=objetivos.find(o=>o.mes===m.getMonth()+1&&o.anio===m.getFullYear());
-  const objOut=mObj?.demos_objetivo_outbound||0;
-  const objIn=mObj?.demos_objetivo_inbound||0;
-  const objCwdOut=mObj?.cwd_objetivo_outbound||0;
-  const objCwdIn=mObj?.cwd_objetivo_inbound||0;
-
-  const pill=(val,green,yellow,suffix='%')=>{
-    const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
-    return`<span class="pct-pill ${cls}">${val.toFixed(1)}${suffix}</span>`;
-  };
-
-  const metricCard=(icon,title,value,sub,color='')=>`
-    <div class="mgr-block" style="text-align:center;padding:20px 16px;">
-      <div style="font-size:22px;margin-bottom:6px;">${icon}</div>
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:8px;">${title}</div>
-      <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:${color||'var(--teal-dark)'};">${value}</div>
-      ${sub?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">${sub}</div>`:''}
-    </div>`;
-
-  list.innerHTML=`
-    <div style="margin-bottom:24px;">
-      <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);margin-bottom:6px;">📊 Mis métricas — ${monthLabel()}</div>
-      <div style="font-size:13px;color:var(--muted);">Tu actividad y ratios del mes. Úsalos para entender dónde puedes mejorar.</div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-      ${metricCard('📅','Demos agendadas',totalDemos,`Out: ${demosOut} · In: ${demosIn}`)}
-      ${metricCard('✅','Ejecutadas',ejecutadas,`${totalDemos>0?Math.round(ejecutadas/totalDemos*100):0}% de las agendadas`)}
-      ${metricCard('💰','Ventas (CWD)',totalCwd,`Out: ${cwdOut} · In: ${cwdIn}`,'var(--green)')}
-      ${metricCard('❌','Canceladas',canceladas,`${pctCanc}% del total`,'var(--red)')}
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">
-      <div class="mgr-block">
-        <div class="mgr-block-title" style="margin-bottom:14px;">🎯 Progreso vs objetivo</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          ${[
-            ['Demos Outbound',demosOut,objOut],
-            ['Demos Inbound',demosIn,objIn],
-            ['CWD Outbound',cwdOut,objCwdOut],
-            ['CWD Inbound',cwdIn,objCwdIn]
-          ].map(([label,a,o])=>{
-            const pct=o>0?Math.min(100,Math.round(a/o*100)):0;
-            const c=pct>=86?'verde':pct>=70?'amarillo':'rojo';
-            return`<div>
-              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-                <span style="color:var(--text);">${label}</span>
-                <span style="font-weight:700;color:var(--teal-dark);">${a}/${o}</span>
-              </div>
-              <div class="battery" style="height:14px;">
-                <div class="battery-fill ${c}" style="width:${pct}%;"><span class="battery-pct" style="font-size:9px;">${pct>15?pct+'%':''}</span></div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-
-      <div class="mgr-block">
-        <div class="mgr-block-title" style="margin-bottom:14px;">📈 Ratios de conversión</div>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">% Ejecución de demos</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              ${pill(totalDemos>0?ejecutadas/totalDemos*100:0,70,50)}
-              <span style="font-size:12px;color:var(--muted);">${ejecutadas} de ${totalDemos} demos</span>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">% Demo → Venta cerrada</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              ${pill(pctCierre,20,10)}
-              <span style="font-size:12px;color:var(--muted);">${totalCwd} ventas de ${ejecutadas} demos</span>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">% Cancelación</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              ${pill(100-pctCanc,80,60)}
-              <span style="font-size:12px;color:var(--muted);">${canceladas} canceladas</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mgr-block">
-        <div class="mgr-block-title" style="margin-bottom:14px;">📞 Actividad</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Demos outbound creadas</div>
-            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--teal-dark);">${demosOut} <span style="font-size:13px;color:var(--muted);">/ ${objOut} objetivo</span></div>
-          </div>
-          <div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Demos inbound creadas</div>
-            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--teal-dark);">${demosIn} <span style="font-size:13px;color:var(--muted);">/ ${objIn} objetivo</span></div>
-          </div>
-          <div style="background:var(--green-soft);border:1px solid #a8e0c0;border-radius:8px;padding:12px 14px;">
-            <div style="font-size:11px;color:var(--green);margin-bottom:2px;">Ventas cerradas (CWD)</div>
-            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--green);">${totalCwd} <span style="font-size:13px;">/ ${objCwdOut+objCwdIn} objetivo</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="proyeccion-box" style="margin-top:0;">
-      <div class="proy-icon">💡</div>
-      <div class="proy-content">
-        <div class="proy-title" style="color:var(--teal-dark);">¿Cómo leer estos ratios?</div>
-        <div class="proy-text">
-          <b>% Ejecución ≥70%</b> → bueno. Las demos que agendas se están haciendo.<br>
-          <b>% Demo→Venta ≥20%</b> → excelente. 1 de cada 5 demos termina en venta.<br>
-          <b>% Demo→Venta ≥10%</b> → correcto. Por debajo hay margen de mejora en la calidad de los leads.<br>
-          <b>% Cancelación bajo</b> → cuanto menor, mejor. Habla de la calidad del agendamiento.
-        </div>
-      </div>
-    </div>`;
-}
+// ── METRICS PANEL (inline expansion) ──
 function comercialName(id){const c=comerciales.find(x=>x.id===id);return c?c.nombre:'—';}
 function ciudadName(id){const c=ciudades.find(x=>x.id===id);return c?c.nombre:'—';}
 function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Necesita seguimiento',no_interesado:'No interesado',cerrado_ganado:'Cerrado ganado',cerrado_perdido:'Cerrado perdido'}[o]||'';}
 
-async function renderSdrMetrics(){
-  const list=document.getElementById('demo-list');
+async function toggleMetricsPanel(){
+  const btn=document.getElementById('btn-metrics-toggle');
+  const panel=document.getElementById('metrics-panel-inline');
+  const txt=document.getElementById('metrics-toggle-text');
+  if(panel.style.display==='block'){
+    panel.style.display='none';
+    btn.classList.remove('active');
+    txt.textContent='📊 Ver mis métricas de actividad';
+    sessionStorage.setItem('metrics-open','0');
+    return;
+  }
+  btn.classList.add('active');
+  txt.textContent='✕ Cerrar métricas';
+  panel.style.display='block';
+  panel.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);">Cargando…</div>';
+  sessionStorage.setItem('metrics-open','1');
+  await renderSdrMetricsInline();
+}
+
+async function renderSdrMetricsInline(){
+  const panel=document.getElementById('metrics-panel-inline');
   const{start,end}=monthRange();
   const m=getTargetMonth();
-
-  // Load all SDRs llamadas for this month (need to fetch from Supabase)
-  let allSdrUsers=[];
-  let allLlamadasData=[];
-  let allDemosData=[];
+  let allSdrUsers=[],allLlamadasData=[],allDemosData=[];
   try{
     allSdrUsers=await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre&order=nombre.asc`)||[];
     allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
-    allDemosData=await sb(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento`)||[];
-  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error cargando métricas</div></div>';return;}
+    allDemosData=await sb(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada`)||[];
+  }catch(e){panel.innerHTML='<div style="padding:20px;color:var(--red);text-align:center;">Error cargando métricas</div>';return;}
 
   const pill=(val,green,yellow)=>{
     const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
@@ -2880,52 +2790,127 @@ async function renderSdrMetrics(){
     const pctConexion=hechas>0?conectadas/hechas*100:0;
     const pctConectaDemo=conectadas>0?totalDemos/conectadas*100:0;
     const pctDemoGanada=ejecutadas>0?cwd/ejecutadas*100:0;
-    return{nombre:s.nombre,hechas,conectadas,pctConexion,totalDemos,pctConectaDemo,cwd,pctDemoGanada,isMe:s.id===currentUser.id};
+    return{nombre:s.nombre,hechas,conectadas,pctConexion,totalDemos,ejecutadas,pctConectaDemo,cwd,pctDemoGanada,isMe:s.id===currentUser.id};
   });
 
-  list.innerHTML=`
-    <div style="margin-bottom:20px;">
-      <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;">📊 Métricas de actividad — ${monthLabel()}</div>
-      <div style="font-size:13px;color:var(--muted);">Tu rendimiento comparado con el resto del equipo. Las llamadas las actualiza el manager.</div>
-    </div>
-    <div class="mgr-block" style="overflow-x:auto;">
-      <table class="mgr-table">
-        <thead><tr>
-          <th>SDR</th>
-          <th>Llamadas hechas</th>
-          <th>Conectadas</th>
-          <th>% Conexión</th>
-          <th>Demos</th>
-          <th>% Conect→Demo</th>
-          <th>Ventas</th>
-          <th>% Demo→Venta</th>
-        </tr></thead>
-        <tbody>
-        ${rows.map(r=>`
-          <tr style="${r.isMe?'background:var(--lime-soft);font-weight:600;':''}">
-            <td>${r.nombre}${r.isMe?' 👈':''}</td>
-            <td>${r.hechas||'—'}</td>
-            <td>${r.conectadas||'—'}</td>
-            <td>${r.hechas>0?pill(r.pctConexion,70,50):'—'}</td>
-            <td><b>${r.totalDemos}</b></td>
-            <td>${r.conectadas>0?pill(r.pctConectaDemo,10,5):'—'}</td>
-            <td><b style="color:var(--green)">${r.cwd||'—'}</b></td>
-            <td>${r.ejecutadas>0?pill(r.pctDemoGanada,20,10):'—'}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="proyeccion-box" style="margin-top:16px;">
-      <div class="proy-icon">💡</div>
-      <div class="proy-content">
-        <div class="proy-title" style="color:var(--teal-dark);">Cómo leer estos ratios</div>
-        <div class="proy-text">
-          <b>% Conexión ≥70%</b> → bueno, la gente coge el teléfono.<br>
-          <b>% Conect→Demo ≥10%</b> → verde. De cada 10 llamadas conectadas, 1 acaba en demo.<br>
-          <b>% Demo→Venta ≥20%</b> → excelente. 1 de cada 5 demos termina en venta.
-        </div>
+  panel.innerHTML=`
+    <div class="mgr-block">
+      <div class="mgr-block-head">
+        <div class="mgr-block-title">📊 Métricas de actividad — ${monthLabel()}</div>
+        <div class="mgr-block-sub">Tu rendimiento comparado con el equipo. Las llamadas las actualiza el manager.</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="mgr-table">
+          <thead><tr>
+            <th>SDR</th><th>Llamadas</th><th>Conectadas</th><th>% Conexión</th>
+            <th>Demos</th><th>% Conect→Demo</th><th>Ventas</th><th>% Demo→Venta</th>
+          </tr></thead>
+          <tbody>
+          ${rows.map(r=>`
+            <tr style="${r.isMe?'background:var(--lime-soft);':''}">
+              <td style="${r.isMe?'font-weight:700;':''}">${r.nombre}${r.isMe?' 👈':''}</td>
+              <td>${r.hechas||'—'}</td>
+              <td>${r.conectadas||'—'}</td>
+              <td>${r.hechas>0?pill(r.pctConexion,70,50):'—'}</td>
+              <td><b>${r.totalDemos}</b></td>
+              <td>${r.conectadas>0?pill(r.pctConectaDemo,10,5):'—'}</td>
+              <td><b style="color:var(--green)">${r.cwd||'—'}</b></td>
+              <td>${r.ejecutadas>0?pill(r.pctDemoGanada,20,10):'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;padding:11px 14px;background:var(--surface-2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6;">
+        <b style="color:var(--teal-dark);">Cómo leer los ratios:</b>
+        <b>%Conexión ≥70%</b> bueno · <b>%Conect→Demo ≥10%</b> verde · <b>%Demo→Venta ≥20%</b> excelente, ≥10% correcto
       </div>
     </div>`;
+}
+
+// ── STAT EXPANSION (click on stat cards) ──
+let expandedStat=null;
+function toggleStatExpansion(stat){
+  const panel=document.getElementById('stat-expansion-panel');
+  // Clear all expanded states
+  ['hoy','semana','ganadas','canceladas'].forEach(s=>{
+    const c=document.getElementById('stat-card-'+s);
+    if(c)c.classList.remove('expanded');
+  });
+  if(expandedStat===stat){
+    expandedStat=null;
+    panel.style.display='none';
+    return;
+  }
+  expandedStat=stat;
+  document.getElementById('stat-card-'+stat).classList.add('expanded');
+  renderStatExpansion(stat);
+}
+
+function renderStatExpansion(stat){
+  const panel=document.getElementById('stat-expansion-panel');
+  const today=todayStr();
+  const week=weekDates();
+  const{start,end}=monthRange();
+  let items=[],title='',targetView='';
+
+  if(stat==='hoy'){
+    items=demos.filter(d=>demoAgendadoDate(d)===today&&d.estado!=='cancelada');
+    title='📅 Demos creadas hoy';
+    targetView='todas';
+  }else if(stat==='semana'){
+    items=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada');
+    title='🗓️ Demos de esta semana';
+    targetView='semana';
+  }else if(stat==='ganadas'){
+    items=demos.filter(d=>d.fecha>=start&&d.fecha<=end&&d.outcome==='cerrado_ganado');
+    title='💰 Ventas ganadas este mes';
+    targetView='ganadas';
+  }else if(stat==='canceladas'){
+    items=demos.filter(d=>d.fecha>=start&&d.fecha<=end&&d.estado==='cancelada');
+    title='❌ Demos canceladas este mes';
+    targetView='reagendar';
+  }
+
+  // Sort by demo date ascending
+  items=items.slice().sort((a,b)=>{
+    const da=a.fecha||a.fecha_agendamiento||'';
+    const db=b.fecha||b.fecha_agendamiento||'';
+    return da.localeCompare(db);
+  });
+  const visible=items.slice(0,8);
+  const more=items.length-visible.length;
+  const accent=stat==='ganadas'?' accent':'';
+
+  panel.className='stat-expansion'+accent;
+  panel.style.display='block';
+  panel.innerHTML=`
+    <div class="stat-expansion-header">
+      <div class="stat-expansion-title">${title} (${items.length})</div>
+      <button class="stat-expansion-close" onclick="toggleStatExpansion('${stat}')">✕</button>
+    </div>
+    ${items.length===0
+      ? `<div class="stat-expansion-empty">No hay demos en esta categoría.</div>`
+      : `<div class="stat-expansion-list">
+          ${visible.map(d=>`
+            <div class="stat-mini-item" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})'>
+              <div class="stat-mini-item-name">${d.sf_nombre||'Sin nombre'}</div>
+              <div class="stat-mini-item-meta">📅 ${fmtDate(d.fecha)}${d.hora?' · '+d.hora.substring(0,5):''} · ${comercialName(d.comercial_id)}</div>
+            </div>`).join('')}
+        </div>
+        ${more>0?`<div class="stat-expansion-footer"><button onclick="goToView('${targetView}')">Ver las ${items.length} en lista →</button></div>`:''}`
+    }`;
+}
+
+function goToView(view){
+  // Close stat expansion and switch to the target view
+  if(expandedStat){
+    document.getElementById('stat-card-'+expandedStat).classList.remove('expanded');
+    expandedStat=null;
+  }
+  document.getElementById('stat-expansion-panel').style.display='none';
+  const btn=Array.from(document.querySelectorAll('.view-tab')).find(b=>b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${view}'`));
+  if(btn)btn.click();
+  else setView(view);
 }
 
 function renderList(){
@@ -2933,8 +2918,6 @@ function renderList(){
 
   // Hoy uses the live view with semáforo
   if(currentView==='hoy'||currentView==='enlive'){renderLiveView();return;}
-  // Métricas panel
-  if(currentView==='metricas'){renderSdrMetrics();return;}
 
   const filtered=getFilteredDemos();
   if(!filtered.length){
