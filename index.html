@@ -580,6 +580,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
       <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
       <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
+      <button class="view-tab" onclick="setView('metricas',this)">📊 Mis métricas</button>
       <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
       <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
       <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
@@ -2697,7 +2698,150 @@ function renderDemoCard(d,liveClass=''){
   </div>`;
 }
 
-function comercialName(id){const c=comerciales.find(x=>x.id===id);return c?c.nombre:'—';}
+function renderSdrMetrics(){
+  const list=document.getElementById('demo-list');
+  const{start,end}=monthRange();
+
+  // Get llamadas for this SDR this month
+  const m=getTargetMonth();
+  // We need to load llamadas for the SDR — use the already-loaded objetivos as reference
+  // Llamadas are not loaded in SDR view, so we show what we have from demos
+  const monthDemos=demos.filter(d=>{
+    const ag=demoAgendadoDate(d);
+    return ag>=start&&ag<=end;
+  });
+  const totalDemos=monthDemos.filter(d=>d.estado!=='cancelada').length;
+  const demosOut=monthDemos.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
+  const demosIn=monthDemos.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
+  const ejecutadas=monthDemos.filter(d=>d.estado==='ejecutada').length;
+  const canceladas=monthDemos.filter(d=>d.estado==='cancelada').length;
+
+  // CWD by demo date
+  const cwdDemos=demos.filter(d=>d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const cwdOut=cwdDemos.filter(d=>d.canal==='outbound').length;
+  const cwdIn=cwdDemos.filter(d=>d.canal==='inbound').length;
+  const totalCwd=cwdOut+cwdIn;
+
+  const pctCanc=(totalDemos+canceladas)>0?Math.round(canceladas/(totalDemos+canceladas)*100):0;
+  const pctCierre=ejecutadas>0?(totalCwd/ejecutadas*100):0;
+
+  // Get objetivos
+  const mObj=objetivos.find(o=>o.mes===m.getMonth()+1&&o.anio===m.getFullYear());
+  const objOut=mObj?.demos_objetivo_outbound||0;
+  const objIn=mObj?.demos_objetivo_inbound||0;
+  const objCwdOut=mObj?.cwd_objetivo_outbound||0;
+  const objCwdIn=mObj?.cwd_objetivo_inbound||0;
+
+  const pill=(val,green,yellow,suffix='%')=>{
+    const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
+    return`<span class="pct-pill ${cls}">${val.toFixed(1)}${suffix}</span>`;
+  };
+
+  const metricCard=(icon,title,value,sub,color='')=>`
+    <div class="mgr-block" style="text-align:center;padding:20px 16px;">
+      <div style="font-size:22px;margin-bottom:6px;">${icon}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:8px;">${title}</div>
+      <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:${color||'var(--teal-dark)'};">${value}</div>
+      ${sub?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">${sub}</div>`:''}
+    </div>`;
+
+  list.innerHTML=`
+    <div style="margin-bottom:24px;">
+      <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);margin-bottom:6px;">📊 Mis métricas — ${monthLabel()}</div>
+      <div style="font-size:13px;color:var(--muted);">Tu actividad y ratios del mes. Úsalos para entender dónde puedes mejorar.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      ${metricCard('📅','Demos agendadas',totalDemos,`Out: ${demosOut} · In: ${demosIn}`)}
+      ${metricCard('✅','Ejecutadas',ejecutadas,`${totalDemos>0?Math.round(ejecutadas/totalDemos*100):0}% de las agendadas`)}
+      ${metricCard('💰','Ventas (CWD)',totalCwd,`Out: ${cwdOut} · In: ${cwdIn}`,'var(--green)')}
+      ${metricCard('❌','Canceladas',canceladas,`${pctCanc}% del total`,'var(--red)')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">
+      <div class="mgr-block">
+        <div class="mgr-block-title" style="margin-bottom:14px;">🎯 Progreso vs objetivo</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${[
+            ['Demos Outbound',demosOut,objOut],
+            ['Demos Inbound',demosIn,objIn],
+            ['CWD Outbound',cwdOut,objCwdOut],
+            ['CWD Inbound',cwdIn,objCwdIn]
+          ].map(([label,a,o])=>{
+            const pct=o>0?Math.min(100,Math.round(a/o*100)):0;
+            const c=pct>=86?'verde':pct>=70?'amarillo':'rojo';
+            return`<div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                <span style="color:var(--text);">${label}</span>
+                <span style="font-weight:700;color:var(--teal-dark);">${a}/${o}</span>
+              </div>
+              <div class="battery" style="height:14px;">
+                <div class="battery-fill ${c}" style="width:${pct}%;"><span class="battery-pct" style="font-size:9px;">${pct>15?pct+'%':''}</span></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="mgr-block">
+        <div class="mgr-block-title" style="margin-bottom:14px;">📈 Ratios de conversión</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">% Ejecución de demos</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              ${pill(totalDemos>0?ejecutadas/totalDemos*100:0,70,50)}
+              <span style="font-size:12px;color:var(--muted);">${ejecutadas} de ${totalDemos} demos</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">% Demo → Venta cerrada</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              ${pill(pctCierre,20,10)}
+              <span style="font-size:12px;color:var(--muted);">${totalCwd} ventas de ${ejecutadas} demos</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">% Cancelación</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              ${pill(100-pctCanc,80,60)}
+              <span style="font-size:12px;color:var(--muted);">${canceladas} canceladas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mgr-block">
+        <div class="mgr-block-title" style="margin-bottom:14px;">📞 Actividad</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Demos outbound creadas</div>
+            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--teal-dark);">${demosOut} <span style="font-size:13px;color:var(--muted);">/ ${objOut} objetivo</span></div>
+          </div>
+          <div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Demos inbound creadas</div>
+            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--teal-dark);">${demosIn} <span style="font-size:13px;color:var(--muted);">/ ${objIn} objetivo</span></div>
+          </div>
+          <div style="background:var(--green-soft);border:1px solid #a8e0c0;border-radius:8px;padding:12px 14px;">
+            <div style="font-size:11px;color:var(--green);margin-bottom:2px;">Ventas cerradas (CWD)</div>
+            <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--green);">${totalCwd} <span style="font-size:13px;">/ ${objCwdOut+objCwdIn} objetivo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="proyeccion-box" style="margin-top:0;">
+      <div class="proy-icon">💡</div>
+      <div class="proy-content">
+        <div class="proy-title" style="color:var(--teal-dark);">¿Cómo leer estos ratios?</div>
+        <div class="proy-text">
+          <b>% Ejecución ≥70%</b> → bueno. Las demos que agendas se están haciendo.<br>
+          <b>% Demo→Venta ≥20%</b> → excelente. 1 de cada 5 demos termina en venta.<br>
+          <b>% Demo→Venta ≥10%</b> → correcto. Por debajo hay margen de mejora en la calidad de los leads.<br>
+          <b>% Cancelación bajo</b> → cuanto menor, mejor. Habla de la calidad del agendamiento.
+        </div>
+      </div>
+    </div>`;
+}
 function ciudadName(id){const c=ciudades.find(x=>x.id===id);return c?c.nombre:'—';}
 function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Necesita seguimiento',no_interesado:'No interesado',cerrado_ganado:'Cerrado ganado',cerrado_perdido:'Cerrado perdido'}[o]||'';}
 
@@ -2706,6 +2850,8 @@ function renderList(){
 
   // Hoy uses the live view with semáforo
   if(currentView==='hoy'||currentView==='enlive'){renderLiveView();return;}
+  // Métricas panel
+  if(currentView==='metricas'){renderSdrMetrics();return;}
 
   const filtered=getFilteredDemos();
   if(!filtered.length){
