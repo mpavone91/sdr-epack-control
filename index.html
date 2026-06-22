@@ -357,6 +357,38 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .heatmap-legend-cell{width:18px;height:14px;border-radius:3px;}
 .heatmap-insight{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-top:14px;font-size:13px;color:var(--text);line-height:1.6;}
 .heatmap-insight b{color:var(--teal-dark);}
+/* ALERTAS PROACTIVAS */
+.alertas-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:20px;}
+.alertas-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.alertas-title{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--teal-dark);display:flex;align-items:center;gap:8px;}
+.alertas-counter{background:var(--teal-dark);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.alertas-counter.critical{background:var(--red);}
+.alertas-counter.good{background:var(--green);}
+.alertas-toggle{background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;font-weight:600;font-family:'Inter',sans-serif;}
+.alertas-toggle:hover{color:var(--teal-dark);}
+.alertas-list{display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto;}
+.alerta-card{border-radius:11px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;border:1px solid;transition:all 0.2s;}
+.alerta-card.critical{background:#fef5f5;border-color:#f0c0c0;}
+.alerta-card.warning{background:#fff8e8;border-color:#f0d58a;}
+.alerta-card.info{background:#eaf3fb;border-color:#a8c8e0;}
+.alerta-card.success{background:#eefaf2;border-color:#a8e0c0;}
+.alerta-card-icon{font-size:22px;flex-shrink:0;line-height:1;}
+.alerta-card-content{flex:1;}
+.alerta-card-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.3;}
+.alerta-card-desc{font-size:12.5px;color:var(--muted);line-height:1.55;}
+.alerta-card-desc b{color:var(--text);}
+.alerta-card-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.alerta-action-btn{background:none;border:1px solid transparent;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.alerta-card.critical .alerta-action-btn{color:var(--red);border-color:#f0c0c0;}
+.alerta-card.critical .alerta-action-btn:hover{background:var(--red);color:#fff;}
+.alerta-card.warning .alerta-action-btn{color:#8a5e00;border-color:#f0d58a;}
+.alerta-card.warning .alerta-action-btn:hover{background:#f0d58a;color:#5a3e00;}
+.alerta-card.info .alerta-action-btn{color:#1a4a7a;border-color:#a8c8e0;}
+.alerta-card.info .alerta-action-btn:hover{background:#a8c8e0;color:#0a2a4a;}
+.alerta-card.success .alerta-action-btn{color:var(--green);border-color:#a8e0c0;}
+.alerta-card.success .alerta-action-btn:hover{background:var(--green);color:#fff;}
+.alertas-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px;}
+.alertas-empty-icon{font-size:32px;margin-bottom:8px;}
 .stat-delta{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:500;}
 .mgr-table .num{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
 
@@ -762,6 +794,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <button class="btn-primary" style="background:var(--teal);color:#fff;" onclick="exportExcel()">⬇️ Descargar Excel</button>
       </div>
     </div>
+
+    <!-- ALERTAS PROACTIVAS -->
+    <div id="alertas-proactivas-wrap"></div>
 
     <!-- MANAGER NAV -->
     <div class="mgr-nav">
@@ -1361,6 +1396,7 @@ function renderManager(){
   renderMgrModalidad();
   renderMgrCancel();
   renderHeatmap();
+  renderAlertasProactivas();
   renderMgrSdrSelector();
   renderLlamadasTable();
   renderObjetivosForm();
@@ -1918,6 +1954,212 @@ async function addCiudad(){
 async function toggleCiudad(id,activa){
   try{await sb(`ciudades?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activa})});await loadManagerData();renderManager();}
   catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── ALERTAS PROACTIVAS ──
+function detectAlertas(){
+  const alertas=[];
+  const today=todayStr();
+  const{start:mStart,end:mEnd}=mgrMonthRange();
+  const obj=getObjForMonth();
+  const m=mgrTargetMonth();
+  const firstDay=new Date(m.getFullYear(),m.getMonth(),1);
+  const lastDay=new Date(m.getFullYear(),m.getMonth()+1,0);
+  const totalWorkdays=workdaysBetween(firstDay,lastDay);
+  const elapsedWorkdays=workdaysBetween(firstDay,new Date());
+  const monthProgress=totalWorkdays>0?elapsedWorkdays/totalWorkdays:0;
+  const remainingDays=Math.max(0,totalWorkdays-elapsedWorkdays);
+
+  // 1. Inactividad / bajo ritmo por SDR (últimos 3 días)
+  allSdrs.forEach(s=>{
+    const last3Days=[];
+    for(let i=0;i<3;i++){
+      const d=new Date();d.setDate(d.getDate()-i);
+      if(isWorkday(d))last3Days.push(localDateStr(d));
+    }
+    const last3DemosCount=last3Days.map(date=>allDemos.filter(d=>{
+      const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+      return d.sdr_id===s.id&&ag===date&&d.estado!=='cancelada';
+    }).length);
+    const totalLast3=last3DemosCount.reduce((a,b)=>a+b,0);
+    const daysWithOne=last3DemosCount.filter(c=>c===1).length;
+    const daysWithZero=last3DemosCount.filter(c=>c===0).length;
+    if(daysWithZero>=2){
+      alertas.push({tipo:'critical',icon:'🚨',titulo:`${s.nombre}: ${daysWithZero} días sin agendar`,desc:`En los últimos ${last3Days.length} días hábiles, ${s.nombre} solo ha agendado <b>${totalLast3} demos</b>. Necesita apoyo urgente.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:1});
+    }else if(daysWithOne>=2&&last3Days.length>=2){
+      alertas.push({tipo:'warning',icon:'⚠️',titulo:`${s.nombre}: bajo ritmo (${daysWithOne} días con 1 sola demo)`,desc:`Esperamos 2-3 demos diarias por SDR. ${s.nombre} viene agendando solo 1 en los últimos días. Considera una 1:1 para entender qué está pasando.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:2});
+    }
+  });
+
+  // 2. Caída de ritmo significativa (esta semana vs promedio 3 anteriores)
+  const thisWeek=weekDates();
+  allSdrs.forEach(s=>{
+    const demosThisWeek=allDemos.filter(d=>{
+      const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+      return d.sdr_id===s.id&&thisWeek.includes(ag)&&d.estado!=='cancelada';
+    }).length;
+    const priorWeeks=[];
+    for(let w=1;w<=3;w++){
+      const days=[];
+      const mon=new Date(thisWeek[0]+'T12:00:00');mon.setDate(mon.getDate()-7*w);
+      for(let i=0;i<7;i++){const x=new Date(mon);x.setDate(mon.getDate()+i);days.push(localDateStr(x));}
+      priorWeeks.push(allDemos.filter(d=>{
+        const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+        return d.sdr_id===s.id&&days.includes(ag)&&d.estado!=='cancelada';
+      }).length);
+    }
+    const avgPrior=priorWeeks.reduce((a,b)=>a+b,0)/3;
+    if(avgPrior>=5&&demosThisWeek<avgPrior*0.7){
+      const pct=Math.round((1-demosThisWeek/avgPrior)*100);
+      alertas.push({tipo:'warning',icon:'📉',titulo:`${s.nombre}: ha bajado el ritmo un ${pct}% esta semana`,desc:`Promedio últimas 3 semanas: <b>${avgPrior.toFixed(1)} demos</b>. Esta semana lleva <b>${demosThisWeek}</b>. Quizás necesita un empujón.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:3});
+    }
+  });
+
+  // 3. Récord personal — va mejor que el mes anterior
+  allSdrs.forEach(s=>{
+    const curr=calcStatsForSdrRange(s.id,mStart,mEnd);
+    const prev=prevMonthStatsForSdr(s.id);
+    if(curr.totalDemos>0&&prev.totalDemos>0&&curr.totalDemos>prev.totalDemos*1.3&&monthProgress<0.9){
+      const pctGrowth=Math.round((curr.totalDemos/prev.totalDemos-1)*100);
+      alertas.push({tipo:'success',icon:'🔥',titulo:`${s.nombre} va camino de récord personal (+${pctGrowth}%)`,desc:`Lleva <b>${curr.totalDemos} demos</b> este mes vs <b>${prev.totalDemos}</b> el anterior. Un kudos a tiempo motiva mucho.`,action:{label:'🎉 Enviar kudos',fn:`openKudosModal(${s.id},'${s.nombre.replace(/'/g,"\\'")}')`},priority:5});
+    }
+  });
+
+  // 4. Demos ejecutadas sin outcome (+2 días)
+  const cutoff2=new Date();cutoff2.setDate(cutoff2.getDate()-2);
+  const cutoff2Str=localDateStr(cutoff2);
+  allSdrs.forEach(s=>{
+    const sinActualizar=allDemos.filter(d=>d.sdr_id===s.id&&d.estado==='ejecutada'&&(d.fecha||'')<=cutoff2Str&&!d.outcome).length;
+    if(sinActualizar>=3){
+      alertas.push({tipo:'info',icon:'📋',titulo:`${s.nombre}: ${sinActualizar} demos sin outcome (>2 días)`,desc:`Hay demos ejecutadas hace más de 2 días sin marcar como ganadas/perdidas. Recuérdale actualizarlas.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:6});
+    }
+  });
+
+  // 5. % Cancelación alto por SDR (>25%)
+  allSdrs.forEach(s=>{
+    const st=calcStatsForSdrRange(s.id,mStart,mEnd);
+    if(st.totalDemos>=10&&st.pctCanc>=25){
+      alertas.push({tipo:'warning',icon:'❌',titulo:`${s.nombre}: ${st.pctCanc}% de cancelación este mes`,desc:`Lleva <b>${st.canc} canceladas</b> de ${st.totalDemos+st.canc} totales. Tu reto es reducir esto. Sesión 1:1 para revisar agendamiento.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:2});
+    }
+  });
+
+  // 6. Demos canceladas acumuladas pendientes de reagendar
+  allSdrs.forEach(s=>{
+    const pendientes=allDemos.filter(d=>d.sdr_id===s.id&&d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
+    if(pendientes>=5){
+      alertas.push({tipo:'warning',icon:'🔄',titulo:`${s.nombre}: ${pendientes} demos canceladas pendientes`,desc:`Tiene <b>${pendientes} demos canceladas</b> sin reagendar ni descartar. Recuperar incluso 1 o 2 ya es ganar.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:3});
+    }
+  });
+
+  // 7. SDR cerca de cumplir objetivo (90-99%)
+  if(obj){
+    allSdrs.forEach(s=>{
+      const st=sdrStats(s.id);
+      const objTotalDemos=(obj.demos_objetivo_outbound||0)+(obj.demos_objetivo_inbound||0);
+      if(objTotalDemos>0){
+        const pct=(st.totalDemos/objTotalDemos)*100;
+        if(pct>=90&&pct<100&&remainingDays>=1){
+          const falta=objTotalDemos-st.totalDemos;
+          alertas.push({tipo:'info',icon:'🎯',titulo:`${s.nombre}: a ${falta} demo${falta>1?'s':''} del 100% del objetivo`,desc:`Lleva <b>${st.totalDemos}/${objTotalDemos}</b> demos (${Math.round(pct)}%). Si le animas, lo cierra antes de fin de mes.`,action:{label:'🎉 Enviar kudos',fn:`openKudosModal(${s.id},'${s.nombre.replace(/'/g,"\\'")}')`},priority:5});
+        }
+      }
+    });
+  }
+
+  // 8. SDR superó el objetivo
+  if(obj){
+    allSdrs.forEach(s=>{
+      const st=sdrStats(s.id);
+      const objTotalDemos=(obj.demos_objetivo_outbound||0)+(obj.demos_objetivo_inbound||0);
+      if(objTotalDemos>0&&st.totalDemos>=objTotalDemos){
+        const extra=st.totalDemos-objTotalDemos;
+        alertas.push({tipo:'success',icon:'🏆',titulo:`${s.nombre} ya superó el objetivo (+${extra})`,desc:`Lleva <b>${st.totalDemos}/${objTotalDemos}</b> demos. Reconocer este logro motiva al resto del equipo.`,action:{label:'🎉 Enviar kudos',fn:`openKudosModal(${s.id},'${s.nombre.replace(/'/g,"\\'")}')`},priority:4});
+      }
+    });
+  }
+
+  // 9. % Cancelación del equipo subiendo
+  const teamStats=calcStatsForRange(mStart,mEnd);
+  const prevMonth=getLastMonthRange();
+  const prevTeamStats=calcStatsForRange(prevMonth.start,prevMonth.end);
+  if(teamStats.totalDemos>=20&&teamStats.pctCanc>prevTeamStats.pctCanc+5&&teamStats.pctCanc>=20){
+    alertas.push({tipo:'warning',icon:'📊',titulo:`Cancelación del equipo subiendo`,desc:`Este mes: <b>${teamStats.pctCanc}%</b> vs mes anterior: <b>${prevTeamStats.pctCanc}%</b>. Tu reto principal es bajar esto. Revisa patrones en el heatmap.`,action:null,priority:2});
+  }
+
+  // 10. Equipo cumplió objetivo conjunto
+  if(obj){
+    const stats=allSdrs.map(s=>sdrStats(s.id));
+    const totalDemos=stats.reduce((a,b)=>a+b.totalDemos,0);
+    const objTeam=((obj.demos_objetivo_outbound||0)+(obj.demos_objetivo_inbound||0))*allSdrs.length;
+    if(objTeam>0&&totalDemos>=objTeam){
+      alertas.push({tipo:'success',icon:'🎊',titulo:`¡El equipo cumplió el objetivo del mes!`,desc:`<b>${totalDemos}/${objTeam}</b> demos. Un kudos grupal cierra el círculo perfecto.`,action:{label:'🎉 Kudos al equipo',fn:`openKudosModal(null,'todo el equipo')`},priority:4});
+    }
+  }
+
+  alertas.sort((a,b)=>a.priority-b.priority);
+  return alertas;
+}
+
+function workdaysBetween(d1,d2){
+  let count=0;
+  const cur=new Date(d1);
+  while(cur<=d2){if(isWorkday(cur))count++;cur.setDate(cur.getDate()+1);}
+  return count;
+}
+
+let alertasCollapsed=false;
+function toggleAlertas(){
+  alertasCollapsed=!alertasCollapsed;
+  const list=document.getElementById('alertas-list');
+  const btn=document.getElementById('alertas-toggle-btn');
+  if(list)list.style.display=alertasCollapsed?'none':'flex';
+  if(btn)btn.textContent=alertasCollapsed?'Mostrar ▼':'Ocultar ▲';
+}
+
+function renderAlertasProactivas(){
+  const wrap=document.getElementById('alertas-proactivas-wrap');
+  if(!wrap)return;
+  const alertas=detectAlertas();
+  if(alertas.length===0){
+    wrap.innerHTML=`
+      <div class="alertas-panel">
+        <div class="alertas-head">
+          <div class="alertas-title">🔔 Lo que necesita tu atención <span class="alertas-counter good">0</span></div>
+        </div>
+        <div class="alertas-empty">
+          <div class="alertas-empty-icon">✨</div>
+          <div>Todo en orden. El equipo va al ritmo y no hay alertas que tratar ahora mismo.</div>
+        </div>
+      </div>`;
+    return;
+  }
+  const critical=alertas.filter(a=>a.tipo==='critical').length;
+  const counterClass=critical>0?'critical':'';
+  const counterText=critical>0?`${critical} crítica${critical>1?'s':''} · ${alertas.length} total`:`${alertas.length}`;
+  wrap.innerHTML=`
+    <div class="alertas-panel">
+      <div class="alertas-head">
+        <div class="alertas-title">🔔 Lo que necesita tu atención <span class="alertas-counter ${counterClass}">${counterText}</span></div>
+        <button class="alertas-toggle" id="alertas-toggle-btn" onclick="toggleAlertas()">${alertasCollapsed?'Mostrar ▼':'Ocultar ▲'}</button>
+      </div>
+      <div class="alertas-list" id="alertas-list" style="display:${alertasCollapsed?'none':'flex'};">
+        ${alertas.map(a=>`
+          <div class="alerta-card ${a.tipo}">
+            <div class="alerta-card-icon">${a.icon}</div>
+            <div class="alerta-card-content">
+              <div class="alerta-card-title">${a.titulo}</div>
+              <div class="alerta-card-desc">${a.desc}</div>
+            </div>
+            ${a.action?`<div class="alerta-card-actions"><button class="alerta-action-btn" onclick="${a.action.fn}">${a.action.label}</button></div>`:''}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function setMgrIndividualSdr(id){
+  const btn=document.querySelector('.mgr-nav-btn[onclick*="individual"]');
+  if(btn)setMgrTab('individual',btn);
+  selectMgrSdr(id);
 }
 
 // ── HEATMAP HORARIO ──
