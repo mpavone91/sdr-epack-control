@@ -320,6 +320,43 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .kudos-templates{display:flex;flex-direction:column;gap:6px;}
 .kudos-template{padding:9px 13px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;text-align:left;font-family:'Inter',sans-serif;transition:all 0.15s;}
 .kudos-template:hover{border-color:var(--lime);background:var(--lime-soft);}
+/* HEATMAP */
+.heatmap-tab{padding:6px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.heatmap-tab:hover{border-color:var(--lime);color:var(--text);}
+.heatmap-tab.active{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+.heatmap-grid{display:grid;gap:3px;min-width:600px;}
+.heatmap-row{display:grid;grid-template-columns:60px repeat(5,1fr);gap:3px;}
+.heatmap-cell{aspect-ratio:1.2;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text);position:relative;cursor:default;transition:all 0.15s;border:1px solid transparent;}
+.heatmap-cell:hover{border-color:var(--teal-dark);transform:scale(1.05);z-index:2;box-shadow:0 4px 10px rgba(0,0,0,0.15);}
+.heatmap-cell.empty{background:#f4f4f4;color:#ccc;}
+.heatmap-cell-label{font-size:11px;color:var(--muted);text-align:right;padding:0 8px;align-self:center;font-weight:600;}
+.heatmap-cell-header{font-size:11px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:0.04em;padding:6px 0;}
+/* Agendadas: green scale */
+.hm-ag-0{background:#f4f4f4;color:#ccc;}
+.hm-ag-1{background:#e0f3e6;color:#1e7a3a;}
+.hm-ag-2{background:#a8e0c0;color:#0e4a1e;}
+.hm-ag-3{background:#5fc77f;color:white;}
+.hm-ag-4{background:#22a652;color:white;}
+.hm-ag-5{background:#0e7a35;color:white;}
+/* Ejecutadas: teal scale */
+.hm-ej-0{background:#f4f4f4;color:#ccc;}
+.hm-ej-1{background:#dcebef;color:#2c4f5b;}
+.hm-ej-2{background:#9bc4d0;color:#1a3340;}
+.hm-ej-3{background:#5a9aae;color:white;}
+.hm-ej-4{background:#2c728a;color:white;}
+.hm-ej-5{background:#1a3340;color:white;}
+/* Canceladas: red scale */
+.hm-ca-0{background:#f4f4f4;color:#ccc;}
+.hm-ca-1{background:#fde8e8;color:#c0392b;}
+.hm-ca-2{background:#f5b8b8;color:#7a2020;}
+.hm-ca-3{background:#e57878;color:white;}
+.hm-ca-4{background:#c0392b;color:white;}
+.hm-ca-5{background:#8a1f15;color:white;}
+.heatmap-legend{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:11px;color:var(--muted);}
+.heatmap-legend-scale{display:flex;gap:2px;}
+.heatmap-legend-cell{width:18px;height:14px;border-radius:3px;}
+.heatmap-insight{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-top:14px;font-size:13px;color:var(--text);line-height:1.6;}
+.heatmap-insight b{color:var(--teal-dark);}
 .stat-delta{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:500;}
 .mgr-table .num{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
 
@@ -786,6 +823,25 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-modalidad-table"></table></div>
       </div>
 
+      <!-- Heatmap horario -->
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">🔥 Heatmap horario · día × hora</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select class="form-select" id="heatmap-sdr" onchange="renderHeatmap()" style="width:auto;padding:6px 28px 6px 12px;font-size:12px;">
+              <option value="">📊 Equipo (agregado)</option>
+            </select>
+          </div>
+        </div>
+        <div class="mgr-block-sub" style="margin-bottom:14px;">Identifica las mejores franjas para agendar, las que más ejecutan, y dónde se concentran las cancelaciones. Color más intenso = más demos.</div>
+        <div id="heatmap-tabs" style="display:flex;gap:6px;margin-bottom:14px;">
+          <button class="heatmap-tab active" onclick="setHeatmapType('agendadas',this)">📅 Agendadas</button>
+          <button class="heatmap-tab" onclick="setHeatmapType('ejecutadas',this)">✅ Ejecutadas</button>
+          <button class="heatmap-tab" onclick="setHeatmapType('canceladas',this)">❌ Canceladas</button>
+        </div>
+        <div id="heatmap-container" style="overflow-x:auto;"></div>
+      </div>
+
       <!-- Desglose cancelación -->
       <div class="mgr-block" style="margin-top:20px;">
         <div class="mgr-block-head">
@@ -1242,6 +1298,7 @@ function setMgrPeriod(period,btn){
   renderMgrComerciales();
   renderMgrModalidad();
   renderMgrCancel();
+  renderHeatmap();
 }
 
 function mgrPeriodDates(){
@@ -1305,6 +1362,7 @@ function renderManager(){
   renderMgrComerciales();
   renderMgrModalidad();
   renderMgrCancel();
+  renderHeatmap();
   renderMgrSdrSelector();
   renderLlamadasTable();
   renderObjetivosForm();
@@ -1864,7 +1922,127 @@ async function toggleCiudad(id,activa){
   catch(e){showToast('❌ Error');console.error(e);}
 }
 
-// ── KUDOS ──
+// ── HEATMAP HORARIO ──
+let heatmapType='agendadas';
+function setHeatmapType(type,btn){
+  heatmapType=type;
+  document.querySelectorAll('.heatmap-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHeatmap();
+}
+
+function renderHeatmap(){
+  const container=document.getElementById('heatmap-container');
+  if(!container)return;
+
+  // Populate SDR selector if not done
+  const sel=document.getElementById('heatmap-sdr');
+  if(sel&&sel.options.length<=1){
+    allSdrs.forEach(s=>{
+      const opt=document.createElement('option');
+      opt.value=s.id;opt.textContent='👤 '+s.nombre;
+      sel.appendChild(opt);
+    });
+  }
+
+  const sdrFilter=sel?sel.value:'';
+  const{start,end}=mgrMonthRange();
+
+  // Filter demos for the month (and SDR if selected)
+  let periodDemos=allDemos.filter(d=>{
+    const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return ag>=start&&ag<=end;
+  });
+  if(sdrFilter)periodDemos=periodDemos.filter(d=>d.sdr_id==sdrFilter);
+
+  // Filter by type
+  let demosToShow=[];
+  if(heatmapType==='agendadas')demosToShow=periodDemos.filter(d=>d.estado!=='cancelada');
+  else if(heatmapType==='ejecutadas')demosToShow=periodDemos.filter(d=>d.estado==='ejecutada');
+  else if(heatmapType==='canceladas')demosToShow=periodDemos.filter(d=>d.estado==='cancelada');
+
+  // Build the day×hour matrix
+  // Rows: 9-10, 10-11, 11-12, 12-13, 13-14, 14-15, 15-16, 16-17, 17-18
+  // Cols: Lun, Mar, Mié, Jue, Vie
+  const hours=[9,10,11,12,13,14,15,16,17];
+  const dayNames=['Lun','Mar','Mié','Jue','Vie'];
+  const matrix={};
+  hours.forEach(h=>{matrix[h]=[0,0,0,0,0];});
+
+  demosToShow.forEach(d=>{
+    if(!d.hora||!d.fecha)return;
+    const hr=parseInt(d.hora.split(':')[0]);
+    if(!hours.includes(hr))return;
+    // Use fecha to determine day of week
+    const date=new Date(d.fecha+'T12:00:00');
+    const dow=date.getDay(); // 0=sun, 1=mon ... 5=fri, 6=sat
+    if(dow<1||dow>5)return;
+    const colIdx=dow-1;
+    matrix[hr][colIdx]++;
+  });
+
+  // Find max for color scale
+  let max=0;
+  Object.values(matrix).forEach(row=>row.forEach(v=>{if(v>max)max=v;}));
+
+  // Scale function: 0-5
+  const scaleClass=(v)=>{
+    if(v===0)return 0;
+    if(max<=1)return v;
+    const ratio=v/max;
+    if(ratio<0.2)return 1;
+    if(ratio<0.4)return 2;
+    if(ratio<0.6)return 3;
+    if(ratio<0.8)return 4;
+    return 5;
+  };
+
+  const prefix=heatmapType==='agendadas'?'hm-ag-':heatmapType==='ejecutadas'?'hm-ej-':'hm-ca-';
+
+  let html='<div class="heatmap-grid">';
+  // Header row
+  html+='<div class="heatmap-row"><div></div>';
+  dayNames.forEach(d=>{html+=`<div class="heatmap-cell-header">${d}</div>`;});
+  html+='</div>';
+  // Data rows
+  hours.forEach(h=>{
+    html+=`<div class="heatmap-row"><div class="heatmap-cell-label">${h}:00</div>`;
+    matrix[h].forEach((v,i)=>{
+      const cls=prefix+scaleClass(v);
+      html+=`<div class="heatmap-cell ${cls}" title="${dayNames[i]} ${h}:00 — ${v} demos">${v||''}</div>`;
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+
+  // Legend
+  const totalDemos=demosToShow.length;
+  const legendColors=[1,2,3,4,5].map(n=>`<div class="heatmap-legend-cell ${prefix}${n}"></div>`).join('');
+  html+=`<div class="heatmap-legend"><span>Menos</span><div class="heatmap-legend-scale">${legendColors}</div><span>Más</span> · Total: <b style="color:var(--teal-dark);">${totalDemos}</b> demos${sdrFilter?' de '+(allSdrs.find(s=>s.id==sdrFilter)?.nombre||''):' (equipo)'}</div>`;
+
+  // Insights — find peak slot
+  let peakVal=0,peakHr=null,peakDay=null;
+  hours.forEach(h=>{
+    matrix[h].forEach((v,i)=>{
+      if(v>peakVal){peakVal=v;peakHr=h;peakDay=dayNames[i];}
+    });
+  });
+
+  if(peakVal>0){
+    const typeText=heatmapType==='agendadas'?'agendamiento':heatmapType==='ejecutadas'?'ejecución':'cancelación';
+    let insight=`💡 Mayor pico de <b>${typeText}</b>: <b>${peakDay} a las ${peakHr}:00</b> con ${peakVal} demos.`;
+    if(heatmapType==='canceladas'&&peakVal>=3){
+      insight+=` Considera revisar por qué se concentran cancelaciones en esa franja.`;
+    }else if(heatmapType==='ejecutadas'){
+      insight+=` Esta franja es la más productiva — orienta más agendamientos aquí.`;
+    }else if(heatmapType==='agendadas'){
+      insight+=` Es la hora favorita del equipo para cerrar citas.`;
+    }
+    html+=`<div class="heatmap-insight">${insight}</div>`;
+  }
+
+  container.innerHTML=html;
+}
 const KUDOS_TEMPLATES_IND=[
   '¡Genial cómo cerraste ese deal hoy! Sigue así 🚀',
   'Volumen brutal de demos esta semana. Se nota la energía.',
