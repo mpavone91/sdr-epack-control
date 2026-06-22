@@ -298,6 +298,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pct-pill.verde{background:var(--green-soft);color:var(--green);}
 .pct-pill.amarillo{background:var(--amber-soft);color:var(--amber);}
 .pct-pill.rojo{background:#fde8e8;color:var(--red);}
+.delta-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.delta-badge.up{background:#eafaf0;color:var(--green);}
+.delta-badge.down{background:#fde8e8;color:var(--red);}
+.delta-badge.flat{background:#f0f0f0;color:var(--muted);}
+.stat-delta{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:500;}
 .mgr-table .num{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
 
 /* ── MANAGER PANEL ── */
@@ -1247,22 +1252,65 @@ function renderManager(){
   renderGestionLists();
 }
 
+// Helper: stats for previous month (used for delta comparisons)
+function prevMgrMonthRange(){
+  const m=mgrTargetMonth();
+  const prev=new Date(m.getFullYear(),m.getMonth()-1,1);
+  return{start:localDateStr(new Date(prev.getFullYear(),prev.getMonth(),1)),end:localDateStr(new Date(prev.getFullYear(),prev.getMonth()+1,0))};
+}
+function prevMonthStatsForSdr(sdrId){
+  const{start,end}=prevMgrMonthRange();
+  const sDemos=allDemos.filter(d=>{
+    const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
+    return d.sdr_id===sdrId&&ag>=start&&ag<=end;
+  });
+  const totalDemos=sDemos.filter(d=>d.estado!=='cancelada').length;
+  const ejecutadas=sDemos.filter(d=>d.estado==='ejecutada').length;
+  const canceladas=sDemos.filter(d=>d.estado==='cancelada').length;
+  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+  return{totalDemos,ejecutadas,canceladas,cwd};
+}
+function deltaBadge(curr,prev){
+  if(prev===0&&curr===0)return'<span class="delta-badge flat">—</span>';
+  if(prev===0)return`<span class="delta-badge up">+${curr}</span>`;
+  const d=curr-prev;
+  if(d===0)return'<span class="delta-badge flat">=</span>';
+  if(d>0)return`<span class="delta-badge up">+${d}</span>`;
+  return`<span class="delta-badge down">${d}</span>`;
+}
+
 function renderMgrTeamStats(){
   const stats=allSdrs.map(s=>sdrStats(s.id));
   const totalDemos=stats.reduce((a,b)=>a+b.totalDemos,0);
   const totalEjec=stats.reduce((a,b)=>a+b.ejecutadas,0);
   const totalCwd=stats.reduce((a,b)=>a+b.totalCwd,0);
   const totalCanc=stats.reduce((a,b)=>a+b.canceladas,0);
-  const pctCanc=( totalDemos+totalCanc)>0?Math.round(totalCanc/(totalDemos+totalCanc)*100):0;
+  const pctCanc=(totalDemos+totalCanc)>0?Math.round(totalCanc/(totalDemos+totalCanc)*100):0;
   const pctCierre=totalEjec>0?Math.round(totalCwd/totalEjec*100):0;
+  // Previous month totals
+  const prevStats=allSdrs.map(s=>prevMonthStatsForSdr(s.id));
+  const pTotalDemos=prevStats.reduce((a,b)=>a+b.totalDemos,0);
+  const pTotalEjec=prevStats.reduce((a,b)=>a+b.ejecutadas,0);
+  const pTotalCwd=prevStats.reduce((a,b)=>a+b.cwd,0);
+  const pTotalCanc=prevStats.reduce((a,b)=>a+b.canceladas,0);
   const el=document.getElementById('mgr-team-stats');
   el.innerHTML=`
-    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Agendadas</div></div>
-    <div class="stat-card"><div class="stat-num">${totalEjec}</div><div class="stat-label">Ejecutadas</div></div>
-    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ganadas (CWD)</div></div>
-    <div class="stat-card"><div class="stat-num">${totalCanc}</div><div class="stat-label">Canceladas</div></div>
+    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Agendadas</div><div class="stat-delta">${deltaBadge(totalDemos,pTotalDemos)} vs mes anterior</div></div>
+    <div class="stat-card"><div class="stat-num">${totalEjec}</div><div class="stat-label">Ejecutadas</div><div class="stat-delta">${deltaBadge(totalEjec,pTotalEjec)} vs mes anterior</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ganadas (CWD)</div><div class="stat-delta">${deltaBadge(totalCwd,pTotalCwd)} vs mes anterior</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCanc}</div><div class="stat-label">Canceladas</div><div class="stat-delta">${deltaBadgeInverted(totalCanc,pTotalCanc)} vs mes anterior</div></div>
     <div class="stat-card"><div class="stat-num">${pctCanc}%</div><div class="stat-label">% Cancelación</div></div>
     <div class="stat-card"><div class="stat-num">${pctCierre}%</div><div class="stat-label">% Cierre</div></div>`;
+}
+
+// Inverted delta: for canceladas, lower is better (green for less)
+function deltaBadgeInverted(curr,prev){
+  if(prev===0&&curr===0)return'<span class="delta-badge flat">—</span>';
+  if(prev===0)return`<span class="delta-badge down">+${curr}</span>`;
+  const d=curr-prev;
+  if(d===0)return'<span class="delta-badge flat">=</span>';
+  if(d>0)return`<span class="delta-badge down">+${d}</span>`;
+  return`<span class="delta-badge up">${d}</span>`;
 }
 
 function renderMgrTeamObj(){
@@ -1291,12 +1339,15 @@ function renderMgrTeamObj(){
 }
 
 function renderMgrRanking(){
-  const rows=allSdrs.map(s=>({nombre:s.nombre,...sdrStats(s.id)})).sort((a,b)=>b.totalDemos-a.totalDemos);
+  const rows=allSdrs.map(s=>({nombre:s.nombre,id:s.id,...sdrStats(s.id)})).sort((a,b)=>b.totalDemos-a.totalDemos);
   const tot=(k)=>rows.reduce((a,b)=>a+b[k],0);
   const totEjec=tot('ejecutadas');
   const totCwd=tot('totalCwd');
   const totCanc=tot('canceladas');
   const totDemos=tot('totalDemos');
+  // Prev month totals for comparison
+  const prevStats=rows.map(r=>prevMonthStatsForSdr(r.id));
+  const pTotDemos=prevStats.reduce((a,b)=>a+b.totalDemos,0);
   const pctPill=(val,green=30,yellow=15)=>{
     const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
     return`<span class="pct-pill ${cls}">${val}%</span>`;
@@ -1304,21 +1355,23 @@ function renderMgrRanking(){
   const t=document.getElementById('mgr-ranking');
   t.innerHTML=`
     <thead><tr>
-      <th>SDR</th><th>Agend.</th><th>Out</th><th>In</th>
+      <th>SDR</th><th>Agend.</th><th>vs mes ant.</th><th>Out</th><th>In</th>
       <th>Ejec.</th><th>Pend.</th><th>% Ejec</th>
       <th>Ganadas</th><th>% Cierre</th>
       <th>Canc.</th><th>% Canc</th>
       <th>Llam.</th><th>Conect.</th>
     </tr></thead>
     <tbody>
-    ${rows.map(r=>{
+    ${rows.map((r,i)=>{
       const pctEjec=r.totalDemos>0?Math.round(r.ejecutadas/r.totalDemos*100):0;
       const pctCierre=r.ejecutadas>0?Math.round(r.totalCwd/r.ejecutadas*100):0;
       const pctCanc=(r.totalDemos+r.canceladas)>0?Math.round(r.canceladas/(r.totalDemos+r.canceladas)*100):0;
       const pendientes=r.totalDemos-r.ejecutadas;
+      const p=prevStats[i];
       return`<tr>
         <td>${r.nombre}</td>
         <td><span class="num">${r.totalDemos}</span></td>
+        <td>${deltaBadge(r.totalDemos,p.totalDemos)}</td>
         <td>${r.demosOut}</td><td>${r.demosIn}</td>
         <td>${r.ejecutadas}</td>
         <td><span style="font-weight:600;color:${pendientes>0?'var(--blue)':'var(--muted)'};">${pendientes}</span></td>
@@ -1331,6 +1384,7 @@ function renderMgrRanking(){
     <tr class="row-total">
       <td>TOTAL</td>
       <td><b>${totDemos}</b></td>
+      <td>${deltaBadge(totDemos,pTotDemos)}</td>
       <td>${tot('demosOut')}</td><td>${tot('demosIn')}</td>
       <td>${totEjec}</td>
       <td>${totDemos-totEjec}</td>
