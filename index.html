@@ -2274,9 +2274,9 @@ function renderHeatmap(){
     if(heatmapType==='canceladas'&&peakVal>=3){
       insight+=` Considera revisar por qué se concentran cancelaciones en esa franja.`;
     }else if(heatmapType==='ejecutadas'){
-      insight+=` Esta franja es la más productiva — orienta más agendamientos aquí.`;
+      insight+=` Es la franja donde más demos se llegan a realizar.`;
     }else if(heatmapType==='agendadas'){
-      insight+=` Es la hora favorita del equipo para cerrar citas.`;
+      insight+=` Es la franja horaria que más usa el equipo para agendar.`;
     }
     html+=`<div class="heatmap-insight">${insight}</div>`;
   }
@@ -4150,12 +4150,6 @@ function buildPersonalTimeInsights(){
     if(rate>worstCancRate&&rate>0.2){worstCancRate=rate;worstCancHour=parseInt(hr);worstCancCount=s.total;}
   });
 
-  // Best hour for closing (highest CWD)
-  let bestCloseHour=null,bestCloseCount=0;
-  Object.entries(byHour).forEach(([hr,s])=>{
-    if(s.cwd>bestCloseCount){bestCloseCount=s.cwd;bestCloseHour=parseInt(hr);}
-  });
-
   // Best day for execution
   let bestDay=null,bestDayRate=0;
   Object.entries(byDay).forEach(([dow,s])=>{
@@ -4164,19 +4158,27 @@ function buildPersonalTimeInsights(){
     if(rate>bestDayRate){bestDayRate=rate;bestDay=parseInt(dow);}
   });
 
-  // Build insights
+  // Worst day for cancellation
+  let worstCancDay=null,worstCancDayRate=0;
+  Object.entries(byDay).forEach(([dow,s])=>{
+    if(s.total<3)return;
+    const rate=s.canc/s.total;
+    if(rate>worstCancDayRate&&rate>0.2){worstCancDayRate=rate;worstCancDay=parseInt(dow);}
+  });
+
+  // Build insights — focused on execution and cancellation (what they control), NOT closing
   let insights=[];
   if(bestExecHour!==null){
     insights.push(`✅ <b>Tu mejor franja para que las demos se ejecuten</b> es a las <b>${bestExecHour}:00</b> — un ${Math.round(bestExecRate*100)}% de las demos que agendas en esa hora se hacen (sobre ${bestExecCount} demos). Agenda más a esta hora si puedes.`);
-  }
-  if(bestCloseHour!==null&&bestCloseCount>=1){
-    insights.push(`💰 <b>La hora donde más cierras ventas</b> es a las <b>${bestCloseHour}:00</b> con ${bestCloseCount} venta${bestCloseCount>1?'s':''} cerrada${bestCloseCount>1?'s':''}. Quizás los clientes están más decididos en esa franja.`);
   }
   if(worstCancHour!==null){
     insights.push(`⚠️ <b>Cuidado con las ${worstCancHour}:00</b> — un ${Math.round(worstCancRate*100)}% de tus demos a esa hora se cancelan. Si puedes, intenta agendar fuera de esa franja.`);
   }
   if(bestDay!==null&&bestDayRate>0.7){
     insights.push(`📅 <b>Los ${dayNames[bestDay].toLowerCase()}</b> son tu mejor día: ${Math.round(bestDayRate*100)}% de demos ejecutadas.`);
+  }
+  if(worstCancDay!==null){
+    insights.push(`📆 <b>Los ${dayNames[worstCancDay].toLowerCase()}</b> concentran más cancelaciones (${Math.round(worstCancDayRate*100)}%). Revisa si puedes confirmar mejor esas demos el día antes.`);
   }
 
   if(insights.length===0){
@@ -4193,7 +4195,7 @@ function buildPersonalTimeInsights(){
     <div class="mgr-block" style="margin-top:16px;background:linear-gradient(135deg,#fff9e6,#fff4c4);border:1px solid #f0d480;">
       <div class="resumen-block-title" style="color:#5a4400;">⏰ Tus mejores y peores horarios</div>
       <div style="font-size:12.5px;color:#5a4400;margin-bottom:12px;line-height:1.5;">
-        Basado en el histórico completo de tus demos (${myDemos.length} en total con hora registrada).
+        Basado en el histórico completo de tus demos (${myDemos.length} en total con hora registrada). Mira cuándo se ejecutan más y cuándo se te cancelan, para que agendes mejor.
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         ${insights.map(i=>`<div style="background:rgba(255,255,255,0.65);border:1px solid rgba(240,212,128,0.5);border-radius:8px;padding:11px 14px;font-size:13px;color:var(--text);line-height:1.6;">${i}</div>`).join('')}
