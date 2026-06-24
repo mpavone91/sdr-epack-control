@@ -969,6 +969,36 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   </div>
 </div>
 
+<!-- MODAL REAGENDAR -->
+<div class="modal-overlay" id="reagendar-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <div class="modal-title">🔄 Reagendar demo</div>
+      <button class="modal-close" onclick="closeReagendarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reag-demo-id"/>
+      <div id="reag-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nueva fecha</label>
+          <input class="form-input" type="date" id="reag-fecha"/>
+        </div>
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">Nueva hora</label>
+          <input class="form-input" type="text" id="reag-hora" placeholder="Ej: 10:30" maxlength="5" autocomplete="off"
+            oninput="filterReagHoraOptions(this.value)" onfocus="showReagHoraDropdown()" onblur="hideReagHoraDropdown()"/>
+          <div class="hora-dropdown" id="reag-hora-dropdown"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeReagendarModal()">Cancelar</button>
+        <button class="btn-save" onclick="confirmReagendar()">🔄 Reagendar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL KUDOS -->
 <div class="modal-overlay" id="kudos-modal">
   <div class="modal" style="max-width:540px;">
@@ -3291,30 +3321,7 @@ async function changeEstado(id,estado){
 
 // ── REAGENDAR ──
 async function reagendar(id){
-  const demo=demos.find(d=>d.id===id);
-  if(!demo)return;
-  const nuevaFecha=prompt('Nueva fecha para la demo (YYYY-MM-DD):',demo.fecha||todayStr());
-  if(nuevaFecha===null)return; // user cancelled
-  const fechaTrim=nuevaFecha.trim();
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(fechaTrim)){showToast('⚠️ Fecha no válida, usa formato 2026-06-25');return;}
-  const nuevaHora=prompt('Hora de la demo (ej: 10:30). Déjalo vacío si no aplica:',demo.hora||'');
-  if(nuevaHora===null)return; // user cancelled
-  let horaVal=null;
-  if(nuevaHora.trim()){
-    if(/^\d{1,2}:\d{2}$/.test(nuevaHora.trim())){horaVal=nuevaHora.trim().padStart(5,'0');}
-    else{showToast('⚠️ Hora no válida, usa formato 10:30');return;}
-  }
-  try{
-    // Update the SAME demo: new date/hora, back to agendada. No duplication.
-    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({
-      fecha:fechaTrim,
-      hora:horaVal,
-      estado:'agendada',
-      descartada:false
-    })});
-    showToast('✓ Demo reagendada para '+fmtDate(fechaTrim)+(horaVal?' a las '+horaVal:''));
-    await loadDemos();
-  }catch(e){showToast('❌ Error al reagendar');console.error(e);}
+  openReagendarModal(id);
 }
 
 async function deleteDemo(id){
@@ -3909,28 +3916,60 @@ async function quickOutcome(id,estado,outcome){
 
 // Reschedule the SAME demo to a new date/time (no new demo created, stays in agendadas)
 async function reagendarConHora(id){
+  openReagendarModal(id);
+}
+
+// ── REAGENDAR MODAL ──
+function openReagendarModal(id){
   const demo=demos.find(d=>d.id===id);
   if(!demo)return;
-  const nuevaFecha=prompt('Nueva fecha de la demo (YYYY-MM-DD):',demo.fecha||todayStr());
-  if(nuevaFecha===null)return; // user cancelled
-  const fechaTrim=nuevaFecha.trim();
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(fechaTrim)){showToast('⚠️ Fecha no válida, usa formato 2026-06-25');return;}
-  const nuevaHora=prompt('Nueva hora (ej: 10:30). Déjalo vacío si no aplica:',demo.hora||'');
-  if(nuevaHora===null)return; // user cancelled
+  document.getElementById('reag-demo-id').value=id;
+  document.getElementById('reag-demo-name').textContent=demo.sf_nombre||'Sin nombre';
+  document.getElementById('reag-fecha').value=demo.fecha||todayStr();
+  document.getElementById('reag-hora').value=demo.hora||'';
+  document.getElementById('reagendar-modal').classList.add('active');
+}
+function closeReagendarModal(){
+  document.getElementById('reagendar-modal').classList.remove('active');
+}
+function showReagHoraDropdown(){
+  filterReagHoraOptions(document.getElementById('reag-hora').value);
+  document.getElementById('reag-hora-dropdown').classList.add('show');
+}
+function hideReagHoraDropdown(){
+  setTimeout(()=>document.getElementById('reag-hora-dropdown')?.classList.remove('show'),150);
+}
+function filterReagHoraOptions(val){
+  const dd=document.getElementById('reag-hora-dropdown');
+  if(!dd)return;
+  const q=(val||'').trim();
+  const filtered=q?HORA_OPTIONS.filter(o=>o.startsWith(q)):HORA_OPTIONS;
+  dd.innerHTML=filtered.map(o=>`<div class="hora-option" onmousedown="selectReagHora('${o}')">${o}</div>`).join('');
+}
+function selectReagHora(val){
+  document.getElementById('reag-hora').value=val;
+  document.getElementById('reag-hora-dropdown').classList.remove('show');
+}
+
+async function confirmReagendar(){
+  const id=document.getElementById('reag-demo-id').value;
+  const fechaTrim=document.getElementById('reag-fecha').value;
+  if(!fechaTrim){showToast('⚠️ Selecciona una fecha');return;}
+  const horaRaw=document.getElementById('reag-hora').value.trim();
   let horaVal=null;
-  if(nuevaHora.trim()){
-    if(/^\d{1,2}:\d{2}$/.test(nuevaHora.trim())){horaVal=nuevaHora.trim().padStart(5,'0');}
+  if(horaRaw){
+    if(/^\d{1,2}:\d{2}$/.test(horaRaw)){horaVal=horaRaw.padStart(5,'0');}
     else{showToast('⚠️ Hora no válida, usa formato 10:30');return;}
   }
-  // Warn if rescheduling to a past date/time (would immediately reappear as pending)
+  // Warn if rescheduling to a past date/time
   const today=todayStr();
   if(fechaTrim<today){
-    if(!confirm('Esa fecha ya pasó. La demo volverá a aparecer como pendiente. ¿Seguro que quieres usar una fecha en el pasado?'))return;
+    if(!confirm('Esa fecha ya pasó. La demo volverá a aparecer como pendiente. ¿Seguro?'))return;
   }else if(fechaTrim===today&&horaVal){
     const[h,m]=horaVal.split(':').map(Number);
     const demoTime=new Date(madridNow());demoTime.setHours(h,m,0,0);
     if((madridNow()-demoTime)/60000>30){
-      if(!confirm('Esa hora de hoy ya pasó. La demo seguirá apareciendo como pendiente. ¿Quieres usar una hora más tarde?'))return;
+      if(!confirm('Esa hora de hoy ya pasó. La demo seguirá apareciendo como pendiente. ¿Continuar?'))return;
     }
   }
   try{
@@ -3942,6 +3981,7 @@ async function reagendarConHora(id){
       descartada:false
     })});
     showToast('✓ Demo reagendada para '+fmtDate(fechaTrim)+(horaVal?' a las '+horaVal:''));
+    closeReagendarModal();
     await loadDemos();
   }catch(e){showToast('❌ Error al reagendar');console.error(e);}
 }
