@@ -3922,11 +3922,23 @@ async function reagendarConHora(id){
     if(/^\d{1,2}:\d{2}$/.test(nuevaHora.trim())){horaVal=nuevaHora.trim().padStart(5,'0');}
     else{showToast('⚠️ Hora no válida, usa formato 10:30');return;}
   }
+  // Warn if rescheduling to a past date/time (would immediately reappear as pending)
+  const today=todayStr();
+  if(fechaTrim<today){
+    if(!confirm('Esa fecha ya pasó. La demo volverá a aparecer como pendiente. ¿Seguro que quieres usar una fecha en el pasado?'))return;
+  }else if(fechaTrim===today&&horaVal){
+    const[h,m]=horaVal.split(':').map(Number);
+    const demoTime=new Date(madridNow());demoTime.setHours(h,m,0,0);
+    if((madridNow()-demoTime)/60000>30){
+      if(!confirm('Esa hora de hoy ya pasó. La demo seguirá apareciendo como pendiente. ¿Quieres usar una hora más tarde?'))return;
+    }
+  }
   try{
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({
       fecha:fechaTrim,
       hora:horaVal,
       estado:'agendada',
+      outcome:null,
       descartada:false
     })});
     showToast('✓ Demo reagendada para '+fmtDate(fechaTrim)+(horaVal?' a las '+horaVal:''));
