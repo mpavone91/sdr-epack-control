@@ -1091,7 +1091,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         </div>
         <div class="form-group">
           <label class="form-label">Outcome</label>
-          <select class="form-select" id="f-outcome">
+          <select class="form-select" id="f-outcome" onchange="toggleFechaFirma()">
             <option value="">Sin definir</option>
             <option value="interesado">Interesado</option>
             <option value="necesita_seguimiento">Necesita seguimiento</option>
@@ -1099,6 +1099,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             <option value="cerrado_perdido">Cerrado perdido</option>
           </select>
         </div>
+      </div>
+      <div class="form-group" id="fecha-firma-group" style="display:none;">
+        <label class="form-label">📝 Fecha de la firma <span style="font-weight:400;color:var(--muted);">(cuándo se cerró la venta)</span></label>
+        <input class="form-input" type="date" id="f-fecha-firma"/>
+        <div class="form-hint">La venta contará en el mes de esta fecha, no en el de la demo. Si lo dejas vacío, usará la fecha de la demo.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Notas (opcional)</label>
@@ -1155,6 +1160,8 @@ function localDateStr(d=new Date()){
 function todayStr(){return localDateStr();}
 // Use fecha_agendamiento if set, otherwise fall back to created_at date
 function demoAgendadoDate(d){return d.fecha_agendamiento||(d.created_at?localDateStr(new Date(d.created_at)):'')||todayStr();}
+// CWD counts by signing date (fecha_firma) if set, otherwise by demo date (fecha)
+function cwdDate(d){return d.fecha_firma||d.fecha||'';}
 function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return localDateStr(d);}
 function weekDates(){
   const d=new Date();const day=d.getDay();const diff=day===0?-6:1-day;
@@ -1362,7 +1369,7 @@ function sdrStats(sdrId){
   const demosOut=created.filter(d=>d.canal==='outbound'&&d.estado!=='cancelada').length;
   const demosIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
   // CWD counts by DEMO DATE (fecha), not creation date — a sale in June counts for June
-  const cwdByDate=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const cwdByDate=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end);
   const cwdOut=cwdByDate.filter(d=>d.canal==='outbound').length;
   const cwdIn=cwdByDate.filter(d=>d.canal==='inbound').length;
   const cld=created.filter(d=>d.outcome==='cerrado_perdido').length;
@@ -1420,7 +1427,7 @@ function prevMonthStatsForSdr(sdrId){
   const totalDemos=sDemos.filter(d=>d.estado!=='cancelada').length;
   const ejecutadas=sDemos.filter(d=>d.estado==='ejecutada').length;
   const canceladas=sDemos.filter(d=>d.estado==='cancelada').length;
-  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
   return{totalDemos,ejecutadas,canceladas,cwd};
 }
 function deltaBadge(curr,prev){
@@ -1611,7 +1618,7 @@ function renderMgrModalidad(){
       return x.sdr_id===s.id&&ag>=start&&ag<=end&&x.estado!=='cancelada';
     });
     // CWD: by demo date (fecha) — same logic as everywhere else
-    const cwd=allDemos.filter(x=>x.sdr_id===s.id&&x.outcome==='cerrado_ganado'&&(x.fecha||'')>=start&&(x.fecha||'')<=end);
+    const cwd=allDemos.filter(x=>x.sdr_id===s.id&&x.outcome==='cerrado_ganado'&&cwdDate(x)>=start&&cwdDate(x)<=end);
     const pres=created.filter(x=>x.tipo==='presencial');
     const onl=created.filter(x=>x.tipo==='online');
     const presEjec=pres.filter(x=>x.estado==='ejecutada').length;
@@ -1733,7 +1740,7 @@ function renderMgrIndividual(){
     const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
     return d.sdr_id===mgrIndividualSdr&&ag>=start&&ag<=end&&d.estado!=='cancelada';
   });
-  const sdrCwd=allDemos.filter(d=>d.sdr_id===mgrIndividualSdr&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const sdrCwd=allDemos.filter(d=>d.sdr_id===mgrIndividualSdr&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end);
   const pres=sdrDemos.filter(d=>d.tipo==='presencial');
   const onl=sdrDemos.filter(d=>d.tipo==='online');
   const presCwd=sdrCwd.filter(d=>d.tipo==='presencial').length;
@@ -2454,7 +2461,7 @@ function calcStatsForRange(start,end){
   const ejec=periodDemos.filter(d=>d.estado==='ejecutada').length;
   const canc=periodDemos.filter(d=>d.estado==='cancelada').length;
   // CWD by demo date
-  const cwd=allDemos.filter(d=>d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+  const cwd=allDemos.filter(d=>d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
   const pctCanc=(totalDemos+canc)>0?Math.round(canc/(totalDemos+canc)*100):0;
   const pctCierre=ejec>0?Math.round(cwd/ejec*100):0;
   const pctEjec=totalDemos>0?Math.round(ejec/totalDemos*100):0;
@@ -2471,7 +2478,7 @@ function calcStatsForSdrRange(sdrId,start,end){
   const inb=sDemos.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
   const ejec=sDemos.filter(d=>d.estado==='ejecutada').length;
   const canc=sDemos.filter(d=>d.estado==='cancelada').length;
-  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
   const pctCanc=(totalDemos+canc)>0?Math.round(canc/(totalDemos+canc)*100):0;
   const pctCierre=ejec>0?Math.round(cwd/ejec*100):0;
   const pctEjec=totalDemos>0?Math.round(ejec/totalDemos*100):0;
@@ -2989,6 +2996,7 @@ function exportExcel(){
     Modalidad:d.tipo||'',
     Estado:d.estado||'',
     Outcome:outcomeLabel(d.outcome)||'',
+    'Fecha firma':d.fecha_firma||'',
     Notas:d.notas||'',
     Creada:(d.created_at||'').split('T')[0]
   }));
@@ -3144,6 +3152,8 @@ function openDemoModal(demo=null){
     togglePlataforma();
     document.getElementById('f-estado').value=demo.estado||'agendada';
     document.getElementById('f-outcome').value=demo.outcome||'';
+    document.getElementById('f-fecha-firma').value=demo.fecha_firma||'';
+    toggleFechaFirma();
     document.getElementById('f-notas').value=demo.notas||'';
     setCanal(demo.canal||'outbound');
     parseSfUrl();
@@ -3161,6 +3171,8 @@ function openDemoModal(demo=null){
     togglePlataforma();
     document.getElementById('f-estado').value='agendada';
     document.getElementById('f-outcome').value='';
+    document.getElementById('f-fecha-firma').value='';
+    toggleFechaFirma();
     document.getElementById('f-notas').value='';
     setCanal('outbound');
     document.getElementById('sf-preview').classList.remove('show');
@@ -3203,6 +3215,10 @@ function togglePlataforma(){
   const tipo=document.getElementById('f-tipo').value;
   document.getElementById('plataforma-group').style.display=tipo==='online'?'block':'none';
 }
+function toggleFechaFirma(){
+  const outcome=document.getElementById('f-outcome').value;
+  document.getElementById('fecha-firma-group').style.display=outcome==='cerrado_ganado'?'block':'none';
+}
 function setCanal(canal){
   selectedCanal=canal;
   document.getElementById('f-canal').value=canal;
@@ -3241,6 +3257,7 @@ async function saveDemo(){
     canal:document.getElementById('f-canal').value||'outbound',
     estado:document.getElementById('f-estado').value||'agendada',
     outcome:document.getElementById('f-outcome').value||null,
+    fecha_firma:document.getElementById('f-outcome').value==='cerrado_ganado'?(document.getElementById('f-fecha-firma').value||null):null,
     notas:document.getElementById('f-notas').value||null
   };
   if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
@@ -3302,8 +3319,18 @@ async function reagendar(id){
 
 async function deleteDemo(id){
   if(!confirm('¿Eliminar esta demo? No se puede deshacer.'))return;
-  try{await sb(`demos?id=eq.${id}`,{method:'DELETE'});showToast('✓ Demo eliminada');await loadDemos();}
-  catch(e){showToast('❌ Error');console.error(e);}
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'DELETE'});
+    // Verify it was actually deleted (RLS can silently block deletes)
+    const check=await sb(`demos?id=eq.${id}&select=id`);
+    if(check&&check.length>0){
+      showToast('❌ No se pudo eliminar (permisos). Avisa a Massimo.');
+      console.error('DELETE bloqueado por RLS — falta política DELETE en tabla demos');
+      return;
+    }
+    showToast('✓ Demo eliminada');
+    await loadDemos();
+  }catch(e){showToast('❌ Error al eliminar');console.error(e);}
 }
 
 // ── FILTERING ──
@@ -3569,7 +3596,7 @@ function renderObjetivos(){
   const actualIn=created.filter(d=>d.canal==='inbound'&&d.estado!=='cancelada').length;
   // CWD: count by demo date (fecha), not creation date
   const{start,end}=monthRange();
-  const cwdThisMonth=demos.filter(d=>d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const cwdThisMonth=demos.filter(d=>d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end);
   const actualCwdOut=cwdThisMonth.filter(d=>d.canal==='outbound').length;
   const actualCwdIn=cwdThisMonth.filter(d=>d.canal==='inbound').length;
 
@@ -3771,7 +3798,8 @@ function renderStats(){
   const{start,end}=monthRange();
   const sem=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
   const monthByDate=demos.filter(d=>d.fecha>=start&&d.fecha<=end);
-  const ganadas=monthByDate.filter(d=>d.outcome==='cerrado_ganado').length;
+  // Ganadas count by signing date (fecha_firma fallback fecha)
+  const ganadas=demos.filter(d=>d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
   const canc=monthByDate.filter(d=>d.estado==='cancelada').length;
   const totalConCanceladas=monthByDate.filter(d=>d.estado!=='reagendada').length;
   const ratio=totalConCanceladas>0?Math.round(canc/totalConCanceladas*100)+'%':'—';
@@ -3962,6 +3990,7 @@ function renderDemoCard(d,liveClass=''){
       <div class="demo-meta">
         <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
         ${d.fecha_agendamiento&&d.fecha_agendamiento!==todayStr()?`<span class="demo-meta-item" style="color:var(--lime-dark);font-weight:500;">📞 Creada el ${fmtDate(d.fecha_agendamiento)}</span>`:''}
+        ${d.outcome==='cerrado_ganado'&&d.fecha_firma?`<span class="demo-meta-item" style="color:var(--green);font-weight:600;">📝 Firmada el ${fmtDate(d.fecha_firma)}</span>`:''}
         <span class="demo-meta-item">👤 ${comercialName(d.comercial_id)}</span>
         <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
         ${d.tipo==='online'&&d.plataforma?`<span class="demo-meta-item">${plataformaMap[d.plataforma]||d.plataforma}</span>`:''}
@@ -4032,7 +4061,7 @@ async function renderSdrMetricsInline(){
   try{
     allSdrUsers=await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre&order=nombre.asc`)||[];
     allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
-    allDemosData=await sb(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada`)||[];
+    allDemosData=await sb(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma`)||[];
   }catch(e){panel.innerHTML='<div style="padding:20px;color:var(--red);text-align:center;">Error cargando métricas</div>';return;}
 
   const pill=(val,green,yellow)=>{
@@ -4050,7 +4079,7 @@ async function renderSdrMetricsInline(){
     });
     const totalDemos=sDemos.length;
     const ejecutadas=sDemos.filter(d=>d.estado==='ejecutada').length;
-    const cwd=allDemosData.filter(d=>d.sdr_id===s.id&&d.outcome==='cerrado_ganado'&&(d.fecha||'')>=start&&(d.fecha||'')<=end).length;
+    const cwd=allDemosData.filter(d=>d.sdr_id===s.id&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
     const pctConexion=hechas>0?conectadas/hechas*100:0;
     const pctConectaDemo=conectadas>0?totalDemos/conectadas*100:0;
     const pctDemoGanada=ejecutadas>0?cwd/ejecutadas*100:0;
@@ -4234,7 +4263,7 @@ function renderStatExpansion(stat){
     title='🗓️ Demos de esta semana';
     targetView='semana';
   }else if(stat==='ganadas'){
-    items=demos.filter(d=>d.fecha>=start&&d.fecha<=end&&d.outcome==='cerrado_ganado');
+    items=demos.filter(d=>d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end);
     title='💰 Ventas ganadas este mes';
     targetView='ganadas';
   }else if(stat==='canceladas'){
