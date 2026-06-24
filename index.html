@@ -3176,7 +3176,7 @@ function openDemoModal(demo=null){
     document.getElementById('f-comercial').value=demo.comercial_id||'';
     document.getElementById('f-ciudad').value=demo.ciudad_id||'';
     document.getElementById('f-fecha').value=demo.fecha||'';
-    document.getElementById('f-hora').value=demo.hora||'';
+    document.getElementById('f-hora').value=demo.hora?demo.hora.slice(0,5):'';
     document.getElementById('f-tipo').value=demo.tipo||'presencial';
     document.getElementById('f-plataforma').value=demo.plataforma||'teams';
     togglePlataforma();
@@ -3926,7 +3926,8 @@ function openReagendarModal(id){
   document.getElementById('reag-demo-id').value=id;
   document.getElementById('reag-demo-name').textContent=demo.sf_nombre||'Sin nombre';
   document.getElementById('reag-fecha').value=demo.fecha||todayStr();
-  document.getElementById('reag-hora').value=demo.hora||'';
+  // Strip seconds (Supabase time columns return HH:MM:SS)
+  document.getElementById('reag-hora').value=demo.hora?demo.hora.slice(0,5):'';
   document.getElementById('reagendar-modal').classList.add('active');
 }
 function closeReagendarModal(){
@@ -3958,7 +3959,9 @@ async function confirmReagendar(){
   const horaRaw=document.getElementById('reag-hora').value.trim();
   let horaVal=null;
   if(horaRaw){
-    if(/^\d{1,2}:\d{2}$/.test(horaRaw)){horaVal=horaRaw.padStart(5,'0');}
+    // Accept HH:MM or HH:MM:SS, normalize to HH:MM
+    const clean=horaRaw.slice(0,5);
+    if(/^\d{1,2}:\d{2}$/.test(clean)){horaVal=clean.padStart(5,'0');}
     else{showToast('⚠️ Hora no válida, usa formato 10:30');return;}
   }
   // Warn if rescheduling to a past date/time
