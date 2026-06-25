@@ -542,7 +542,63 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .live-quick-btn.ca{background:var(--red);color:white;}
 .live-quick-btn.re{background:var(--amber);color:white;}
 
-/* ── LIVE VIEW ── */
+/* ── VIEW MODE TOGGLE ── */
+.viewmode-toggle{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:4px;width:fit-content;margin-bottom:16px;}
+.viewmode-btn{padding:9px 20px;border:none;background:none;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:7px;}
+.viewmode-btn:hover{color:var(--text);}
+.viewmode-btn.active{background:var(--teal-dark);color:#fff;}
+
+/* ── CALENDAR VIEW ── */
+.cal-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+.cal-nav{display:flex;align-items:center;gap:8px;}
+.cal-nav-btn{width:36px;height:36px;border:1px solid var(--border);background:var(--surface);border-radius:9px;cursor:pointer;font-size:15px;color:var(--teal-dark);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.cal-nav-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
+.cal-week-label{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--teal-dark);min-width:200px;text-align:center;}
+.cal-today-btn{padding:8px 14px;border:1px solid var(--border);background:var(--surface);border-radius:9px;font-size:12.5px;font-weight:600;color:var(--teal-dark);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.cal-today-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
+.cal-comercial-filter{display:flex;align-items:center;gap:8px;}
+.cal-comercial-filter select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);cursor:pointer;}
+.cal-comercial-filter select:focus{outline:none;border-color:var(--lime);}
+
+.cal-grid-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto;}
+.cal-grid{display:grid;grid-template-columns:54px repeat(7,minmax(120px,1fr));min-width:900px;}
+.cal-corner{background:var(--surface-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.cal-day-head{background:var(--surface-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:10px 8px;text-align:center;}
+.cal-day-head:last-child{border-right:none;}
+.cal-day-head.today{background:var(--lime-soft);}
+.cal-day-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);}
+.cal-day-num{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);margin-top:2px;}
+.cal-day-head.today .cal-day-num{color:var(--lime-dark);}
+.cal-day-count{font-size:10px;color:var(--muted);margin-top:2px;}
+.cal-hour-label{background:var(--surface-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:10.5px;color:var(--muted);font-weight:600;text-align:right;padding:4px 6px 0;height:54px;}
+.cal-cell{border-bottom:1px solid var(--border);border-right:1px solid var(--border);min-height:54px;padding:3px;position:relative;}
+.cal-cell:nth-child(8n+1){border-right:none;}
+.cal-cell.today{background:rgba(127,216,31,0.04);}
+.cal-cell.weekend{background:var(--surface-2);}
+.cal-event{border-radius:6px;padding:4px 7px;margin-bottom:3px;cursor:pointer;font-size:11px;line-height:1.3;border-left:3px solid;transition:all 0.12s;overflow:hidden;}
+.cal-event:hover{transform:translateX(1px);box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+.cal-event-time{font-weight:700;font-size:10.5px;}
+.cal-event-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Event states */
+.cal-event.agendada{background:var(--blue-soft);border-left-color:var(--blue);color:#1a4a7a;}
+.cal-event.ejecutada{background:var(--green-soft);border-left-color:var(--green);color:#15683a;}
+.cal-event.cancelada{background:var(--red-soft);border-left-color:var(--red);color:#9a2020;text-decoration:line-through;opacity:0.7;}
+.cal-event.reagendada{background:var(--amber-soft);border-left-color:var(--amber);color:#8a5e00;}
+.cal-event.ganada{background:var(--lime);border-left-color:var(--lime-dark);color:var(--teal-dark);font-weight:600;}
+.cal-allday-row{display:grid;grid-template-columns:54px repeat(7,minmax(120px,1fr));min-width:900px;border-bottom:2px solid var(--border);}
+.cal-allday-label{background:var(--surface-2);border-right:1px solid var(--border);font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;display:flex;align-items:center;justify-content:flex-end;padding:0 6px;text-align:right;}
+.cal-allday-cell{border-right:1px solid var(--border);padding:3px;min-height:30px;}
+.cal-allday-cell:last-child{border-right:none;}
+.cal-empty-week{text-align:center;padding:50px 20px;color:var(--muted);}
+.cal-empty-week .empty-icon{font-size:38px;margin-bottom:12px;opacity:0.4;}
+/* Popup detail rows */
+.popup-detail-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.popup-detail-row:last-of-type{border-bottom:none;}
+.popup-detail-label{font-weight:600;color:var(--muted);min-width:90px;font-size:12.5px;}
+.popup-detail-val{color:var(--text);flex:1;}
+.popup-detail-val a{color:var(--teal);text-decoration:none;border-bottom:1.5px solid var(--lime);}
+
+
 .live-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:6px 0 10px;display:flex;align-items:center;gap:8px;}
 .live-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 .live-section-label.pasada{color:var(--muted);}
@@ -750,8 +806,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="comerciales-grid" id="comerciales-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>
     </div>
 
+    <!-- VIEW MODE TOGGLE -->
+    <div class="viewmode-toggle">
+      <button class="viewmode-btn active" id="vm-lista" onclick="setViewMode('lista')">📋 Lista</button>
+      <button class="viewmode-btn" id="vm-calendario" onclick="setViewMode('calendario')">🗓️ Calendario</button>
+    </div>
+
     <!-- SEARCH + CANAL FILTER -->
-    <div class="list-controls">
+    <div class="list-controls" id="list-controls-wrap">
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input class="search-input" id="demo-search" placeholder="Buscar por oportunidad, comercial, notas..." oninput="renderList()"/>
@@ -764,21 +826,38 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
     </div>
 
-    <div class="view-tabs">
-      <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
-      <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
-      <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
-      <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
-      <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
-      <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
-      <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
-      <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Follow up <span class="count" id="c-viejas">0</span></button>
-      <button class="view-tab" onclick="setView('papelera',this)">🗑️ Papelera <span class="count" id="c-papelera">0</span></button>
+    <!-- LIST VIEW (tabs + list) -->
+    <div id="list-view-wrap">
+      <div class="view-tabs">
+        <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
+        <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
+        <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
+        <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
+        <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
+        <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
+        <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
+        <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Follow up <span class="count" id="c-viejas">0</span></button>
+        <button class="view-tab" onclick="setView('papelera',this)">🗑️ Papelera <span class="count" id="c-papelera">0</span></button>
+      </div>
+
+      <div class="demo-view active" id="view-content">
+        <div class="demo-list" id="demo-list"></div>
+      </div>
     </div>
 
-    <div class="demo-view active" id="view-content">
-      <div class="demo-list" id="demo-list"></div>
+    <!-- CALENDAR VIEW -->
+    <div id="calendar-view-wrap" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- DEMO DETAIL POPUP (from calendar) -->
+<div class="modal-overlay" id="demo-popup">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <div class="modal-title" id="demo-popup-title">Demo</div>
+      <button class="modal-close" onclick="closeDemoPopup()">✕</button>
     </div>
+    <div class="modal-body" id="demo-popup-body"></div>
   </div>
 </div>
 
@@ -3456,7 +3535,8 @@ function render(){
   renderCounts();
   renderLiveBanner();
   renderXMonthPanel();
-  renderList();
+  if(viewMode==='calendario')renderCalendar();
+  else renderList();
 }
 
 function renderCancelPanel(){
@@ -4463,6 +4543,225 @@ function renderList(){
   const isReagendar=currentView==='reagendar';
   const isVieja=currentView==='viejas';
   list.innerHTML=sorted.map(d=>renderDemoCard(d,isVieja?'vieja':'')).join('');
+}
+
+// ── CALENDAR VIEW ──
+let viewMode='lista';        // 'lista' | 'calendario'
+let calWeekOffset=0;          // 0 = current week
+let calComercialFilter='';    // '' = all comerciales
+
+function setViewMode(mode){
+  viewMode=mode;
+  document.getElementById('vm-lista').classList.toggle('active',mode==='lista');
+  document.getElementById('vm-calendario').classList.toggle('active',mode==='calendario');
+  const listWrap=document.getElementById('list-view-wrap');
+  const calWrap=document.getElementById('calendar-view-wrap');
+  const controls=document.getElementById('list-controls-wrap');
+  if(mode==='calendario'){
+    listWrap.style.display='none';
+    calWrap.style.display='block';
+    controls.style.display='none';
+    if(liveInterval){clearInterval(liveInterval);liveInterval=null;}
+    renderCalendar();
+  }else{
+    listWrap.style.display='block';
+    calWrap.style.display='none';
+    controls.style.display='';
+    renderList();
+  }
+}
+
+// Get the Mon-Sun dates for a given week offset
+function calWeekDates(offset){
+  const d=new Date();
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  const monday=new Date(d);
+  monday.setDate(d.getDate()+diff+offset*7);
+  const dates=[];
+  for(let i=0;i<7;i++){const x=new Date(monday);x.setDate(monday.getDate()+i);dates.push(localDateStr(x));}
+  return dates;
+}
+
+function calWeekLabel(dates){
+  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const[sy,sm,sd]=dates[0].split('-');
+  const[ey,em,ed]=dates[6].split('-');
+  if(sm===em)return`${parseInt(sd)}–${parseInt(ed)} ${months[parseInt(sm)-1]} ${sy}`;
+  if(sy===ey)return`${parseInt(sd)} ${months[parseInt(sm)-1]} – ${parseInt(ed)} ${months[parseInt(em)-1]} ${sy}`;
+  return`${parseInt(sd)} ${months[parseInt(sm)-1]} ${sy} – ${parseInt(ed)} ${months[parseInt(em)-1]} ${ey}`;
+}
+
+function calNavWeek(delta){calWeekOffset+=delta;renderCalendar();}
+function calGoToday(){calWeekOffset=0;renderCalendar();}
+function setCalComercialFilter(val){calComercialFilter=val;renderCalendar();}
+
+// Determine event visual class from demo state/outcome
+function calEventClass(d){
+  if(d.outcome==='cerrado_ganado')return'ganada';
+  if(d.estado==='cancelada')return'cancelada';
+  if(d.estado==='ejecutada')return'ejecutada';
+  if(d.estado==='reagendada')return'reagendada';
+  return'agendada';
+}
+
+function renderCalendar(){
+  const wrap=document.getElementById('calendar-view-wrap');
+  const dates=calWeekDates(calWeekOffset);
+  const today=todayStr();
+  const dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  // Comercial dropdown options
+  const comOptions='<option value="">Todos los comerciales</option>'+
+    comerciales.map(c=>`<option value="${c.id}"${calComercialFilter==c.id?' selected':''}>${c.nombre}</option>`).join('');
+
+  // Filter demos: in this week, apply comercial filter, hide papelera
+  let weekDemos=demos.filter(d=>{
+    if(!d.fecha||!dates.includes(d.fecha))return false;
+    if(calComercialFilter&&d.comercial_id!=calComercialFilter)return false;
+    if(d.estado==='cancelada'&&(d.descartada||d.outcome==='cerrado_perdido'))return false;
+    return true;
+  });
+
+  // Toolbar
+  let html=`
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calNavWeek(-1)" title="Semana anterior">‹</button>
+        <div class="cal-week-label">${calWeekLabel(dates)}</div>
+        <button class="cal-nav-btn" onclick="calNavWeek(1)" title="Semana siguiente">›</button>
+        <button class="cal-today-btn" onclick="calGoToday()">Hoy</button>
+      </div>
+      <div class="cal-comercial-filter">
+        <span style="font-size:13px;color:var(--muted);">👤 Filtrar:</span>
+        <select onchange="setCalComercialFilter(this.value)">${comOptions}</select>
+      </div>
+    </div>`;
+
+  if(!weekDemos.length){
+    html+=`<div class="cal-grid-wrap"><div class="cal-empty-week"><div class="empty-icon">🗓️</div><div class="empty-title" style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;">Sin demos esta semana</div><div class="empty-text" style="font-size:13.5px;color:var(--muted);">${calComercialFilter?'No hay demos de este comercial en la semana.':'No tienes demos agendadas para esta semana.'}</div></div></div>`;
+    wrap.innerHTML=html;
+    return;
+  }
+
+  // Separate demos with hora vs without (all-day)
+  const noHora=dates.map(()=>[]);
+  const byDayHour={}; // key: dayIdx-hour
+  const hoursUsed=new Set();
+  weekDemos.forEach(d=>{
+    const dayIdx=dates.indexOf(d.fecha);
+    if(!d.hora){noHora[dayIdx].push(d);return;}
+    const hr=parseInt(d.hora.split(':')[0]);
+    hoursUsed.add(hr);
+    const key=dayIdx+'-'+hr;
+    if(!byDayHour[key])byDayHour[key]=[];
+    byDayHour[key].push(d);
+  });
+
+  // Determine hour range to show (min 9, max 18, expand if demos outside)
+  let minHr=9,maxHr=18;
+  hoursUsed.forEach(h=>{if(h<minHr)minHr=h;if(h>maxHr)maxHr=h;});
+  const hours=[];for(let h=minHr;h<=maxHr;h++)hours.push(h);
+
+  // Build day headers
+  let headRow=`<div class="cal-corner"></div>`;
+  dates.forEach((dt,i)=>{
+    const isToday=dt===today;
+    const dayCount=weekDemos.filter(d=>d.fecha===dt).length;
+    const dnum=parseInt(dt.split('-')[2]);
+    headRow+=`<div class="cal-day-head${isToday?' today':''}">
+      <div class="cal-day-name">${dayNames[i]}</div>
+      <div class="cal-day-num">${dnum}</div>
+      <div class="cal-day-count">${dayCount?dayCount+(dayCount>1?' demos':' demo'):'—'}</div>
+    </div>`;
+  });
+
+  // All-day row (demos without hora)
+  let allDayHtml='';
+  const hasNoHora=noHora.some(arr=>arr.length);
+  if(hasNoHora){
+    allDayHtml=`<div class="cal-allday-row"><div class="cal-allday-label">Sin<br>hora</div>`;
+    noHora.forEach((arr,i)=>{
+      const isToday=dates[i]===today;
+      allDayHtml+=`<div class="cal-allday-cell${isToday?' today':''}">`;
+      arr.forEach(d=>{allDayHtml+=calEventHtml(d);});
+      allDayHtml+=`</div>`;
+    });
+    allDayHtml+=`</div>`;
+  }
+
+  // Hour rows
+  let body='';
+  hours.forEach(h=>{
+    body+=`<div class="cal-hour-label">${h}:00</div>`;
+    dates.forEach((dt,dayIdx)=>{
+      const isToday=dt===today;
+      const isWeekend=dayIdx>=5;
+      const key=dayIdx+'-'+h;
+      const events=(byDayHour[key]||[]).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+      body+=`<div class="cal-cell${isToday?' today':''}${isWeekend?' weekend':''}">`;
+      events.forEach(d=>{body+=calEventHtml(d);});
+      body+=`</div>`;
+    });
+  });
+
+  html+=`<div class="cal-grid-wrap">
+    <div class="cal-grid">${headRow}</div>
+    ${allDayHtml}
+    <div class="cal-grid">${body}</div>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted);">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--blue);margin-right:4px;"></span>Agendada</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--green);margin-right:4px;"></span>Ejecutada</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--lime);margin-right:4px;"></span>Ganada</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--amber);margin-right:4px;"></span>Reagendada</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--red);margin-right:4px;"></span>Cancelada</span>
+  </div>`;
+
+  wrap.innerHTML=html;
+}
+
+function calEventHtml(d){
+  const cls=calEventClass(d);
+  const hora=d.hora?d.hora.slice(0,5):'';
+  const name=d.sf_nombre||'Sin nombre';
+  return`<div class="cal-event ${cls}" onclick="openDemoPopup(${d.id})" title="${name}">
+    ${hora?`<div class="cal-event-time">${hora}</div>`:''}
+    <div class="cal-event-name">${name}</div>
+  </div>`;
+}
+
+// ── DEMO DETAIL POPUP (from calendar) ──
+function openDemoPopup(id){
+  const d=demos.find(x=>x.id===id);
+  if(!d)return;
+  document.getElementById('demo-popup-title').textContent=d.sf_nombre||'Demo';
+  const plataformaMap={teams:'💻 Teams',whatsapp:'💬 WhatsApp',meet:'🎥 Meet',zoom:'📹 Zoom'};
+  const estadoLabel={agendada:'Agendada',ejecutada:'Ejecutada',cancelada:'Cancelada',reagendada:'Reagendada'}[d.estado]||d.estado;
+  const canalLabel=(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound';
+  const tipoLabel=d.tipo==='presencial'?'📍 Presencial':'💻 Online';
+  let rows='';
+  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📅 Fecha</span><span class="popup-detail-val">${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora.slice(0,5):''}</span></div>`;
+  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📊 Estado</span><span class="popup-detail-val">${estadoLabel}${d.outcome?' · '+outcomeLabel(d.outcome):''}</span></div>`;
+  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">🔀 Canal</span><span class="popup-detail-val">${canalLabel} · ${tipoLabel}${d.tipo==='online'&&d.plataforma?' · '+(plataformaMap[d.plataforma]||d.plataforma):''}</span></div>`;
+  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">👤 Comercial</span><span class="popup-detail-val">${comercialName(d.comercial_id)}</span></div>`;
+  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📍 Ciudad</span><span class="popup-detail-val">${ciudadName(d.ciudad_id)}</span></div>`;
+  if(d.fecha_agendamiento)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📞 Creada</span><span class="popup-detail-val">${fmtDate(d.fecha_agendamiento)}</span></div>`;
+  if(d.outcome==='cerrado_ganado'&&d.fecha_firma)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📝 Firmada</span><span class="popup-detail-val">${fmtDate(d.fecha_firma)}</span></div>`;
+  if(d.sf_url)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">🔗 Salesforce</span><span class="popup-detail-val"><a href="${d.sf_url}" target="_blank" rel="noopener">Abrir oportunidad</a></span></div>`;
+  if(d.notas)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📝 Notas</span><span class="popup-detail-val">${d.notas}</span></div>`;
+  rows+=`<div class="modal-actions" style="margin-top:18px;">
+    <button class="btn-cancel" onclick="closeDemoPopup()">Cerrar</button>
+    <button class="btn-save" onclick="editFromPopup(${d.id})">✏️ Editar demo</button>
+  </div>`;
+  document.getElementById('demo-popup-body').innerHTML=rows;
+  document.getElementById('demo-popup').classList.add('active');
+}
+function closeDemoPopup(){document.getElementById('demo-popup').classList.remove('active');}
+function editFromPopup(id){
+  closeDemoPopup();
+  const d=demos.find(x=>x.id===id);
+  if(d)openDemoModal(d);
 }
 
 function setView(view,btn){
