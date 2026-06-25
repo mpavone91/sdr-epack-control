@@ -3270,6 +3270,29 @@ function extractOppCode(name){
   return m?m[0].toUpperCase():null;
 }
 
+// Build the best working Salesforce URL for a demo.
+// Handles: markdown links, trailing junk, and rebuilds a clean lightning URL from the 006 record ID.
+function sfHref(d){
+  let url=d.sf_url||'';
+  if(!url)return null;
+  // If it's a markdown link [text](url), pull the url part
+  const md=url.match(/\]\((https?:\/\/[^\s\)]+)\)/);
+  if(md)url=md[1];
+  // Grab the first clean http(s) URL, stopping at whitespace, ), ], > or quotes
+  const m=url.match(/https?:\/\/[^\s\)\]>"']+/);
+  if(m)url=m[0];
+  // Strip trailing punctuation that often sticks to pasted links
+  url=url.replace(/[.,;)\]]+$/,'');
+  // If the URL contains a Salesforce record ID (006...), rebuild a canonical lightning URL
+  const idMatch=url.match(/(006[A-Za-z0-9]{12,15})/);
+  const domainMatch=url.match(/https?:\/\/([a-z0-9-]+\.(?:lightning\.force\.com|my\.salesforce\.com|salesforce\.com|force\.com))/i);
+  if(idMatch&&domainMatch){
+    const host=domainMatch[1].replace(/\.my\.salesforce\.com/i,'.lightning.force.com');
+    return`https://${host}/lightning/r/Opportunity/${idMatch[1]}/view`;
+  }
+  return url||null;
+}
+
 // Check for duplicate demos based on opportunity ID or code
 function checkDuplicate(){
   const editId=document.getElementById('edit-demo-id').value;
@@ -3619,7 +3642,7 @@ function renderXMonthPanel(){
       ${pendingFollow.map(d=>`
         <div class="xmonth-item">
           <div class="xmonth-item-info">
-            <div class="xmonth-item-name">${d.sf_url?`<a href="${d.sf_url}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
+            <div class="xmonth-item-name">${sfHref(d)?`<a href="${sfHref(d)}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
             <div class="xmonth-item-meta">📅 ${fmtDate(d.fecha)} · 👤 ${comercialName(d.comercial_id)} · 📍 ${ciudadName(d.ciudad_id)}</div>
           </div>
           <div class="xmonth-item-actions">
@@ -3641,7 +3664,7 @@ function renderXMonthPanel(){
       ${pendingReagendar.map(d=>`
         <div class="xmonth-item">
           <div class="xmonth-item-info">
-            <div class="xmonth-item-name">${d.sf_url?`<a href="${d.sf_url}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
+            <div class="xmonth-item-name">${sfHref(d)?`<a href="${sfHref(d)}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
             <div class="xmonth-item-meta">📅 ${fmtDate(d.fecha)} · 👤 ${comercialName(d.comercial_id)}</div>
           </div>
           <div class="xmonth-item-actions">
@@ -4169,7 +4192,7 @@ function renderLiveView(){
 }
 
 function renderDemoCard(d,liveClass=''){
-  const sfLink=d.sf_url?`<a href="${d.sf_url}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
+  const sfLink=sfHref(d)?`<a href="${sfHref(d)}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
   const isReagendar=currentView==='reagendar';
   const cardClass=isReagendar?'reagendar':liveClass?`live-${liveClass}`:'';
   const horaDisplay=d.hora?`<span class="live-hora-badge ${liveClass||'despues'}">${d.hora}</span>`:'';
@@ -4748,7 +4771,7 @@ function openDemoPopup(id){
   rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📍 Ciudad</span><span class="popup-detail-val">${ciudadName(d.ciudad_id)}</span></div>`;
   if(d.fecha_agendamiento)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📞 Creada</span><span class="popup-detail-val">${fmtDate(d.fecha_agendamiento)}</span></div>`;
   if(d.outcome==='cerrado_ganado'&&d.fecha_firma)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📝 Firmada</span><span class="popup-detail-val">${fmtDate(d.fecha_firma)}</span></div>`;
-  if(d.sf_url)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">🔗 Salesforce</span><span class="popup-detail-val"><a href="${d.sf_url}" target="_blank" rel="noopener">Abrir oportunidad</a></span></div>`;
+  if(sfHref(d))rows+=`<div class="popup-detail-row"><span class="popup-detail-label">🔗 Salesforce</span><span class="popup-detail-val"><a href="${sfHref(d)}" target="_blank" rel="noopener">Abrir oportunidad</a></span></div>`;
   if(d.notas)rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📝 Notas</span><span class="popup-detail-val">${d.notas}</span></div>`;
   rows+=`<div class="modal-actions" style="margin-top:18px;">
     <button class="btn-cancel" onclick="closeDemoPopup()">Cerrar</button>
