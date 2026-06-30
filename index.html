@@ -623,6 +623,50 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--lime);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* ── TASK BELL (notificación de tareas) ── */
+.task-bell{position:relative;background:rgba(255,255,255,0.1);border:none;width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.task-bell:hover{background:rgba(255,255,255,0.2);}
+.task-bell.has-tasks{animation:bellPulse 2s ease-in-out infinite;}
+@keyframes bellPulse{0%,100%{transform:scale(1) rotate(0deg);}10%{transform:scale(1.1) rotate(-8deg);}20%{transform:scale(1.1) rotate(8deg);}30%{transform:scale(1) rotate(0deg);}}
+.task-bell-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid var(--teal-dark);}
+
+/* ── TAREAS PENDIENTES ── */
+.tarea-add-form{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.tarea-add-title{font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:12px;}
+.quick-date-btn{padding:9px 12px;border:1.5px solid var(--border);background:var(--surface);border-radius:9px;font-size:12px;font-weight:600;color:var(--teal-dark);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.quick-date-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
+.tarea-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;display:flex;align-items:center;gap:8px;}
+.tarea-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.tarea-section-label.atrasada{color:var(--red);}
+.tarea-section-label.hoy{color:#9a6a00;}
+.tarea-section-label.futura{color:var(--green);}
+.tarea-card{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;border-radius:11px;padding:12px 14px;margin-bottom:8px;border:1px solid;}
+.tarea-card.atrasada{background:var(--red-soft);border-color:#f0c0c0;}
+.tarea-card.hoy{background:var(--amber-soft);border-color:#f0d58a;}
+.tarea-card.futura{background:var(--green-soft);border-color:#a8e0c0;}
+.tarea-card.completada{background:var(--surface-2);border-color:var(--border);opacity:0.65;}
+.tarea-card-main{flex:1;min-width:0;}
+.tarea-card-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+.tarea-date-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;}
+.tarea-date-badge.atrasada{background:#fdd8d8;color:var(--red);}
+.tarea-date-badge.hoy{background:#fdeec0;color:#9a6a00;}
+.tarea-date-badge.futura{background:#d6f2e0;color:var(--green);}
+.tarea-date-badge.completada{background:#e8e8e8;color:var(--muted);}
+.tarea-lead-link{font-size:12px;color:var(--teal);text-decoration:none;border-bottom:1.5px solid var(--lime);font-weight:600;}
+.tarea-lead-link:hover{color:var(--lime-dark);}
+.tarea-lead-text{font-size:12px;color:var(--muted);font-weight:600;}
+.tarea-nota{font-size:13.5px;color:var(--text);line-height:1.5;word-break:break-word;white-space:pre-wrap;}
+.tarea-nota.done{text-decoration:line-through;color:var(--muted);}
+.tarea-card-actions{display:flex;gap:5px;flex-shrink:0;}
+.tarea-btn{width:32px;height:32px;border:1px solid var(--border);background:var(--surface);border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.tarea-btn.complete:hover{background:var(--green);color:#fff;border-color:var(--green);}
+.tarea-btn.edit:hover{background:var(--lime-soft);border-color:var(--lime);}
+.tarea-btn.delete:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.tarea-btn.reopen:hover{background:var(--amber-soft);border-color:var(--amber);}
+.tarea-completed-toggle{font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:12px 0 8px;margin-top:8px;border-top:1px dashed var(--border);}
+.tarea-completed-toggle:hover{color:var(--teal-dark);}
+.tarea-empty{text-align:center;padding:30px 20px;}
+
 @media(max-width:780px){
   .stats-row{grid-template-columns:repeat(2,1fr);}
   .demo-card{grid-template-columns:1fr;}
@@ -670,6 +714,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="topbar-title">SDR Hub</div>
     </div>
     <div class="topbar-right">
+      <button class="task-bell" id="task-bell" onclick="openTareasModal()" title="Tareas pendientes">🔔<span class="task-bell-badge" id="task-bell-badge">0</span></button>
       <div class="user-chip">
         <div class="user-avatar" id="user-avatar">?</div>
         <span id="user-name">—</span>
@@ -1237,6 +1282,71 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   </div>
 </div>
 
+<!-- MODAL PROGRAMAR SEGUIMIENTO (aplazar con fecha) -->
+<div class="modal-overlay" id="aplazar-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <div class="modal-title">⏰ Programar seguimiento</div>
+      <button class="modal-close" onclick="closeAplazarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="aplazar-demo-id"/>
+      <div id="aplazar-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
+      <div class="form-group">
+        <label class="form-label">¿Cuándo quieres que te lo recuerde?</label>
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+          <button type="button" class="quick-date-btn" onclick="setAplazarQuick(7)">+1 semana</button>
+          <button type="button" class="quick-date-btn" onclick="setAplazarQuick(14)">+2 semanas</button>
+          <button type="button" class="quick-date-btn" onclick="setAplazarQuick(30)">+1 mes</button>
+        </div>
+        <input class="form-input" type="date" id="aplazar-fecha"/>
+        <div class="form-hint">El seguimiento reaparecerá en la pestaña "Follow up" en la fecha que elijas.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeAplazarModal()">Cancelar</button>
+        <button class="btn-save" onclick="confirmAplazar()">⏰ Programar recordatorio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TAREAS PENDIENTES -->
+<div class="modal-overlay" id="tareas-modal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-head">
+      <div class="modal-title">🔔 Tareas pendientes</div>
+      <button class="modal-close" onclick="closeTareasModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tarea-add-form">
+        <div class="tarea-add-title" id="tarea-form-title">➕ Nueva tarea / recordatorio</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <input class="form-input" id="tarea-lead" placeholder="Enlace del lead o nombre (opcional)"/>
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <textarea class="form-textarea" id="tarea-nota" placeholder="Ej: Llamar mañana — interesado pero quiere pensarlo. Pidió que le mande el dossier antes." style="min-height:54px;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="margin-bottom:0;flex:1;min-width:140px;">
+            <label class="form-label">📅 Recordarme el</label>
+            <input class="form-input" type="date" id="tarea-fecha"/>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="quick-date-btn" onclick="setTareaQuick(0)">Hoy</button>
+            <button type="button" class="quick-date-btn" onclick="setTareaQuick(1)">Mañana</button>
+            <button type="button" class="quick-date-btn" onclick="setTareaQuick(7)">+1 sem</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn-save" id="tarea-save-btn" style="flex:1;" onclick="saveTarea()">+ Añadir tarea</button>
+          <button class="btn-cancel" id="tarea-cancel-edit" style="display:none;" onclick="resetTareaForm()">Cancelar edición</button>
+        </div>
+      </div>
+      <div id="tareas-list" style="margin-top:18px;"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1401,7 +1511,7 @@ async function enterApp(){
   document.getElementById('user-name').textContent=currentUser.nombre;
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('today-date').textContent=fmtDateLong();
-  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr()]);
+  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
   if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
@@ -3704,22 +3814,27 @@ async function descartarDemo(id){
   }catch(e){showToast('❌ Error');console.error(e);}
 }
 
-// Aplazar seguimiento: snooze a follow-up by N weeks
-async function aplazarSeguimiento(id){
-  const opcion=prompt('¿Cuánto tiempo aplazar el seguimiento?\n\nEscribe:\n1 = 1 semana\n2 = 2 semanas\nO una fecha concreta (YYYY-MM-DD)','1');
-  if(!opcion)return;
-  let fecha;
-  if(opcion==='1'||opcion==='2'){
-    const d=new Date();d.setDate(d.getDate()+parseInt(opcion)*7);
-    fecha=localDateStr(d);
-  }else if(/^\d{4}-\d{2}-\d{2}$/.test(opcion)){
-    fecha=opcion;
-  }else{
-    showToast('⚠️ Opción no válida');return;
-  }
+// Aplazar seguimiento: abre modal con calendario para elegir fecha concreta
+function aplazarSeguimiento(id){openAplazarModal(id);}
+function openAplazarModal(id){
+  const demo=demos.find(d=>d.id===id);
+  document.getElementById('aplazar-demo-id').value=id;
+  document.getElementById('aplazar-demo-name').textContent='📞 '+(demo?.sf_nombre||'Sin nombre');
+  // Por defecto +1 semana
+  const d=new Date();d.setDate(d.getDate()+7);
+  document.getElementById('aplazar-fecha').value=localDateStr(d);
+  document.getElementById('aplazar-modal').classList.add('active');
+}
+function closeAplazarModal(){document.getElementById('aplazar-modal').classList.remove('active');}
+function setAplazarQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('aplazar-fecha').value=localDateStr(d);}
+async function confirmAplazar(){
+  const id=document.getElementById('aplazar-demo-id').value;
+  const fecha=document.getElementById('aplazar-fecha').value;
+  if(!fecha){showToast('⚠️ Selecciona una fecha');return;}
   try{
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
-    showToast('✓ Seguimiento aplazado hasta '+fmtDate(fecha));
+    showToast('✓ Recordatorio programado para '+fmtDate(fecha));
+    closeAplazarModal();
     await loadDemos();
   }catch(e){showToast('❌ Error');console.error(e);}
 }
@@ -4806,6 +4921,190 @@ function updateLiveClock(){
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2800);}
+
+// ════════════════════════════════════════════════════════
+// TAREAS PENDIENTES — recordatorios diarios (llamadas/emails)
+// Separado del control de demos. Cada SDR gestiona las suyas.
+// ════════════════════════════════════════════════════════
+let tareas=[];
+let editTareaId=null;
+let tareasShowCompleted=false;
+
+async function loadTareas(){
+  if(!currentUser||currentUser.rol!=='sdr')return;
+  try{
+    tareas=await sb(`tareas?sdr_id=eq.${currentUser.id}&select=*&order=fecha_recordatorio.asc`)||[];
+  }catch(e){console.error('Error cargando tareas:',e);tareas=[];}
+  renderTareasBadge();
+}
+
+function tareaStatus(t){
+  const today=todayStr();
+  if(t.completada)return'completada';
+  if((t.fecha_recordatorio||'')<today)return'atrasada';
+  if(t.fecha_recordatorio===today)return'hoy';
+  return'futura';
+}
+
+function renderTareasBadge(){
+  const badge=document.getElementById('task-bell-badge');
+  const bell=document.getElementById('task-bell');
+  if(!badge||!bell)return;
+  const today=todayStr();
+  const debidas=tareas.filter(t=>!t.completada&&(t.fecha_recordatorio||'')<=today);
+  const count=debidas.length;
+  if(count>0){
+    badge.textContent=count;
+    badge.style.display='flex';
+    const hayAtrasadas=debidas.some(t=>(t.fecha_recordatorio||'')<today);
+    badge.style.background=hayAtrasadas?'var(--red)':'var(--amber)';
+    bell.classList.add('has-tasks');
+  }else{
+    badge.style.display='none';
+    bell.classList.remove('has-tasks');
+  }
+}
+
+function isTaskUrl(s){return /^https?:\/\//i.test((s||'').trim());}
+
+function openTareasModal(){
+  resetTareaForm();
+  document.getElementById('tareas-modal').classList.add('active');
+  renderTareasList();
+}
+function closeTareasModal(){document.getElementById('tareas-modal').classList.remove('active');}
+
+function resetTareaForm(){
+  editTareaId=null;
+  document.getElementById('tarea-lead').value='';
+  document.getElementById('tarea-nota').value='';
+  document.getElementById('tarea-fecha').value=todayStr();
+  document.getElementById('tarea-form-title').textContent='➕ Nueva tarea / recordatorio';
+  document.getElementById('tarea-save-btn').textContent='+ Añadir tarea';
+  document.getElementById('tarea-cancel-edit').style.display='none';
+}
+
+function setTareaQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('tarea-fecha').value=localDateStr(d);}
+
+async function saveTarea(){
+  const lead=document.getElementById('tarea-lead').value.trim();
+  const nota=document.getElementById('tarea-nota').value.trim();
+  const fecha=document.getElementById('tarea-fecha').value;
+  if(!nota){showToast('⚠️ Escribe una nota para la tarea');return;}
+  if(!fecha){showToast('⚠️ Pon una fecha de recordatorio');return;}
+  const payload={sdr_id:currentUser.id,lead_url:lead||null,nota,fecha_recordatorio:fecha};
+  try{
+    if(editTareaId){
+      await sb(`tareas?id=eq.${editTareaId}`,{method:'PATCH',body:JSON.stringify(payload)});
+      showToast('✓ Tarea actualizada');
+    }else{
+      await sb('tareas',{method:'POST',body:JSON.stringify(payload)});
+      showToast('✓ Tarea añadida');
+    }
+    resetTareaForm();
+    await loadTareas();
+    renderTareasList();
+  }catch(e){showToast('❌ Error guardando la tarea (¿falta crear la tabla?)');console.error(e);}
+}
+
+function editTarea(id){
+  const t=tareas.find(x=>x.id===id);
+  if(!t)return;
+  editTareaId=id;
+  document.getElementById('tarea-lead').value=t.lead_url||'';
+  document.getElementById('tarea-nota').value=t.nota||'';
+  document.getElementById('tarea-fecha').value=t.fecha_recordatorio||todayStr();
+  document.getElementById('tarea-form-title').textContent='✏️ Modificar tarea';
+  document.getElementById('tarea-save-btn').textContent='💾 Guardar cambios';
+  document.getElementById('tarea-cancel-edit').style.display='inline-block';
+  const body=document.querySelector('#tareas-modal .modal-body');
+  if(body)body.scrollTop=0;
+}
+
+async function completeTarea(id){
+  try{
+    await sb(`tareas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({completada:true,completed_at:new Date().toISOString()})});
+    showToast('✓ Tarea completada');
+    await loadTareas();
+    renderTareasList();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+async function reopenTarea(id){
+  try{
+    await sb(`tareas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({completada:false,completed_at:null})});
+    await loadTareas();
+    renderTareasList();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+async function deleteTarea(id){
+  if(!confirm('¿Eliminar esta tarea? No se puede deshacer.'))return;
+  try{
+    await sb(`tareas?id=eq.${id}`,{method:'DELETE'});
+    showToast('✓ Tarea eliminada');
+    await loadTareas();
+    renderTareasList();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function toggleTareasCompleted(){tareasShowCompleted=!tareasShowCompleted;renderTareasList();}
+
+function renderTareasList(){
+  const cont=document.getElementById('tareas-list');
+  if(!cont)return;
+  const pend=tareas.filter(t=>!t.completada);
+  const atrasadas=pend.filter(t=>tareaStatus(t)==='atrasada').sort((a,b)=>(a.fecha_recordatorio||'').localeCompare(b.fecha_recordatorio||''));
+  const hoy=pend.filter(t=>tareaStatus(t)==='hoy');
+  const futuras=pend.filter(t=>tareaStatus(t)==='futura').sort((a,b)=>(a.fecha_recordatorio||'').localeCompare(b.fecha_recordatorio||''));
+  const completadas=tareas.filter(t=>t.completada).sort((a,b)=>(b.completed_at||'').localeCompare(a.completed_at||''));
+
+  const section=(label,arr,cls)=>arr.length?`<div class="tarea-section-label ${cls}">${label} (${arr.length})</div>`+arr.map(t=>tareaCard(t,cls)).join(''):'';
+
+  let html='';
+  if(!pend.length){
+    html+=`<div class="tarea-empty"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-weight:600;color:var(--text);">Sin tareas pendientes</div><div style="font-size:13px;color:var(--muted);margin-top:4px;">Añade un recordatorio arriba para no olvidar ninguna llamada o email.</div></div>`;
+  }else{
+    html+=section('🔴 Atrasadas',atrasadas,'atrasada');
+    html+=section('🟡 Para hoy',hoy,'hoy');
+    html+=section('🟢 Próximas',futuras,'futura');
+  }
+
+  if(completadas.length){
+    html+=`<div class="tarea-completed-toggle" onclick="toggleTareasCompleted()">${tareasShowCompleted?'▾':'▸'} Completadas (${completadas.length})</div>`;
+    if(tareasShowCompleted)html+=completadas.slice(0,20).map(t=>tareaCard(t,'completada')).join('');
+  }
+
+  cont.innerHTML=html;
+}
+
+function tareaCard(t,cls){
+  const leadHtml=t.lead_url
+    ? (isTaskUrl(t.lead_url)
+        ? `<a href="${t.lead_url}" target="_blank" rel="noopener" class="tarea-lead-link">🔗 Abrir lead</a>`
+        : `<span class="tarea-lead-text">👤 ${(t.lead_url||'').replace(/</g,'&lt;')}</span>`)
+    : '';
+  const fechaTxt=fmtDate(t.fecha_recordatorio);
+  const dateLabel=cls==='atrasada'?`⏰ Venció ${fechaTxt}`:cls==='hoy'?'📅 Para hoy':cls==='completada'?`✓ ${fechaTxt}`:`📅 ${fechaTxt}`;
+  const safeNota=(t.nota||'').replace(/</g,'&lt;');
+  return`
+    <div class="tarea-card ${cls}">
+      <div class="tarea-card-main">
+        <div class="tarea-card-top">
+          <span class="tarea-date-badge ${cls}">${dateLabel}</span>
+          ${leadHtml}
+        </div>
+        <div class="tarea-nota ${t.completada?'done':''}">${safeNota}</div>
+      </div>
+      <div class="tarea-card-actions">
+        ${t.completada
+          ? `<button class="tarea-btn reopen" onclick="reopenTarea(${t.id})" title="Reabrir">↺</button>`
+          : `<button class="tarea-btn complete" onclick="completeTarea(${t.id})" title="Completar tarea">✓</button>
+             <button class="tarea-btn edit" onclick="editTarea(${t.id})" title="Modificar / reprogramar">✏️</button>`}
+        <button class="tarea-btn delete" onclick="deleteTarea(${t.id})" title="Eliminar">🗑️</button>
+      </div>
+    </div>`;
+}
 
 // ── INIT ──
 async function init(){
