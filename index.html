@@ -631,8 +631,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .task-bell-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid var(--teal-dark);}
 
 /* ── TAREAS PENDIENTES ── */
-.tarea-add-form{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;}
-.tarea-add-title{font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:12px;}
 .quick-date-btn{padding:9px 12px;border:1.5px solid var(--border);background:var(--surface);border-radius:9px;font-size:12px;font-weight:600;color:var(--teal-dark);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
 .quick-date-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
 .tarea-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;display:flex;align-items:center;gap:8px;}
@@ -749,7 +747,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="page-title">Mis demos</div>
         <div class="page-sub" id="today-date">—</div>
       </div>
-      <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openNuevaTarea()">📌 Nueva tarea</button>
+        <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
+      </div>
     </div>
 
     <div class="month-tabs">
@@ -1218,6 +1219,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             oninput="filterHoraOptions(this.value)" onfocus="showHoraDropdown()" onblur="hideHoraDropdown()"/>
           <div class="hora-dropdown" id="hora-dropdown"></div>
         </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Modalidad</label>
@@ -1311,38 +1313,54 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 
 <!-- MODAL TAREAS PENDIENTES -->
+<!-- MODAL LISTA DE TAREAS (campana) -->
 <div class="modal-overlay" id="tareas-modal">
-  <div class="modal" style="max-width:580px;">
+  <div class="modal" style="max-width:560px;">
     <div class="modal-head">
       <div class="modal-title">🔔 Tareas pendientes</div>
       <button class="modal-close" onclick="closeTareasModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="tarea-add-form">
-        <div class="tarea-add-title" id="tarea-form-title">➕ Nueva tarea / recordatorio</div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <input class="form-input" id="tarea-lead" placeholder="Enlace del lead o nombre (opcional)"/>
-        </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <textarea class="form-textarea" id="tarea-nota" placeholder="Ej: Llamar mañana — interesado pero quiere pensarlo. Pidió que le mande el dossier antes." style="min-height:54px;"></textarea>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-          <div class="form-group" style="margin-bottom:0;flex:1;min-width:140px;">
-            <label class="form-label">📅 Recordarme el</label>
-            <input class="form-input" type="date" id="tarea-fecha"/>
-          </div>
-          <div style="display:flex;gap:6px;">
-            <button type="button" class="quick-date-btn" onclick="setTareaQuick(0)">Hoy</button>
-            <button type="button" class="quick-date-btn" onclick="setTareaQuick(1)">Mañana</button>
-            <button type="button" class="quick-date-btn" onclick="setTareaQuick(7)">+1 sem</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
-          <button class="btn-save" id="tarea-save-btn" style="flex:1;" onclick="saveTarea()">+ Añadir tarea</button>
-          <button class="btn-cancel" id="tarea-cancel-edit" style="display:none;" onclick="resetTareaForm()">Cancelar edición</button>
-        </div>
+      <button class="btn-save" style="width:100%;margin-bottom:16px;" onclick="openNuevaTarea()">📌 Nueva tarea</button>
+      <div id="tareas-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA TAREA / EDITAR -->
+<div class="modal-overlay" id="tarea-add-modal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head">
+      <div class="modal-title" id="tarea-add-title">📌 Nueva tarea</div>
+      <button class="modal-close" onclick="closeNuevaTarea()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tarea-edit-id"/>
+      <div class="form-group">
+        <label class="form-label">🔗 Enlace del lead <span style="font-weight:400;color:var(--muted);">(opcional)</span></label>
+        <input class="form-input" id="tarea-lead" placeholder="Pega aquí el enlace del lead / Salesforce"/>
       </div>
-      <div id="tareas-list" style="margin-top:18px;"></div>
+      <div class="form-group">
+        <label class="form-label">🍽️ Nombre del restaurante o lead <span style="font-weight:400;color:var(--muted);">(opcional)</span></label>
+        <input class="form-input" id="tarea-nombre" placeholder="Ej: Gastrobar A Fer La Ma"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📝 Nota de la tarea</label>
+        <textarea class="form-textarea" id="tarea-nota" placeholder="Ej: Llamar mañana — interesado pero quiere pensarlo" style="min-height:60px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📅 Recordarme el</label>
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+          <button type="button" class="quick-date-btn" onclick="setTareaQuick(0)">Hoy</button>
+          <button type="button" class="quick-date-btn" onclick="setTareaQuick(1)">Mañana</button>
+          <button type="button" class="quick-date-btn" onclick="setTareaQuick(7)">+1 semana</button>
+        </div>
+        <input class="form-input" type="date" id="tarea-fecha"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeNuevaTarea()">Cancelar</button>
+        <button class="btn-save" id="tarea-save-btn" onclick="saveTarea()">📌 Agendar tarea</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4968,40 +4986,44 @@ function renderTareasBadge(){
 function isTaskUrl(s){return /^https?:\/\//i.test((s||'').trim());}
 
 function openTareasModal(){
-  resetTareaForm();
   document.getElementById('tareas-modal').classList.add('active');
   renderTareasList();
 }
 function closeTareasModal(){document.getElementById('tareas-modal').classList.remove('active');}
 
-function resetTareaForm(){
+// Abrir modal de NUEVA tarea (o editar si se pasa una)
+function openNuevaTarea(){
   editTareaId=null;
+  document.getElementById('tarea-edit-id').value='';
   document.getElementById('tarea-lead').value='';
+  document.getElementById('tarea-nombre').value='';
   document.getElementById('tarea-nota').value='';
   document.getElementById('tarea-fecha').value=todayStr();
-  document.getElementById('tarea-form-title').textContent='➕ Nueva tarea / recordatorio';
-  document.getElementById('tarea-save-btn').textContent='+ Añadir tarea';
-  document.getElementById('tarea-cancel-edit').style.display='none';
+  document.getElementById('tarea-add-title').textContent='📌 Nueva tarea';
+  document.getElementById('tarea-save-btn').textContent='📌 Agendar tarea';
+  document.getElementById('tarea-add-modal').classList.add('active');
 }
+function closeNuevaTarea(){document.getElementById('tarea-add-modal').classList.remove('active');}
 
 function setTareaQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('tarea-fecha').value=localDateStr(d);}
 
 async function saveTarea(){
   const lead=document.getElementById('tarea-lead').value.trim();
+  const nombre=document.getElementById('tarea-nombre').value.trim();
   const nota=document.getElementById('tarea-nota').value.trim();
   const fecha=document.getElementById('tarea-fecha').value;
   if(!nota){showToast('⚠️ Escribe una nota para la tarea');return;}
   if(!fecha){showToast('⚠️ Pon una fecha de recordatorio');return;}
-  const payload={sdr_id:currentUser.id,lead_url:lead||null,nota,fecha_recordatorio:fecha};
+  const payload={sdr_id:currentUser.id,lead_url:lead||null,lead_nombre:nombre||null,nota,fecha_recordatorio:fecha};
   try{
     if(editTareaId){
       await sb(`tareas?id=eq.${editTareaId}`,{method:'PATCH',body:JSON.stringify(payload)});
       showToast('✓ Tarea actualizada');
     }else{
       await sb('tareas',{method:'POST',body:JSON.stringify(payload)});
-      showToast('✓ Tarea añadida');
+      showToast('✓ Tarea agendada');
     }
-    resetTareaForm();
+    closeNuevaTarea();
     await loadTareas();
     renderTareasList();
   }catch(e){showToast('❌ Error guardando la tarea (¿falta crear la tabla?)');console.error(e);}
@@ -5011,14 +5033,14 @@ function editTarea(id){
   const t=tareas.find(x=>x.id===id);
   if(!t)return;
   editTareaId=id;
+  document.getElementById('tarea-edit-id').value=id;
   document.getElementById('tarea-lead').value=t.lead_url||'';
+  document.getElementById('tarea-nombre').value=t.lead_nombre||'';
   document.getElementById('tarea-nota').value=t.nota||'';
   document.getElementById('tarea-fecha').value=t.fecha_recordatorio||todayStr();
-  document.getElementById('tarea-form-title').textContent='✏️ Modificar tarea';
+  document.getElementById('tarea-add-title').textContent='✏️ Modificar tarea';
   document.getElementById('tarea-save-btn').textContent='💾 Guardar cambios';
-  document.getElementById('tarea-cancel-edit').style.display='inline-block';
-  const body=document.querySelector('#tareas-modal .modal-body');
-  if(body)body.scrollTop=0;
+  document.getElementById('tarea-add-modal').classList.add('active');
 }
 
 async function completeTarea(id){
@@ -5063,7 +5085,7 @@ function renderTareasList(){
 
   let html='';
   if(!pend.length){
-    html+=`<div class="tarea-empty"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-weight:600;color:var(--text);">Sin tareas pendientes</div><div style="font-size:13px;color:var(--muted);margin-top:4px;">Añade un recordatorio arriba para no olvidar ninguna llamada o email.</div></div>`;
+    html+=`<div class="tarea-empty"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-weight:600;color:var(--text);">No hay tareas pendientes</div><div style="font-size:13px;color:var(--muted);margin-top:4px;">Pulsa "Nueva tarea" para crear un recordatorio y no olvidar ninguna llamada o email.</div></div>`;
   }else{
     html+=section('🔴 Atrasadas',atrasadas,'atrasada');
     html+=section('🟡 Para hoy',hoy,'hoy');
@@ -5079,11 +5101,16 @@ function renderTareasList(){
 }
 
 function tareaCard(t,cls){
-  const leadHtml=t.lead_url
-    ? (isTaskUrl(t.lead_url)
-        ? `<a href="${t.lead_url}" target="_blank" rel="noopener" class="tarea-lead-link">🔗 Abrir lead</a>`
-        : `<span class="tarea-lead-text">👤 ${(t.lead_url||'').replace(/</g,'&lt;')}</span>`)
-    : '';
+  const nombre=(t.lead_nombre||'').trim();
+  const url=(t.lead_url||'').trim();
+  let leadHtml='';
+  if(url&&isTaskUrl(url)){
+    leadHtml=`<a href="${url}" target="_blank" rel="noopener" class="tarea-lead-link">🔗 ${(nombre||'Abrir lead').replace(/</g,'&lt;')}</a>`;
+  }else if(nombre){
+    leadHtml=`<span class="tarea-lead-text">🍽️ ${nombre.replace(/</g,'&lt;')}</span>`;
+  }else if(url){
+    leadHtml=`<span class="tarea-lead-text">🔗 ${url.replace(/</g,'&lt;')}</span>`;
+  }
   const fechaTxt=fmtDate(t.fecha_recordatorio);
   const dateLabel=cls==='atrasada'?`⏰ Venció ${fechaTxt}`:cls==='hoy'?'📅 Para hoy':cls==='completada'?`✓ ${fechaTxt}`:`📅 ${fechaTxt}`;
   const safeNota=(t.nota||'').replace(/</g,'&lt;');
