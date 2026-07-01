@@ -512,7 +512,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 /* ── CROSS-MONTH REMINDERS ── */
 .xmonth-panel{background:#fff8e8;border:1px solid #f0c060;border-radius:14px;padding:20px 24px;margin-bottom:20px;}
+.xmonth-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;cursor:pointer;}
 .xmonth-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:#7a4e00;margin-bottom:4px;}
+.xmonth-total-badge{display:inline-block;background:#f0c060;color:#7a4e00;font-size:12px;font-weight:700;padding:1px 9px;border-radius:20px;margin-left:6px;vertical-align:middle;font-family:'Inter',sans-serif;}
+.xmonth-collapse-btn{background:rgba(240,192,96,0.28);border:none;color:#7a4e00;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;transition:all 0.15s;line-height:1;}
+.xmonth-collapse-btn:hover{background:rgba(240,192,96,0.55);}
+.xmonth-collapse-btn.collapsed{transform:rotate(-90deg);}
+.xmonth-vertodo{background:none;border:1px dashed #d8a840;color:#a07020;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;width:100%;margin-top:2px;transition:all 0.15s;}
+.xmonth-vertodo:hover{background:rgba(240,192,96,0.18);border-style:solid;}
 .xmonth-subtitle{font-size:13px;color:#8a6500;margin-bottom:16px;}
 .xmonth-group{margin-bottom:14px;}
 .xmonth-group:last-child{margin-bottom:0;}
@@ -761,9 +768,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
     <!-- CROSS-MONTH REMINDERS -->
     <div class="xmonth-panel" id="xmonth-panel" style="display:none;">
-      <div class="xmonth-title">📌 Pendientes de meses anteriores</div>
-      <div class="xmonth-subtitle">Estas demos siguen abiertas. Dales una resolución para que desaparezcan de aquí.</div>
-      <div class="xmonth-groups" id="xmonth-groups"></div>
+      <div class="xmonth-head-row" onclick="toggleXMonthCollapse()">
+        <div class="xmonth-title">📌 Pendientes de meses anteriores <span class="xmonth-total-badge" id="xmonth-total-badge"></span></div>
+        <button class="xmonth-collapse-btn" id="xmonth-collapse-btn" type="button" title="Contraer / expandir">▾</button>
+      </div>
+      <div id="xmonth-body">
+        <div class="xmonth-subtitle">Estas demos siguen abiertas. Dales una resolución para que desaparezcan de aquí.</div>
+        <div class="xmonth-groups" id="xmonth-groups"></div>
+      </div>
     </div>
 
     <!-- OBJETIVOS -->
@@ -3733,6 +3745,23 @@ function renderCancelPanel(){
   grid.innerHTML=card('Outbound','🎯',out)+card('Inbound','📥',inb);
 }
 
+// Estado del panel de pendientes: colapsado y "ver todo" por grupo
+let xmonthCollapsed=false;
+let xmonthShowAll={follow:false,reagendar:false};
+const XMONTH_LIMIT=5;
+
+function toggleXMonthCollapse(){
+  xmonthCollapsed=!xmonthCollapsed;
+  const body=document.getElementById('xmonth-body');
+  const btn=document.getElementById('xmonth-collapse-btn');
+  if(body)body.style.display=xmonthCollapsed?'none':'block';
+  if(btn)btn.classList.toggle('collapsed',xmonthCollapsed);
+}
+function toggleXMonthShowAll(group){
+  xmonthShowAll[group]=!xmonthShowAll[group];
+  renderXMonthPanel();
+}
+
 function renderXMonthPanel(){
   // Only show on current month view
   const panel=document.getElementById('xmonth-panel');
@@ -3762,12 +3791,17 @@ function renderXMonthPanel(){
   if(!pendingFollow.length&&!pendingReagendar.length){panel.style.display='none';return;}
   panel.style.display='block';
 
-  let html='';
+  // Total badge + collapse state
+  const total=pendingFollow.length+pendingReagendar.length;
+  const badge=document.getElementById('xmonth-total-badge');
+  if(badge)badge.textContent=total;
+  const body=document.getElementById('xmonth-body');
+  const cbtn=document.getElementById('xmonth-collapse-btn');
+  if(body)body.style.display=xmonthCollapsed?'none':'block';
+  if(cbtn)cbtn.classList.toggle('collapsed',xmonthCollapsed);
 
-  if(pendingFollow.length){
-    html+=`<div class="xmonth-group">
-      <div class="xmonth-group-label">📞 Seguimiento pendiente (${pendingFollow.length})</div>
-      ${pendingFollow.map(d=>`
+  // Item renderers
+  const followItem=d=>`
         <div class="xmonth-item">
           <div class="xmonth-item-info">
             <div class="xmonth-item-name">${sfHref(d)?`<a href="${sfHref(d)}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
@@ -3782,14 +3816,9 @@ function renderXMonthPanel(){
             </select>
             <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})" style="padding:4px 10px;font-size:11px;">⏰ Aplazar</button>
           </div>
-        </div>`).join('')}
-    </div>`;
-  }
+        </div>`;
 
-  if(pendingReagendar.length){
-    html+=`<div class="xmonth-group">
-      <div class="xmonth-group-label">🔄 Canceladas sin reagendar (${pendingReagendar.length})</div>
-      ${pendingReagendar.map(d=>`
+  const reagItem=d=>`
         <div class="xmonth-item">
           <div class="xmonth-item-info">
             <div class="xmonth-item-name">${sfHref(d)?`<a href="${sfHref(d)}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
@@ -3800,9 +3829,23 @@ function renderXMonthPanel(){
             <button class="btn-primary" style="padding:5px 12px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
             <button class="btn-ghost-red" onclick="descartarDemo(${d.id})" style="padding:5px 10px;font-size:11px;">🗑️ Descartar</button>
           </div>
-        </div>`).join('')}
-    </div>`;
-  }
+        </div>`;
+
+  const groupHtml=(label,items,groupKey,itemFn)=>{
+    const showAll=xmonthShowAll[groupKey];
+    const visible=showAll?items:items.slice(0,XMONTH_LIMIT);
+    let h=`<div class="xmonth-group"><div class="xmonth-group-label">${label} (${items.length})</div>`;
+    h+=visible.map(itemFn).join('');
+    if(items.length>XMONTH_LIMIT){
+      h+=`<button class="xmonth-vertodo" onclick="toggleXMonthShowAll('${groupKey}')">${showAll?'▴ Ver menos':'▾ Ver todo ('+items.length+')'}</button>`;
+    }
+    h+=`</div>`;
+    return h;
+  };
+
+  let html='';
+  if(pendingFollow.length)html+=groupHtml('📞 Seguimiento pendiente',pendingFollow,'follow',followItem);
+  if(pendingReagendar.length)html+=groupHtml('🔄 Canceladas sin reagendar',pendingReagendar,'reagendar',reagItem);
 
   groups.innerHTML=html;
 }
