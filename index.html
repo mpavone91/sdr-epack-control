@@ -202,6 +202,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .month-tab{padding:8px 18px;border:none;background:none;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
 .month-tab:hover{color:var(--text);}
 .month-tab.active{background:var(--lime);color:var(--teal-dark);}
+/* ── MONTH NAV (stepper libre) ── */
+.month-nav{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:4px;width:fit-content;margin-bottom:20px;flex-wrap:wrap;}
+.month-nav-btn{width:36px;height:36px;border:none;background:none;border-radius:8px;font-size:18px;color:var(--teal-dark);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.month-nav-btn:hover{background:var(--lime-soft);}
+.month-nav-label{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--teal-dark);min-width:150px;text-align:center;text-transform:capitalize;padding:0 6px;}
+.month-nav-today{padding:8px 14px;border:none;background:var(--lime);color:var(--teal-dark);border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.month-nav-today:hover{background:var(--lime-dark);}
+.month-nav-today:disabled{opacity:1;cursor:default;background:var(--surface-2);color:var(--muted);}
 
 /* ── OBJETIVOS PANEL ── */
 .objetivos-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;}
@@ -760,10 +768,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
     </div>
 
-    <div class="month-tabs">
-      <button class="month-tab" id="mtab-prev" onclick="setMonth(-1,this)">← Mes anterior</button>
-      <button class="month-tab active" id="mtab-cur" onclick="setMonth(0,this)">Mes en curso</button>
-      <button class="month-tab" id="mtab-next" onclick="setMonth(1,this)">Mes siguiente →</button>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="navMonth(-1)" title="Mes anterior">‹</button>
+      <div class="month-nav-label" id="month-nav-label">—</div>
+      <button class="month-nav-btn" onclick="navMonth(1)" title="Mes siguiente">›</button>
+      <button class="month-nav-today" id="month-nav-today" onclick="navMonthToday()">Hoy</button>
     </div>
 
     <!-- CROSS-MONTH REMINDERS -->
@@ -957,10 +966,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="mgr-nav-btn" onclick="setMgrTab('gestion',this)">⚙️ Comerciales y ciudades</button>
     </div>
 
-    <div class="month-tabs">
-      <button class="month-tab" id="mmtab-prev" onclick="setMgrMonth(-1,this)">← Mes anterior</button>
-      <button class="month-tab active" id="mmtab-cur" onclick="setMgrMonth(0,this)">Mes en curso</button>
-      <button class="month-tab" id="mmtab-next" onclick="setMgrMonth(1,this)">Mes siguiente →</button>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="navMgrMonth(-1)" title="Mes anterior">‹</button>
+      <div class="month-nav-label" id="mgr-month-nav-label">—</div>
+      <button class="month-nav-btn" onclick="navMgrMonth(1)" title="Mes siguiente">›</button>
+      <button class="month-nav-today" id="mgr-month-nav-today" onclick="navMgrMonthToday()">Hoy</button>
     </div>
 
     <!-- TAB: EQUIPO -->
@@ -1011,6 +1021,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="mgr-block-head">
           <div class="mgr-block-title">🔥 Heatmap horario · día × hora</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select class="form-select" id="heatmap-period" onchange="setHeatmapPeriod(this.value)" style="width:auto;padding:6px 28px 6px 12px;font-size:12px;">
+              <option value="mes">📆 Mes seleccionado</option>
+              <option value="trimestre">📊 Trimestre</option>
+              <option value="global">🌐 Global (todo)</option>
+            </select>
             <select class="form-select" id="heatmap-sdr" onchange="renderHeatmap()" style="width:auto;padding:6px 28px 6px 12px;font-size:12px;">
               <option value="">📊 Equipo (agregado)</option>
             </select>
@@ -1655,7 +1670,7 @@ function getObjForMonth(){
 
 // ── MANAGER RENDER ──
 function renderManager(){
-  document.getElementById('mmtab-cur')&&(document.querySelector('#manager-app .month-tab.active'));
+  updateMgrMonthNavLabel();
   renderMgrTeamStats();
   renderMgrTeamObj();
   renderMgrRanking();
@@ -2435,11 +2450,32 @@ function setMgrIndividualSdr(id){
 
 // ── HEATMAP HORARIO ──
 let heatmapType='agendadas';
+let heatmapPeriod='mes';
 function setHeatmapType(type,btn){
   heatmapType=type;
   document.querySelectorAll('.heatmap-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderHeatmap();
+}
+function setHeatmapPeriod(p){heatmapPeriod=p;renderHeatmap();}
+
+// Rango de fechas del heatmap según el periodo elegido (mes / trimestre / global)
+function heatmapRange(){
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  if(heatmapPeriod==='global'){
+    return{start:'0000-01-01',end:'9999-12-31',label:'histórico completo'};
+  }
+  if(heatmapPeriod==='trimestre'){
+    const m=mgrTargetMonth();
+    const q=Math.floor(m.getMonth()/3);        // 0..3
+    const startMonth=q*3;                       // 0,3,6,9
+    const start=new Date(m.getFullYear(),startMonth,1);
+    const end=new Date(m.getFullYear(),startMonth+3,0);
+    const label=`${meses[startMonth]}–${meses[startMonth+2]} ${m.getFullYear()} (T${q+1})`;
+    return{start:localDateStr(start),end:localDateStr(end),label};
+  }
+  const{start,end}=mgrMonthRange();
+  return{start,end,label:mgrMonthLabel()};
 }
 
 function renderHeatmap(){
@@ -2457,7 +2493,7 @@ function renderHeatmap(){
   }
 
   const sdrFilter=sel?sel.value:'';
-  const{start,end}=mgrMonthRange();
+  const{start,end,label:periodLabel}=heatmapRange();
 
   // Filter demos for the month (and SDR if selected)
   let periodDemos=allDemos.filter(d=>{
@@ -2595,7 +2631,7 @@ function renderHeatmap(){
 
     html+=`
       <div class="hm-summary">
-        <div class="hm-summary-title">📊 Resumen rápido · ${totalDemos} demos ${tipoLabel}${sdrFilter?' · '+(allSdrs.find(s=>s.id==sdrFilter)?.nombre||''):' (equipo)'}</div>
+        <div class="hm-summary-title">📊 Resumen rápido · ${periodLabel} · ${totalDemos} demos ${tipoLabel}${sdrFilter?' · '+(allSdrs.find(s=>s.id==sdrFilter)?.nombre||''):' (equipo)'}</div>
         ${chips}
         <div class="hm-summary-narrative">${narrative}</div>
       </div>`;
@@ -3286,15 +3322,21 @@ function closeEmailsModal(){
   const bg=document.getElementById('emails-modal-bg');
   if(bg)bg.classList.remove('show');
 }
-function setMgrMonth(offset,btn){
-  mgrMonthOffset=offset;
+function updateMgrMonthNavLabel(){
+  const lbl=document.getElementById('mgr-month-nav-label');
+  if(lbl)lbl.textContent=mgrMonthLabel()+(mgrMonthOffset===0?' · actual':'');
+  const t=document.getElementById('mgr-month-nav-today');
+  if(t)t.disabled=mgrMonthOffset===0;
+}
+function navMgrMonth(delta){
+  mgrMonthOffset+=delta;
   mgrPeriod='mes';
   document.querySelectorAll('[id^="mgr-period-"]').forEach(b=>b.classList.remove('active'));
   document.getElementById('mgr-period-mes')?.classList.add('active');
-  document.querySelectorAll('#manager-app .month-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
+  updateMgrMonthNavLabel();
   renderManager();
 }
+function navMgrMonthToday(){mgrMonthOffset=0;navMgrMonth(0);}
 
 // ── EXCEL EXPORT ──
 function exportExcel(){
@@ -3358,16 +3400,22 @@ async function loadObjetivos(){
   objetivos=await sb(`objetivos?sdr_id=eq.${currentUser.id}&select=*`)||[];
 }
 
-function setMonth(offset,btn){
-  monthOffset=offset;
-  document.querySelectorAll('.month-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
+function updateMonthNavLabel(){
+  const lbl=document.getElementById('month-nav-label');
+  if(lbl)lbl.textContent=monthLabel()+(monthOffset===0?' · actual':'');
+  const todayBtn=document.getElementById('month-nav-today');
+  if(todayBtn)todayBtn.disabled=monthOffset===0;
+}
+function navMonth(delta){
+  monthOffset+=delta;
   comercialFilter=null;
   canalFilter='all';
   document.querySelectorAll('.canal-filter-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('cf-all')?.classList.add('active');
+  updateMonthNavLabel();
   render();
 }
+function navMonthToday(){monthOffset=0;navMonth(0);}
 
 // ── SF URL PARSER ──
 function parseSfName(url){
@@ -3695,6 +3743,7 @@ function getFilteredDemos(){
 
 // ── RENDER ──
 function render(){
+  updateMonthNavLabel();
   renderObjetivos();
   renderStats();
   renderCancelPanel();
