@@ -2130,21 +2130,25 @@ function renderObjetivosForm(){
 
 async function saveObjetivosGlobal(){
   const m=mgrTargetMonth();
-  const payload=allSdrs.map(s=>({
-    sdr_id:s.id,
-    mes:m.getMonth()+1,
-    anio:m.getFullYear(),
+  const mes=m.getMonth()+1, anio=m.getFullYear();
+  const vals={
     demos_objetivo_outbound:parseInt(document.getElementById('obj-in-demos-out').value)||0,
     demos_objetivo_inbound:parseInt(document.getElementById('obj-in-demos-in').value)||0,
     cwd_objetivo_outbound:parseInt(document.getElementById('obj-in-cwd-out').value)||0,
     cwd_objetivo_inbound:parseInt(document.getElementById('obj-in-cwd-in').value)||0
-  }));
+  };
   try{
-    await sb('objetivos',{
-      method:'POST',
-      headers:{'Prefer':'resolution=merge-duplicates'},
-      body:JSON.stringify(payload)
-    });
+    for(const s of allSdrs){
+      // Buscar si ya existe objetivo para este SDR/mes/año (puede haber duplicados de versiones antiguas)
+      const existentes=objetivos.filter(o=>o.sdr_id===s.id&&o.mes===mes&&o.anio===anio);
+      if(existentes.length){
+        for(const ex of existentes){
+          await sb(`objetivos?id=eq.${ex.id}`,{method:'PATCH',body:JSON.stringify(vals)});
+        }
+      }else{
+        await sb('objetivos',{method:'POST',body:JSON.stringify({sdr_id:s.id,mes,anio,...vals})});
+      }
+    }
     showToast('✓ Objetivos aplicados a todo el equipo');
     await loadManagerData();renderManager();
   }catch(e){showToast('❌ Error guardando objetivos');console.error(e);}
@@ -3653,7 +3657,7 @@ function getFilteredDemos(){
     case'enlive':result=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');break;
     case'manana':result=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada');break;
     case'semana':result=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada');break;
-    case'todas':result=demos.filter(d=>d.estado!=='cancelada');break;
+    case'todas':{const{start:mS,end:mE}=monthRange();result=demos.filter(d=>d.estado!=='cancelada'&&(d.fecha||'')>=mS&&(d.fecha||'')<=mE);break;}
     case'ganadas':result=demos.filter(d=>d.outcome==='cerrado_ganado');break;
     case'perdidas':result=demos.filter(d=>d.outcome==='cerrado_perdido'&&d.estado==='ejecutada');break;
     case'reagendar':result=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido');break;
@@ -4167,7 +4171,8 @@ function renderCounts(){
   document.getElementById('c-hoy').textContent=todayDemos.length;
   document.getElementById('c-manana').textContent=demos.filter(d=>d.fecha===tomorrow&&d.estado!=='cancelada').length;
   document.getElementById('c-semana').textContent=demos.filter(d=>week.includes(d.fecha)&&d.estado!=='cancelada').length;
-  document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada').length;
+  const{start:mStartCount,end:mEndCount}=monthRange();
+  document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada'&&(d.fecha||'')>=mStartCount&&(d.fecha||'')<=mEndCount).length;
   document.getElementById('c-ganadas').textContent=demos.filter(d=>d.outcome==='cerrado_ganado').length;
   document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido'&&d.estado==='ejecutada').length;
   document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
