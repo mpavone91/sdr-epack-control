@@ -680,8 +680,56 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .tarea-completed-toggle:hover{color:var(--teal-dark);}
 .tarea-empty{text-align:center;padding:30px 20px;}
 
+/* ── VACACIONES ── */
+.vac-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.vac-stat{border-radius:12px;padding:16px;text-align:center;border:1px solid var(--border);background:var(--surface-2);}
+.vac-stat.total{background:var(--teal-dark);border-color:var(--teal-dark);}
+.vac-stat.total .vac-stat-num{color:var(--lime);}
+.vac-stat.total .vac-stat-label{color:rgba(255,255,255,0.6);}
+.vac-stat.restantes{background:var(--lime-soft);border-color:var(--lime);}
+.vac-stat.restantes .vac-stat-num{color:var(--lime-dark);}
+.vac-stat-num{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--teal-dark);line-height:1;}
+.vac-stat-label{font-size:11.5px;color:var(--muted);margin-top:5px;font-weight:500;}
+.vac-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:11px;padding:12px 15px;margin-bottom:8px;border:1px solid;flex-wrap:wrap;}
+.vac-item.pendiente{background:var(--amber-soft);border-color:#f0d58a;}
+.vac-item.aprobada{background:var(--green-soft);border-color:#a8e0c0;}
+.vac-item.rechazada{background:var(--red-soft);border-color:#f0c0c0;}
+.vac-item-info{flex:1;min-width:0;}
+.vac-item-range{font-size:14px;font-weight:600;color:var(--teal-dark);}
+.vac-item-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.vac-item-nota{font-size:12.5px;color:var(--text);margin-top:4px;font-style:italic;}
+.vac-status{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.vac-status.pendiente{background:#fdeec0;color:#9a6a00;}
+.vac-status.aprobada{background:#d6f2e0;color:var(--green);}
+.vac-status.rechazada{background:#fdd8d8;color:var(--red);}
+.vac-days-badge{background:var(--teal-dark);color:var(--lime);font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;white-space:nowrap;}
+.vac-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-approve{padding:7px 14px;border:none;background:var(--green);color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-approve:hover{background:#188a46;}
+.btn-reject{padding:7px 14px;border:1px solid #f0c0c0;background:#fff;color:var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-reject:hover{background:var(--red);color:#fff;}
+.vac-preview{background:var(--lime-soft);border:1px solid var(--lime);border-radius:10px;padding:11px 14px;margin-top:10px;font-size:13px;color:var(--teal-dark);display:none;}
+.vac-preview.show{display:block;}
+.vac-preview.error{background:var(--red-soft);border-color:#f0c0c0;color:var(--red);}
+/* Calendario de vacaciones */
+.vaccal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.vaccal-head{font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted);text-align:center;padding:6px 0;}
+.vaccal-day{min-height:64px;border:1px solid var(--border);border-radius:7px;padding:4px 5px;background:var(--surface);}
+.vaccal-day.other{background:var(--surface-2);opacity:0.45;}
+.vaccal-day.weekend{background:var(--surface-2);}
+.vaccal-day.festivo{background:#fdeaea;border-color:#f0c0c0;}
+.vaccal-day.today{border:2px solid var(--lime);}
+.vaccal-daynum{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px;}
+.vaccal-day.today .vaccal-daynum{color:var(--lime-dark);}
+.vaccal-tag{font-size:9.5px;font-weight:700;color:#fff;border-radius:4px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vaccal-festivo-tag{font-size:9px;color:var(--red);font-weight:700;}
+.vac-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--muted);align-items:center;}
+.vac-legend-item{display:flex;align-items:center;gap:5px;}
+.vac-legend-dot{width:10px;height:10px;border-radius:3px;}
+.vac-alert-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:5px;}
+@media(max-width:780px){.vac-summary{grid-template-columns:repeat(2,1fr);}}
+
 @media(max-width:780px){
-  .stats-row{grid-template-columns:repeat(2,1fr);}
   .demo-card{grid-template-columns:1fr;}
   .demo-right{justify-content:space-between;}
   .form-row{grid-template-columns:1fr;}
@@ -763,6 +811,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="page-sub" id="today-date">—</div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openVacacionesModal()">🏖️ Vacaciones</button>
         <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openNuevaTarea()">📌 Nueva tarea</button>
         <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
       </div>
@@ -963,6 +1012,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="mgr-nav-btn" onclick="setMgrTab('llamadas',this)">📞 Llamadas</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('objetivos',this)">🎯 Objetivos</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('mensajes',this)">💬 Mensajes y tablón</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('vacaciones',this)">🏖️ Vacaciones <span id="vac-nav-badge"></span></button>
       <button class="mgr-nav-btn" onclick="setMgrTab('gestion',this)">⚙️ Comerciales y ciudades</button>
     </div>
 
@@ -1106,6 +1156,63 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <button class="btn-primary" onclick="addNoticia()">Publicar</button>
         </div>
         <div id="noticias-list"></div>
+      </div>
+    </div>
+
+    <!-- TAB: VACACIONES -->
+    <div class="mgr-tab" id="mgrtab-vacaciones">
+      <!-- Solicitudes pendientes -->
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">⏳ Solicitudes pendientes de aprobar</div>
+        <p class="mgr-card-sub">Revisa y aprueba o rechaza. Al aprobar, se descuentan los días del saldo del SDR.</p>
+        <div id="vac-pendientes"></div>
+      </div>
+
+      <!-- Saldos del equipo -->
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">📊 Saldo de días por SDR — 2026</div>
+        <p class="mgr-card-sub">Puedes ajustar los días totales de cada uno (por ejemplo, si entró a mitad de año se le prorratean).</p>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="vac-saldos-table"></table></div>
+      </div>
+
+      <!-- Registrar vacaciones directamente -->
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">➕ Registrar vacaciones ya disfrutadas</div>
+        <p class="mgr-card-sub">Para los días que ya se cogieron este año. Se aprueban directamente sin pasar por solicitud.</p>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr auto;gap:10px;align-items:end;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">SDR</label>
+            <select class="form-select" id="vacadd-sdr"></select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Desde</label>
+            <input class="form-input" type="date" id="vacadd-inicio" onchange="previewVacAddDias()"/>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Hasta</label>
+            <input class="form-input" type="date" id="vacadd-fin" onchange="previewVacAddDias()"/>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Nota</label>
+            <input class="form-input" id="vacadd-nota" placeholder="Opcional"/>
+          </div>
+          <button class="btn-primary" onclick="addVacacionesDirecta()">Registrar</button>
+        </div>
+        <div class="vac-preview" id="vacadd-preview"></div>
+      </div>
+
+      <!-- Calendario del equipo -->
+      <div class="mgr-card">
+        <div class="mgr-block-head" style="margin-bottom:14px;">
+          <div class="mgr-card-title" style="margin-bottom:0;">🗓️ Calendario de vacaciones del equipo</div>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="vacCalNav(-1)">‹</button>
+            <div class="cal-week-label" id="vaccal-label" style="min-width:160px;">—</div>
+            <button class="cal-nav-btn" onclick="vacCalNav(1)">›</button>
+            <button class="cal-today-btn" onclick="vacCalToday()">Hoy</button>
+          </div>
+        </div>
+        <div id="vaccal-container"></div>
       </div>
     </div>
 
@@ -1392,6 +1499,47 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   </div>
 </div>
 
+<!-- MODAL VACACIONES (SDR) -->
+<div class="modal-overlay" id="vacaciones-modal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-head">
+      <div class="modal-title">🏖️ Mis vacaciones 2026</div>
+      <button class="modal-close" onclick="closeVacacionesModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="vac-summary" id="vac-summary"></div>
+
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:12px;">📅 Solicitar vacaciones</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Desde</label>
+            <input class="form-input" type="date" id="vac-inicio" onchange="previewVacDias()"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hasta</label>
+            <input class="form-input" type="date" id="vac-fin" onchange="previewVacDias()"/>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Nota (opcional)</label>
+          <input class="form-input" id="vac-nota" placeholder="Ej: Viaje familiar"/>
+        </div>
+        <div class="vac-preview" id="vac-preview"></div>
+        <button class="btn-save" style="width:100%;margin-top:14px;" onclick="solicitarVacaciones()">📤 Enviar solicitud</button>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;">
+          Solo se cuentan días laborables (no cuentan fines de semana ni festivos). Tu manager tiene que aprobarlo. Puedes pedir también días que ya disfrutaste este año para que queden registrados.
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:10px;">📋 Mis solicitudes</div>
+        <div id="vac-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1594,6 +1742,7 @@ async function loadManagerData(){
     allSdrs=sdrs||[];comerciales=coms||[];ciudades=cits||[];
     allDemos=allD||[];objetivos=objs||[];allLlamadas=llam||[];noticias=nots||[];
     await loadMensajesHoy();
+    await loadVacaciones();
   }catch(e){showToast('❌ Error cargando datos del equipo');console.error(e);}
   finally{showLoadingMgr(false);}
 }
@@ -1685,6 +1834,7 @@ function renderManager(){
   renderMensajesList();
   renderNoticiasList();
   renderGestionLists();
+  renderVacManager();
 }
 
 // Helper: stats for previous month (used for delta comparisons)
@@ -5228,6 +5378,381 @@ function tareaCard(t,cls){
         <button class="tarea-btn delete" onclick="deleteTarea(${t.id})" title="Eliminar">🗑️</button>
       </div>
     </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// VACACIONES — solicitud (SDR) + aprobación y calendario (Manager)
+// ════════════════════════════════════════════════════════
+const VAC_ANIO=2026;
+const VAC_DIAS_DEFAULT=23;
+const VAC_COLORS=['#2C4F5B','#7FD81F','#3b7dd8','#e8a317','#9333ea','#1fa856','#e23d3d','#0e7a90'];
+let vacaciones=[];
+let vacCalOffset=0;
+
+// Cuenta solo días laborables (excluye findes y festivos)
+function contarDiasLaborables(inicio,fin){
+  if(!inicio||!fin)return 0;
+  const a=new Date(inicio+'T12:00:00');
+  const b=new Date(fin+'T12:00:00');
+  if(b<a)return -1; // rango inválido
+  let count=0;
+  const cur=new Date(a);
+  while(cur<=b){
+    if(isWorkday(cur))count++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return count;
+}
+
+function vacDiasTotales(sdr){
+  const v=sdr&&sdr.dias_vacaciones;
+  return (v===null||v===undefined||v==='')?VAC_DIAS_DEFAULT:parseInt(v);
+}
+
+// Saldo de un SDR: total, usados (aprobados), pendientes, restantes
+function vacSaldo(sdrId,sdrObj){
+  const total=vadDiasFor(sdrId,sdrObj);
+  const delAnio=vacaciones.filter(v=>v.sdr_id===sdrId&&(v.fecha_inicio||'').startsWith(VAC_ANIO));
+  const usados=delAnio.filter(v=>v.estado==='aprobada').reduce((s,v)=>s+(v.dias||0),0);
+  const pend=delAnio.filter(v=>v.estado==='pendiente').reduce((s,v)=>s+(v.dias||0),0);
+  return{total,usados,pendientes:pend,restantes:total-usados};
+}
+function vadDiasFor(sdrId,sdrObj){
+  const s=sdrObj||(allSdrs.find(x=>x.id===sdrId))||(currentUser&&currentUser.id===sdrId?currentUser:null);
+  return vacDiasTotales(s);
+}
+
+async function loadVacaciones(){
+  try{
+    vacaciones=await sb('vacaciones?select=*&order=fecha_inicio.asc')||[];
+  }catch(e){console.error('Error cargando vacaciones:',e);vacaciones=[];}
+}
+
+function fmtVacRange(v){
+  if(v.fecha_inicio===v.fecha_fin)return fmtDate(v.fecha_inicio);
+  return fmtDate(v.fecha_inicio)+' → '+fmtDate(v.fecha_fin);
+}
+
+// ───────── SDR ─────────
+async function openVacacionesModal(){
+  await loadVacaciones();
+  document.getElementById('vac-inicio').value='';
+  document.getElementById('vac-fin').value='';
+  document.getElementById('vac-nota').value='';
+  document.getElementById('vac-preview').classList.remove('show');
+  renderVacSummary();
+  renderVacList();
+  document.getElementById('vacaciones-modal').classList.add('active');
+}
+function closeVacacionesModal(){document.getElementById('vacaciones-modal').classList.remove('active');}
+
+function renderVacSummary(){
+  const s=vacSaldo(currentUser.id,currentUser);
+  document.getElementById('vac-summary').innerHTML=`
+    <div class="vac-stat total"><div class="vac-stat-num">${s.total}</div><div class="vac-stat-label">Días totales</div></div>
+    <div class="vac-stat"><div class="vac-stat-num">${s.usados}</div><div class="vac-stat-label">Disfrutados</div></div>
+    <div class="vac-stat"><div class="vac-stat-num">${s.pendientes}</div><div class="vac-stat-label">Pendientes aprobar</div></div>
+    <div class="vac-stat restantes"><div class="vac-stat-num">${s.restantes}</div><div class="vac-stat-label">Te quedan</div></div>`;
+}
+
+function previewVacDias(){
+  const ini=document.getElementById('vac-inicio').value;
+  const fin=document.getElementById('vac-fin').value;
+  const p=document.getElementById('vac-preview');
+  if(!ini||!fin){p.classList.remove('show');return;}
+  const dias=contarDiasLaborables(ini,fin);
+  p.classList.add('show');
+  if(dias<0){p.classList.add('error');p.textContent='⚠️ La fecha de fin es anterior a la de inicio.';return;}
+  if(dias===0){p.classList.add('error');p.textContent='⚠️ Ese rango no tiene días laborables (son findes o festivos).';return;}
+  p.classList.remove('error');
+  const s=vacSaldo(currentUser.id,currentUser);
+  const quedarian=s.restantes-dias;
+  p.innerHTML=`📅 Son <b>${dias} día${dias>1?'s':''} laborable${dias>1?'s':''}</b>. `+
+    (quedarian<0
+      ? `<span style="color:var(--red);font-weight:600;">⚠️ Te pasas: solo te quedan ${s.restantes} días.</span>`
+      : `Si te lo aprueban, te quedarían <b>${quedarian}</b> días.`);
+}
+
+async function solicitarVacaciones(){
+  const ini=document.getElementById('vac-inicio').value;
+  const fin=document.getElementById('vac-fin').value;
+  const nota=document.getElementById('vac-nota').value.trim();
+  if(!ini||!fin){showToast('⚠️ Pon la fecha de inicio y de fin');return;}
+  const dias=contarDiasLaborables(ini,fin);
+  if(dias<0){showToast('⚠️ La fecha de fin es anterior a la de inicio');return;}
+  if(dias===0){showToast('⚠️ Ese rango no tiene días laborables');return;}
+  const s=vacSaldo(currentUser.id,currentUser);
+  if(dias>s.restantes){
+    if(!confirm(`Estás pidiendo ${dias} días y solo te quedan ${s.restantes}. ¿Enviar igualmente para que lo valore tu manager?`))return;
+  }
+  try{
+    await sb('vacaciones',{method:'POST',body:JSON.stringify({
+      sdr_id:currentUser.id,fecha_inicio:ini,fecha_fin:fin,dias,nota:nota||null,estado:'pendiente'
+    })});
+    showToast('✓ Solicitud enviada — pendiente de aprobación');
+    document.getElementById('vac-inicio').value='';
+    document.getElementById('vac-fin').value='';
+    document.getElementById('vac-nota').value='';
+    document.getElementById('vac-preview').classList.remove('show');
+    await loadVacaciones();
+    renderVacSummary();renderVacList();
+  }catch(e){showToast('❌ Error enviando la solicitud (¿falta crear la tabla?)');console.error(e);}
+}
+
+function renderVacList(){
+  const el=document.getElementById('vac-list');
+  const mine=vacaciones.filter(v=>v.sdr_id===currentUser.id).sort((a,b)=>(b.fecha_inicio||'').localeCompare(a.fecha_inicio||''));
+  if(!mine.length){el.innerHTML='<div style="text-align:center;padding:22px;color:var(--muted);font-size:13px;">Aún no has solicitado vacaciones este año.</div>';return;}
+  const label={pendiente:'⏳ Pendiente',aprobada:'✅ Aprobada',rechazada:'❌ Rechazada'};
+  el.innerHTML=mine.map(v=>`
+    <div class="vac-item ${v.estado}">
+      <div class="vac-item-info">
+        <div class="vac-item-range">${fmtVacRange(v)}</div>
+        <div class="vac-item-meta">${v.dias} día${v.dias>1?'s':''} laborable${v.dias>1?'s':''}</div>
+        ${v.nota?`<div class="vac-item-nota">📝 ${(v.nota||'').replace(/</g,'&lt;')}</div>`:''}
+        ${v.comentario_manager?`<div class="vac-item-nota" style="color:var(--red);">💬 ${(v.comentario_manager||'').replace(/</g,'&lt;')}</div>`:''}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="vac-status ${v.estado}">${label[v.estado]||v.estado}</span>
+        ${v.estado==='pendiente'?`<button class="tarea-btn delete" onclick="cancelarSolicitudVac(${v.id})" title="Cancelar solicitud">🗑️</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function cancelarSolicitudVac(id){
+  if(!confirm('¿Cancelar esta solicitud de vacaciones?'))return;
+  try{
+    await sb(`vacaciones?id=eq.${id}`,{method:'DELETE'});
+    showToast('✓ Solicitud cancelada');
+    await loadVacaciones();
+    renderVacSummary();renderVacList();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ───────── MANAGER ─────────
+function renderVacManager(){
+  renderVacPendientes();
+  renderVacSaldos();
+  renderVacAddSelect();
+  renderVacCalendario();
+  renderVacNavBadge();
+}
+
+function renderVacNavBadge(){
+  const b=document.getElementById('vac-nav-badge');
+  if(!b)return;
+  const n=vacaciones.filter(v=>v.estado==='pendiente').length;
+  b.innerHTML=n?`<span class="vac-alert-badge">${n}</span>`:'';
+}
+
+function renderVacPendientes(){
+  const el=document.getElementById('vac-pendientes');
+  if(!el)return;
+  const pend=vacaciones.filter(v=>v.estado==='pendiente').sort((a,b)=>(a.fecha_inicio||'').localeCompare(b.fecha_inicio||''));
+  if(!pend.length){
+    el.innerHTML='<div style="text-align:center;padding:26px;color:var(--muted);"><div style="font-size:28px;margin-bottom:6px;">✅</div><div style="font-size:13px;">No hay solicitudes pendientes.</div></div>';
+    return;
+  }
+  el.innerHTML=pend.map(v=>{
+    const sdr=allSdrs.find(s=>s.id===v.sdr_id);
+    const s=vacSaldo(v.sdr_id,sdr);
+    const excede=v.dias>s.restantes;
+    return`
+    <div class="vac-item pendiente">
+      <div class="vac-item-info">
+        <div class="vac-item-range">👤 ${sdr?sdr.nombre:'—'} · ${fmtVacRange(v)}</div>
+        <div class="vac-item-meta">${v.dias} día${v.dias>1?'s':''} laborable${v.dias>1?'s':''} · Le quedan ${s.restantes} de ${s.total}${excede?' <b style="color:var(--red);">⚠️ Excede su saldo</b>':''}</div>
+        ${v.nota?`<div class="vac-item-nota">📝 ${(v.nota||'').replace(/</g,'&lt;')}</div>`:''}
+      </div>
+      <div class="vac-actions">
+        <button class="btn-approve" onclick="aprobarVacaciones(${v.id})">✓ Aprobar</button>
+        <button class="btn-reject" onclick="rechazarVacaciones(${v.id})">✕ Rechazar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function aprobarVacaciones(id){
+  const v=vacaciones.find(x=>x.id===id);
+  if(!v)return;
+  const sdr=allSdrs.find(s=>s.id===v.sdr_id);
+  const s=vacSaldo(v.sdr_id,sdr);
+  if(v.dias>s.restantes){
+    if(!confirm(`⚠️ ${sdr?sdr.nombre:'El SDR'} solo tiene ${s.restantes} días y pide ${v.dias}. ¿Aprobar igualmente?`))return;
+  }
+  try{
+    await sb(`vacaciones?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'aprobada',resuelto_at:new Date().toISOString()})});
+    showToast('✓ Vacaciones aprobadas');
+    await loadVacaciones();renderVacManager();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+async function rechazarVacaciones(id){
+  const motivo=prompt('Motivo del rechazo (lo verá el SDR). Opcional:','');
+  if(motivo===null)return;
+  try{
+    await sb(`vacaciones?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'rechazada',comentario_manager:motivo||null,resuelto_at:new Date().toISOString()})});
+    showToast('✓ Solicitud rechazada');
+    await loadVacaciones();renderVacManager();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderVacSaldos(){
+  const t=document.getElementById('vac-saldos-table');
+  if(!t)return;
+  t.innerHTML=`
+    <thead><tr><th>SDR</th><th>Días totales</th><th>Disfrutados</th><th>Pendientes</th><th>Restantes</th><th></th></tr></thead>
+    <tbody>${allSdrs.map(s=>{
+      const v=vacSaldo(s.id,s);
+      const color=v.restantes<=2?'var(--red)':v.restantes<=5?'var(--amber)':'var(--green)';
+      return`<tr>
+        <td>${s.nombre}</td>
+        <td><input type="number" min="0" max="40" id="vacdias-${s.id}" value="${v.total}"/></td>
+        <td>${v.usados}</td>
+        <td>${v.pendientes||'—'}</td>
+        <td><span class="num" style="color:${color};">${v.restantes}</span></td>
+        <td><button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="saveVacDias(${s.id})">Guardar</button></td>
+      </tr>`;
+    }).join('')}
+    <tr class="row-total">
+      <td>TOTAL</td>
+      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).total,0)}</td>
+      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).usados,0)}</td>
+      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).pendientes,0)}</td>
+      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).restantes,0)}</td>
+      <td></td>
+    </tr>
+    </tbody>`;
+}
+
+async function saveVacDias(sdrId){
+  const dias=parseInt(document.getElementById('vacdias-'+sdrId).value);
+  if(isNaN(dias)||dias<0){showToast('⚠️ Número de días no válido');return;}
+  try{
+    await sb(`sdr_users?id=eq.${sdrId}`,{method:'PATCH',body:JSON.stringify({dias_vacaciones:dias})});
+    showToast('✓ Días actualizados');
+    await loadManagerData();
+    await loadVacaciones();
+    renderVacManager();
+  }catch(e){showToast('❌ Error (¿falta la columna dias_vacaciones?)');console.error(e);}
+}
+
+function renderVacAddSelect(){
+  const sel=document.getElementById('vacadd-sdr');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML=allSdrs.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+function previewVacAddDias(){
+  const ini=document.getElementById('vacadd-inicio').value;
+  const fin=document.getElementById('vacadd-fin').value;
+  const p=document.getElementById('vacadd-preview');
+  if(!ini||!fin){p.classList.remove('show');return;}
+  const dias=contarDiasLaborables(ini,fin);
+  p.classList.add('show');
+  if(dias<0){p.classList.add('error');p.textContent='⚠️ La fecha de fin es anterior a la de inicio.';return;}
+  if(dias===0){p.classList.add('error');p.textContent='⚠️ Ese rango no tiene días laborables.';return;}
+  p.classList.remove('error');
+  p.innerHTML=`📅 Se registrarán <b>${dias} día${dias>1?'s':''} laborable${dias>1?'s':''}</b> como vacaciones aprobadas.`;
+}
+
+async function addVacacionesDirecta(){
+  const sdrId=parseInt(document.getElementById('vacadd-sdr').value);
+  const ini=document.getElementById('vacadd-inicio').value;
+  const fin=document.getElementById('vacadd-fin').value;
+  const nota=document.getElementById('vacadd-nota').value.trim();
+  if(!sdrId){showToast('⚠️ Selecciona un SDR');return;}
+  if(!ini||!fin){showToast('⚠️ Pon las dos fechas');return;}
+  const dias=contarDiasLaborables(ini,fin);
+  if(dias<=0){showToast('⚠️ Rango no válido o sin días laborables');return;}
+  try{
+    await sb('vacaciones',{method:'POST',body:JSON.stringify({
+      sdr_id:sdrId,fecha_inicio:ini,fecha_fin:fin,dias,nota:nota||null,
+      estado:'aprobada',resuelto_at:new Date().toISOString()
+    })});
+    showToast('✓ Vacaciones registradas y aprobadas');
+    document.getElementById('vacadd-inicio').value='';
+    document.getElementById('vacadd-fin').value='';
+    document.getElementById('vacadd-nota').value='';
+    document.getElementById('vacadd-preview').classList.remove('show');
+    await loadVacaciones();renderVacManager();
+  }catch(e){showToast('❌ Error registrando las vacaciones');console.error(e);}
+}
+
+// Calendario mensual del equipo
+function vacCalNav(d){vacCalOffset+=d;renderVacCalendario();}
+function vacCalToday(){vacCalOffset=0;renderVacCalendario();}
+
+function renderVacCalendario(){
+  const cont=document.getElementById('vaccal-container');
+  if(!cont)return;
+  const base=new Date();
+  const m=new Date(base.getFullYear(),base.getMonth()+vacCalOffset,1);
+  const year=m.getFullYear(),month=m.getMonth();
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const lbl=document.getElementById('vaccal-label');
+  if(lbl)lbl.textContent=`${meses[month]} ${year}`;
+
+  // Color por SDR
+  const colorFor={};
+  allSdrs.forEach((s,i)=>{colorFor[s.id]=VAC_COLORS[i%VAC_COLORS.length];});
+
+  // Aprobadas que tocan este mes
+  const mStart=localDateStr(new Date(year,month,1));
+  const mEnd=localDateStr(new Date(year,month+1,0));
+  const aprob=vacaciones.filter(v=>v.estado==='aprobada'&&(v.fecha_inicio||'')<=mEnd&&(v.fecha_fin||'')>=mStart);
+
+  // Rejilla: empieza en lunes
+  const firstDow=(new Date(year,month,1).getDay()+6)%7; // 0=lunes
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=todayStr();
+  const dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  let html='<div class="vaccal-grid">';
+  dayNames.forEach(d=>{html+=`<div class="vaccal-head">${d}</div>`;});
+  for(let i=0;i<firstDow;i++)html+='<div class="vaccal-day other"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dt=new Date(year,month,d);
+    const ds=localDateStr(dt);
+    const dow=dt.getDay();
+    const weekend=dow===0||dow===6;
+    const festivo=FESTIVOS_2026.includes(ds);
+    const isToday=ds===today;
+    const cls=['vaccal-day'];
+    if(weekend)cls.push('weekend');
+    if(festivo)cls.push('festivo');
+    if(isToday)cls.push('today');
+    html+=`<div class="${cls.join(' ')}"><div class="vaccal-daynum">${d}</div>`;
+    if(festivo)html+=`<div class="vaccal-festivo-tag">Festivo</div>`;
+    if(!weekend&&!festivo){
+      aprob.filter(v=>(v.fecha_inicio||'')<=ds&&(v.fecha_fin||'')>=ds).forEach(v=>{
+        const sdr=allSdrs.find(s=>s.id===v.sdr_id);
+        const nom=sdr?sdr.nombre:'—';
+        html+=`<div class="vaccal-tag" style="background:${colorFor[v.sdr_id]||'#888'};" title="${nom}">${nom}</div>`;
+      });
+    }
+    html+='</div>';
+  }
+  const rest=(7-((firstDow+daysInMonth)%7))%7;
+  for(let i=0;i<rest;i++)html+='<div class="vaccal-day other"></div>';
+  html+='</div>';
+
+  // Leyenda
+  html+='<div class="vac-legend">';
+  allSdrs.forEach(s=>{
+    html+=`<div class="vac-legend-item"><span class="vac-legend-dot" style="background:${colorFor[s.id]};"></span>${s.nombre}</div>`;
+  });
+  html+='<div class="vac-legend-item"><span class="vac-legend-dot" style="background:#fdeaea;border:1px solid #f0c0c0;"></span>Festivo</div>';
+  html+='</div>';
+
+  // Resumen del mes
+  const enVac=aprob.length;
+  if(enVac===0){
+    html+='<div style="margin-top:12px;padding:11px 14px;background:var(--surface-2);border-radius:9px;font-size:13px;color:var(--muted);text-align:center;">Nadie tiene vacaciones aprobadas este mes.</div>';
+  }
+  cont.innerHTML=html;
 }
 
 // ── INIT ──
