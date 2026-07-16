@@ -727,6 +727,42 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .vac-legend-item{display:flex;align-items:center;gap:5px;}
 .vac-legend-dot{width:10px;height:10px;border-radius:3px;}
 .vac-alert-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:5px;}
+/* ── MOTIVO (modal rápido + tags + análisis) ── */
+.motivo-btn-list{display:flex;flex-direction:column;gap:8px;}
+.motivo-btn{padding:12px 14px;border:1.5px solid var(--border);background:var(--surface);border-radius:10px;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;text-align:left;transition:all 0.15s;}
+.motivo-btn:hover{border-color:var(--teal-light);background:var(--surface-2);}
+.motivo-btn.cancel-type:hover{border-color:var(--red);background:var(--red-soft);color:var(--red);}
+.motivo-btn.perdida-type:hover{border-color:var(--amber);background:var(--amber-soft);color:#8a5e00;}
+.motivo-tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#f0e4e4;color:#9a4040;}
+.motivo-analysis{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:780px){.motivo-analysis{grid-template-columns:1fr;}}
+.motivo-col-title{font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.motivo-col-title .tot{font-size:12px;color:var(--muted);font-weight:600;}
+.motivo-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.motivo-row-label{font-size:12.5px;color:var(--text);width:150px;flex-shrink:0;}
+.motivo-row-bar{flex:1;height:16px;background:var(--bg);border-radius:5px;overflow:hidden;}
+.motivo-row-fill{height:100%;border-radius:5px;transition:width 0.4s;min-width:2px;}
+.motivo-row-val{font-size:11.5px;color:var(--muted);font-weight:600;width:56px;text-align:right;flex-shrink:0;}
+.motivo-empty{text-align:center;padding:20px;color:var(--muted);font-size:13px;}
+.motivo-insight{margin-top:14px;padding:12px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:13px;line-height:1.6;color:var(--text);}
+.motivo-insight b{color:var(--teal-dark);}
+/* ── GENERADOR DE MENSAJES ── */
+.gen-topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:6px;}
+.gen-topic{border:1.5px solid var(--border);background:var(--surface);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.15s;text-align:left;font-family:'Inter',sans-serif;}
+.gen-topic:hover{border-color:var(--lime);background:var(--lime-soft);transform:translateY(-1px);}
+.gen-topic.active{border-color:var(--lime);background:var(--lime-soft);box-shadow:0 0 0 3px rgba(127,216,31,0.15);}
+.gen-topic-icon{font-size:22px;margin-bottom:8px;}
+.gen-topic-title{font-size:14px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;}
+.gen-topic-desc{font-size:12px;color:var(--muted);line-height:1.45;}
+.gen-topic-tag{display:inline-block;margin-top:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:2px 8px;border-radius:20px;}
+.gen-topic-tag.ind{background:#e0eef5;color:var(--teal);}
+.gen-topic-tag.grp{background:#eae2f5;color:#7a4bc7;}
+.gen-msg-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.gen-msg-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.gen-msg-name{font-size:14px;font-weight:700;color:var(--teal-dark);}
+.gen-msg-body{width:100%;min-height:150px;resize:vertical;font-family:'Inter',sans-serif;font-size:13px;line-height:1.6;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:12px 14px;background:var(--surface-2);}
+.gen-empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.gen-empty-icon{font-size:40px;margin-bottom:10px;opacity:0.5;}
 @media(max-width:780px){.vac-summary{grid-template-columns:repeat(2,1fr);}}
 
 @media(max-width:780px){
@@ -1009,6 +1045,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="mgr-nav-btn active" onclick="setMgrTab('equipo',this)">📊 Visión equipo</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('individual',this)">👤 Por SDR</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('resumenes',this)">📅 Resúmenes</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('generador',this)">✍️ Generador de mensajes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('llamadas',this)">📞 Llamadas</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('objetivos',this)">🎯 Objetivos</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('mensajes',this)">💬 Mensajes y tablón</button>
@@ -1099,6 +1136,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="mgr-table-wrap"><table class="mgr-table" id="mgr-cancel-table"></table></div>
       </div>
 
+      <!-- Motivos de cancelación y pérdida -->
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">🔍 Motivos de cancelación y pérdida</div>
+          <div class="mgr-block-sub">Por qué se caen las demos — para detectar si es un tema de cualificación o de crear valor</div>
+        </div>
+        <div id="mgr-motivos"></div>
+      </div>
+
     </div>
 
     <!-- TAB: INDIVIDUAL -->
@@ -1114,6 +1160,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <button class="resumen-subnav" id="rsubn-mes" onclick="setResumenTipo('mensual',this)">📆 Resumen mensual</button>
       </div>
       <div id="resumen-content"></div>
+    </div>
+
+    <!-- TAB: GENERADOR DE MENSAJES -->
+    <div class="mgr-tab" id="mgrtab-generador">
+      <div class="mgr-card">
+        <div class="mgr-card-title">✍️ Generador de mensajes</div>
+        <p class="mgr-card-sub">Elige un tema y te genero un texto con datos reales de la herramienta, listo para copiar y pegar donde quieras (WhatsApp, email, Slack...). Tú decides cuándo y cómo enviarlo.</p>
+        <div class="gen-topics" id="gen-topics"></div>
+      </div>
+      <div id="gen-output" style="margin-top:20px;"></div>
     </div>
 
     <!-- TAB: LLAMADAS -->
@@ -1384,7 +1440,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Estado</label>
-          <select class="form-select" id="f-estado">
+          <select class="form-select" id="f-estado" onchange="toggleMotivo()">
             <option value="agendada">Agendada</option>
             <option value="ejecutada">Ejecutada</option>
             <option value="cancelada">Cancelada</option>
@@ -1392,7 +1448,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         </div>
         <div class="form-group">
           <label class="form-label">Outcome</label>
-          <select class="form-select" id="f-outcome" onchange="toggleFechaFirma()">
+          <select class="form-select" id="f-outcome" onchange="toggleFechaFirma();toggleMotivo();">
             <option value="">Sin definir</option>
             <option value="interesado">Interesado</option>
             <option value="necesita_seguimiento">Necesita seguimiento</option>
@@ -1400,6 +1456,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
             <option value="cerrado_perdido">Cerrado perdido</option>
           </select>
         </div>
+      </div>
+      <div class="form-group" id="motivo-group" style="display:none;">
+        <label class="form-label" id="motivo-label">Motivo</label>
+        <select class="form-select" id="f-motivo"></select>
+        <div class="form-hint" id="motivo-hint"></div>
       </div>
       <div class="form-group" id="fecha-firma-group" style="display:none;">
         <label class="form-label">📝 Fecha de la firma <span style="font-weight:400;color:var(--muted);">(cuándo se cerró la venta)</span></label>
@@ -1536,6 +1597,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div style="font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:10px;">📋 Mis solicitudes</div>
         <div id="vac-list"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOTIVO RÁPIDO (cancelar / perder desde botones) -->
+<div class="modal-overlay" id="motivo-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <div class="modal-title" id="motivo-modal-title">Motivo</div>
+      <button class="modal-close" onclick="closeMotivoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="motivo-modal-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
+      <div class="motivo-btn-list" id="motivo-modal-options"></div>
+      <button class="btn-cancel" style="width:100%;margin-top:12px;" onclick="applyMotivo('')">Guardar sin motivo</button>
     </div>
   </div>
 </div>
@@ -1762,6 +1838,7 @@ function setMgrPeriod(period,btn){
   renderMgrComerciales();
   renderMgrModalidad();
   renderMgrCancel();
+  renderMgrMotivos();
   renderHeatmap();
 }
 
@@ -1826,6 +1903,7 @@ function renderManager(){
   renderMgrComerciales();
   renderMgrModalidad();
   renderMgrCancel();
+  renderMgrMotivos();
   renderHeatmap();
   renderAlertasProactivas();
   renderMgrSdrSelector();
@@ -1835,6 +1913,7 @@ function renderManager(){
   renderNoticiasList();
   renderGestionLists();
   renderVacManager();
+  renderGenTopics();
 }
 
 // Helper: stats for previous month (used for delta comparisons)
@@ -2135,6 +2214,72 @@ function renderMgrCancel(){
       <td>${sumIn.count}</td><td>${ratioIn}%</td><td style="font-size:11px;">${sumIn.pres} / ${sumIn.onl}</td>
     </tr>
     </tbody>`;
+}
+
+function renderMgrMotivos(){
+  const el=document.getElementById('mgr-motivos');
+  if(!el)return;
+  const{start,end}=mgrPeriodDates();
+  const inPeriod=d=>{const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];return ag>=start&&ag<=end;};
+  const canc=allDemos.filter(d=>d.estado==='cancelada'&&inPeriod(d));
+  const perd=allDemos.filter(d=>d.outcome==='cerrado_perdido'&&inPeriod(d));
+
+  // Cuenta por motivo (incluye "sin motivo")
+  const contar=(arr,motivos)=>{
+    const map={};motivos.forEach(m=>map[m[0]]=0);map['_sin']=0;
+    arr.forEach(d=>{if(d.motivo&&map[d.motivo]!==undefined)map[d.motivo]++;else map['_sin']++;});
+    return map;
+  };
+  const cCanc=contar(canc,MOTIVOS_CANCELADA);
+  const cPerd=contar(perd,MOTIVOS_PERDIDA);
+
+  const barras=(total,map,motivos,color)=>{
+    if(total===0)return'<div class="motivo-empty">Sin datos en este período.</div>';
+    const rows=motivos.map(m=>({label:m[1],n:map[m[0]]||0}));
+    rows.push({label:'Sin motivo registrado',n:map['_sin']||0,sin:true});
+    rows.sort((a,b)=>b.n-a.n);
+    return rows.filter(r=>r.n>0).map(r=>{
+      const pct=Math.round(r.n/total*100);
+      return`<div class="motivo-row">
+        <div class="motivo-row-label">${r.label}</div>
+        <div class="motivo-row-bar"><div class="motivo-row-fill" style="width:${pct}%;background:${r.sin?'#c8c8c8':color};"></div></div>
+        <div class="motivo-row-val">${r.n} · ${pct}%</div>
+      </div>`;
+    }).join('');
+  };
+
+  // Insight: motivo dominante de pérdida y comercial más afectado
+  let insight='';
+  if(perd.length>=3){
+    const topPerd=MOTIVOS_PERDIDA.map(m=>({m:m[0],label:m[1],n:cPerd[m[0]]||0})).sort((a,b)=>b.n-a.n)[0];
+    if(topPerd&&topPerd.n>0){
+      const pct=Math.round(topPerd.n/perd.length*100);
+      // Comercial con más pérdidas por ese motivo
+      const porCom={};
+      perd.filter(d=>d.motivo===topPerd.m&&d.comercial_id).forEach(d=>{porCom[d.comercial_id]=(porCom[d.comercial_id]||0)+1;});
+      const topCom=Object.keys(porCom).sort((a,b)=>porCom[b]-porCom[a])[0];
+      let comTxt='';
+      if(topCom&&porCom[topCom]>=2){comTxt=` Se concentra sobre todo en demos de <b>${comercialName(parseInt(topCom))}</b> (${porCom[topCom]}). Vale la pena revisar con ese comercial cómo se está presentando el valor.`;}
+      let recomend='';
+      if(topPerd.m==='no_encaja'||topPerd.m==='sin_urgencia'||topPerd.m==='dificil')recomend=' Suele indicar un tema de <b>cualificación o discurso de valor</b>, más que de precio.';
+      else if(topPerd.m==='presupuesto')recomend=' Revisa si se está cualificando bien el presupuesto antes de agendar.';
+      else if(topPerd.m==='competidor')recomend=' Puede faltar diferenciación frente a la competencia en la demo.';
+      insight=`<div class="motivo-insight">💡 El motivo de pérdida más común es <b>"${topPerd.label}"</b> (${pct}% de las pérdidas).${recomend}${comTxt}</div>`;
+    }
+  }
+
+  el.innerHTML=`
+    <div class="motivo-analysis">
+      <div>
+        <div class="motivo-col-title">❌ Cancelaciones <span class="tot">${canc.length} total</span></div>
+        ${barras(canc.length,cCanc,MOTIVOS_CANCELADA,'#e57878')}
+      </div>
+      <div>
+        <div class="motivo-col-title">💔 Pérdidas <span class="tot">${perd.length} total</span></div>
+        ${barras(perd.length,cPerd,MOTIVOS_PERDIDA,'#e8a317')}
+      </div>
+    </div>
+    ${insight}`;
 }
 
 function renderMgrSdrSelector(){
@@ -2901,6 +3046,7 @@ function setMgrTab(tab,btn){
   document.getElementById('mgrtab-'+tab).classList.add('active');
   btn.classList.add('active');
   if(tab==='resumenes')renderResumen();
+  if(tab==='generador')renderGenTopics();
 }
 
 // ── RESÚMENES ──
@@ -3472,6 +3618,189 @@ function closeEmailsModal(){
   const bg=document.getElementById('emails-modal-bg');
   if(bg)bg.classList.remove('show');
 }
+
+// ════════════════════════════════════════════════════════
+// GENERADOR DE MENSAJES — textos por tema para copiar y pegar
+// ════════════════════════════════════════════════════════
+const GEN_TOPICS=[
+  {key:'resumen',icon:'📊',title:'Resumen semana pasada',desc:'Rendimiento del equipo de la semana anterior, para compartir con todos.',scope:'grp'},
+  {key:'seguimientos',icon:'📞',title:'Recordatorio de seguimientos',desc:'A cada SDR, sus leads interesados pendientes de seguir.',scope:'ind'},
+  {key:'canceladas',icon:'🔄',title:'Recordatorio de canceladas',desc:'A cada SDR, sus demos canceladas sin reagendar.',scope:'ind'},
+  {key:'bajo_volumen',icon:'⚠️',title:'Aviso de bajo volumen',desc:'Mensaje serio a quien esté por debajo del ritmo del equipo.',scope:'ind'},
+  {key:'comerciales',icon:'🧑‍💼',title:'Comerciales con pocas demos',desc:'Aviso para equilibrar: comerciales que han recibido pocas demos.',scope:'grp'}
+];
+let genTopicActive=null;
+
+function renderGenTopics(){
+  const el=document.getElementById('gen-topics');
+  if(!el)return;
+  el.innerHTML=GEN_TOPICS.map(t=>`
+    <button class="gen-topic ${genTopicActive===t.key?'active':''}" onclick="selectGenTopic('${t.key}')">
+      <div class="gen-topic-icon">${t.icon}</div>
+      <div class="gen-topic-title">${t.title}</div>
+      <div class="gen-topic-desc">${t.desc}</div>
+      <span class="gen-topic-tag ${t.scope}">${t.scope==='ind'?'Individual':'Para el grupo'}</span>
+    </button>`).join('');
+}
+
+function selectGenTopic(key){
+  genTopicActive=key;
+  renderGenTopics();
+  renderGenOutput(key);
+}
+
+// Devuelve un array de {name, text}
+function genBuild(key){
+  if(key==='resumen')return genResumen();
+  if(key==='seguimientos')return genSeguimientos();
+  if(key==='canceladas')return genCanceladas();
+  if(key==='bajo_volumen')return genBajoVolumen();
+  if(key==='comerciales')return genComerciales();
+  return [];
+}
+
+// Seguimientos pendientes de un SDR (mismo criterio que el panel): ejecutadas
+// interesado/necesita_seguimiento, de hace +7 días, sin aplazar a futuro
+function pendingSeguimientosDe(sdrId){
+  const today=todayStr();
+  const c=new Date();c.setDate(c.getDate()-7);const cut=localDateStr(c);
+  return allDemos.filter(d=>d.sdr_id===sdrId&&d.estado==='ejecutada'&&
+    ['interesado','necesita_seguimiento'].includes(d.outcome)&&
+    (d.fecha||'')<=cut&&
+    (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today));
+}
+function canceladasPendientesDe(sdrId){
+  return allDemos.filter(d=>d.sdr_id===sdrId&&d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido');
+}
+
+function genResumen(){
+  const r=getLastWeekRange();
+  let tot=0,ejec=0,cwd=0,canc=0;
+  const perSdr=allSdrs.map(s=>{
+    const st=calcStatsForSdrRange(s.id,r.start,r.end);
+    tot+=st.totalDemos;ejec+=st.ejec;cwd+=st.cwd;canc+=st.canc;
+    return{nombre:s.nombre,demos:st.totalDemos,cwd:st.cwd};
+  });
+  const ratioCanc=(tot+canc)>0?Math.round(canc/(tot+canc)*100):0;
+  const top=[...perSdr].sort((a,b)=>b.demos-a.demos)[0];
+  const topVenta=[...perSdr].sort((a,b)=>b.cwd-a.cwd)[0];
+
+  let t=`📊 Resumen de la semana pasada (${fmtRangeShort(r.start,r.end)})\n\n`;
+  t+=`Equipo, así cerramos la semana:\n\n`;
+  t+=`• Demos agendadas: ${tot}\n`;
+  t+=`• Demos ejecutadas: ${ejec}\n`;
+  t+=`• Ventas cerradas: ${cwd}\n`;
+  t+=`• Ratio de cancelación: ${ratioCanc}%\n\n`;
+  if(top&&top.demos>0)t+=`🏅 ${top.nombre} lideró en volumen con ${top.demos} demos.\n`;
+  if(topVenta&&topVenta.cwd>0&&(!top||topVenta.nombre!==top.nombre))t+=`💰 ${topVenta.nombre} se llevó ${topVenta.cwd} venta${topVenta.cwd>1?'s':''}.\n`;
+  t+=`\n`;
+  if(cwd>0)t+=`Buen trabajo cerrando. Esta semana vamos a por más. 💪`;
+  else t+=`Esta semana toca convertir todo ese esfuerzo en cierres. Vamos a por ello. 💪`;
+  return [{name:'Mensaje para el equipo',text:t}];
+}
+
+function genSeguimientos(){
+  const out=[];
+  allSdrs.forEach(s=>{
+    const pend=pendingSeguimientosDe(s.id);
+    if(!pend.length)return;
+    let t=`Hola ${s.nombre},\n\n`;
+    t+=`Un recordatorio rápido: tienes ${pend.length} seguimiento${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de leads que mostraron interés y conviene no dejar enfriar:\n\n`;
+    pend.slice(0,10).forEach(d=>{t+=`• ${d.sf_nombre||'Sin nombre'} (demo del ${fmtDate(d.fecha)})\n`;});
+    if(pend.length>10)t+=`• ...y ${pend.length-10} más\n`;
+    t+=`\nUn toque a tiempo puede recuperar la venta. ¡A por ellos!`;
+    out.push({name:s.nombre+` · ${pend.length} pendiente${pend.length>1?'s':''}`,text:t});
+  });
+  return out;
+}
+
+function genCanceladas(){
+  const out=[];
+  allSdrs.forEach(s=>{
+    const canc=canceladasPendientesDe(s.id);
+    if(!canc.length)return;
+    let t=`Hola ${s.nombre},\n\n`;
+    t+=`Tienes ${canc.length} demo${canc.length>1?'s':''} cancelada${canc.length>1?'s':''} sin reagendar:\n\n`;
+    canc.slice(0,10).forEach(d=>{t+=`• ${d.sf_nombre||'Sin nombre'} (${fmtDate(d.fecha)})\n`;});
+    if(canc.length>10)t+=`• ...y ${canc.length-10} más\n`;
+    t+=`\nReagenda las que puedas. Recuperar una cancelada es una demo más sin tener que prospectar desde cero.`;
+    out.push({name:s.nombre+` · ${canc.length} cancelada${canc.length>1?'s':''}`,text:t});
+  });
+  return out;
+}
+
+function genBajoVolumen(){
+  const r=getLastWeekRange();
+  const data=allSdrs.map(s=>({s,demos:calcStatsForSdrRange(s.id,r.start,r.end).totalDemos}));
+  const media=data.length?data.reduce((a,d)=>a+d.demos,0)/data.length:0;
+  const umbral=media*0.6;
+  const bajos=data.filter(d=>media>=3&&d.demos<umbral);
+  if(!bajos.length)return [];
+  return bajos.map(({s,demos})=>{
+    let t=`Hola ${s.nombre},\n\n`;
+    t+=`Te escribo para comentarte una cosa que he visto en los números de la semana pasada (${fmtRangeShort(r.start,r.end)}).\n\n`;
+    t+=`Tu volumen de demos ha estado por debajo del ritmo del equipo: ${demos} demo${demos!==1?'s':''}, frente a una media de ${Math.round(media)} por SDR.\n\n`;
+    t+=`No es un reproche — quiero entender qué está pasando y ver cómo echarte una mano para recuperar el ritmo. ¿Sacamos un rato para hablarlo?`;
+    return{name:s.nombre+` · ${demos} demos (media ${Math.round(media)})`,text:t};
+  });
+}
+
+function genComerciales(){
+  // Demos por comercial en los últimos 28 días (no canceladas)
+  const hoy=new Date();
+  const desde=new Date();desde.setDate(hoy.getDate()-28);
+  const dStart=localDateStr(desde),dEnd=localDateStr(hoy);
+  const conteo=comerciales.map(c=>{
+    const n=allDemos.filter(d=>d.comercial_id===c.id&&d.estado!=='cancelada'&&
+      (()=>{const ag=demoAgendadoDate(d);return ag>=dStart&&ag<=dEnd;})()).length;
+    return{nombre:c.nombre,n};
+  });
+  if(!conteo.length)return [{name:'Mensaje para el equipo',text:'Aún no hay comerciales registrados.'}];
+  const media=conteo.reduce((a,c)=>a+c.n,0)/conteo.length;
+  const pocos=conteo.filter(c=>c.n<Math.max(1,media*0.5)).sort((a,b)=>a.n-b.n);
+  let t=`Equipo,\n\n`;
+  if(!pocos.length){
+    t+=`Revisando las asignaciones de demos de las últimas 4 semanas, la carga entre comerciales está bastante equilibrada. Buen reparto. 👍`;
+    return [{name:'Mensaje para el equipo',text:t}];
+  }
+  t+=`Revisando las demos de SDR de las últimas 4 semanas, estos comerciales han recibido pocas o ninguna:\n\n`;
+  pocos.forEach(c=>{t+=`• ${c.nombre}: ${c.n} demo${c.n!==1?'s':''}\n`;});
+  t+=`\nTenerlos presentes para las próximas asignaciones ayuda a equilibrar la carga y aprovechar mejor a todo el equipo comercial. Gracias.`;
+  return [{name:'Mensaje para el equipo',text:t}];
+}
+
+function renderGenOutput(key){
+  const el=document.getElementById('gen-output');
+  if(!el)return;
+  const topic=GEN_TOPICS.find(t=>t.key===key);
+  const msgs=genBuild(key);
+  if(!msgs.length){
+    let vacio='No hay nada que reportar en este tema ahora mismo.';
+    if(key==='seguimientos')vacio='🎉 Nadie tiene seguimientos pendientes ahora mismo. El pipeline está al día.';
+    if(key==='canceladas')vacio='🎉 No hay canceladas sin reagendar. Todo limpio.';
+    if(key==='bajo_volumen')vacio='✅ Nadie está por debajo del ritmo del equipo esta semana. Buen nivel general.';
+    el.innerHTML=`<div class="gen-empty"><div class="gen-empty-icon">${topic?topic.icon:'✅'}</div><div style="font-weight:600;color:var(--text);">${vacio}</div></div>`;
+    return;
+  }
+  let html=`<div style="font-size:13px;color:var(--muted);margin-bottom:14px;">${topic.icon} <b style="color:var(--teal-dark);">${topic.title}</b> — ${topic.scope==='ind'?'un texto por cada SDR con datos pendientes':'texto listo para el grupo'}. Edítalo si quieres y cópialo.</div>`;
+  html+=msgs.map((m,i)=>`
+    <div class="gen-msg-card">
+      <div class="gen-msg-head">
+        <div class="gen-msg-name">${topic.scope==='ind'?'📨 ':''}${m.name}</div>
+        <button class="btn-copy" onclick="copyGenMsg(${i})">📋 Copiar</button>
+      </div>
+      <textarea id="gen-msg-${i}" class="gen-msg-body">${m.text}</textarea>
+    </div>`).join('');
+  el.innerHTML=html;
+}
+
+async function copyGenMsg(i){
+  const ta=document.getElementById('gen-msg-'+i);
+  if(!ta)return;
+  try{await navigator.clipboard.writeText(ta.value);showToast('✓ Mensaje copiado');}
+  catch(e){ta.select();showToast('⚠️ Selecciona y copia con Ctrl+C');}
+}
+
 function updateMgrMonthNavLabel(){
   const lbl=document.getElementById('mgr-month-nav-label');
   if(lbl)lbl.textContent=mgrMonthLabel()+(mgrMonthOffset===0?' · actual':'');
@@ -3503,6 +3832,7 @@ function exportExcel(){
     Modalidad:d.tipo||'',
     Estado:d.estado||'',
     Outcome:outcomeLabel(d.outcome)||'',
+    Motivo:motivoLabel(d.motivo)||'',
     'Fecha firma':d.fecha_firma||'',
     Notas:d.notas||'',
     Creada:(d.created_at||'').split('T')[0]
@@ -3690,6 +4020,8 @@ function openDemoModal(demo=null){
     document.getElementById('f-outcome').value=demo.outcome||'';
     document.getElementById('f-fecha-firma').value=demo.fecha_firma||'';
     toggleFechaFirma();
+    toggleMotivo();
+    document.getElementById('f-motivo').value=demo.motivo||'';
     document.getElementById('f-notas').value=demo.notas||'';
     setCanal(demo.canal||'outbound');
     parseSfUrl();
@@ -3709,6 +4041,7 @@ function openDemoModal(demo=null){
     document.getElementById('f-outcome').value='';
     document.getElementById('f-fecha-firma').value='';
     toggleFechaFirma();
+    toggleMotivo();
     document.getElementById('f-notas').value='';
     setCanal('outbound');
     document.getElementById('sf-preview').classList.remove('show');
@@ -3755,6 +4088,26 @@ function toggleFechaFirma(){
   const outcome=document.getElementById('f-outcome').value;
   document.getElementById('fecha-firma-group').style.display=outcome==='cerrado_ganado'?'block':'none';
 }
+function toggleMotivo(){
+  const estado=document.getElementById('f-estado').value;
+  const outcome=document.getElementById('f-outcome').value;
+  const group=document.getElementById('motivo-group');
+  const sel=document.getElementById('f-motivo');
+  const label=document.getElementById('motivo-label');
+  const hint=document.getElementById('motivo-hint');
+  let opts=null,lbl='',hnt='';
+  if(estado==='cancelada'){opts=MOTIVOS_CANCELADA;lbl='❌ Motivo de la cancelación';hnt='¿Por qué se canceló? Nos ayuda a detectar patrones del equipo.';}
+  else if(outcome==='cerrado_perdido'){opts=MOTIVOS_PERDIDA;lbl='💔 Motivo de la pérdida';hnt='¿Por qué no se cerró? Clave para saber si es objeción de precio, valor, encaje...';}
+  if(opts){
+    const prev=sel.value;
+    sel.innerHTML='<option value="">Selecciona un motivo...</option>'+opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
+    if(prev&&opts.some(o=>o[0]===prev))sel.value=prev;
+    label.textContent=lbl;hint.textContent=hnt;
+    group.style.display='block';
+  }else{
+    group.style.display='none';
+  }
+}
 function setCanal(canal){
   selectedCanal=canal;
   document.getElementById('f-canal').value=canal;
@@ -3794,6 +4147,7 @@ async function saveDemo(){
     estado:document.getElementById('f-estado').value||'agendada',
     outcome:document.getElementById('f-outcome').value||null,
     fecha_firma:document.getElementById('f-outcome').value==='cerrado_ganado'?(document.getElementById('f-fecha-firma').value||null):null,
+    motivo:(document.getElementById('f-estado').value==='cancelada'||document.getElementById('f-outcome').value==='cerrado_perdido')?(document.getElementById('f-motivo').value||null):null,
     notas:document.getElementById('f-notas').value||null
   };
   if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
@@ -3817,10 +4171,39 @@ async function saveDemo(){
 
 // ── ESTADO CHANGE (inline) ──
 async function changeEstado(id,estado){
+  // Si pasa a cancelada, pedimos el motivo primero
+  if(estado==='cancelada'){openMotivoModal({id,tipo:'cancelada',estado:'cancelada'});return;}
   try{
     const patch={estado};
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
     showToast('✓ Estado actualizado');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── MODAL MOTIVO RÁPIDO ──
+let motivoModalCtx=null;
+function openMotivoModal(ctx){
+  motivoModalCtx=ctx;
+  const demo=demos.find(d=>d.id===ctx.id);
+  document.getElementById('motivo-modal-name').textContent=(demo?demo.sf_nombre||'Sin nombre':'')||'';
+  const opts=ctx.tipo==='cancelada'?MOTIVOS_CANCELADA:MOTIVOS_PERDIDA;
+  document.getElementById('motivo-modal-title').textContent=ctx.tipo==='cancelada'?'❌ ¿Por qué se canceló?':'💔 ¿Por qué se perdió?';
+  const btnCls=ctx.tipo==='cancelada'?'cancel-type':'perdida-type';
+  document.getElementById('motivo-modal-options').innerHTML=opts.map(o=>`<button class="motivo-btn ${btnCls}" onclick="applyMotivo('${o[0]}')">${o[1]}</button>`).join('');
+  document.getElementById('motivo-modal').classList.add('active');
+}
+function closeMotivoModal(){document.getElementById('motivo-modal').classList.remove('active');motivoModalCtx=null;}
+async function applyMotivo(motivo){
+  if(!motivoModalCtx)return;
+  const{id,estado,outcome}=motivoModalCtx;
+  const patch={motivo:motivo||null};
+  if(estado!==undefined)patch.estado=estado;
+  if(outcome!==undefined)patch.outcome=outcome;
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast('✓ Demo actualizada');
+    closeMotivoModal();
     await loadDemos();
   }catch(e){showToast('❌ Error');console.error(e);}
 }
@@ -4055,6 +4438,8 @@ function renderXMonthPanel(){
 
 async function changeEstadoOutcome(id,value){
   if(!value)return;
+  // Si lo resuelven como perdido, pedimos motivo
+  if(value==='cerrado_perdido'){openMotivoModal({id,tipo:'perdida',outcome:'cerrado_perdido'});return;}
   try{
     let patch={};
     if(value==='cerrado_ganado'){
@@ -4450,6 +4835,8 @@ function renderLiveBanner(){
 }
 
 async function quickOutcome(id,estado,outcome){
+  // Si es cancelada desde el banner, pedimos motivo
+  if(estado==='cancelada'){openMotivoModal({id,tipo:'cancelada',estado:'cancelada'});return;}
   try{
     const patch={estado};
     if(outcome)patch.outcome=outcome;
@@ -4595,6 +4982,7 @@ function renderDemoCard(d,liveClass=''){
         <span class="demo-meta-item">📍 ${ciudadName(d.ciudad_id)}</span>
         ${d.tipo==='online'&&d.plataforma?`<span class="demo-meta-item">${plataformaMap[d.plataforma]||d.plataforma}</span>`:''}
         ${d.notas?`<span class="demo-meta-item">📝 ${d.notas.length>40?d.notas.slice(0,40)+'…':d.notas}</span>`:''}
+        ${d.motivo?`<span class="demo-meta-item"><span class="motivo-tag">🚫 ${motivoLabel(d.motivo)}</span></span>`:''}
       </div>
     </div>
     <div class="demo-right">
@@ -4633,6 +5021,23 @@ function renderDemoCard(d,liveClass=''){
 function comercialName(id){const c=comerciales.find(x=>x.id===id);return c?c.nombre:'—';}
 function ciudadName(id){const c=ciudades.find(x=>x.id===id);return c?c.nombre:'—';}
 function outcomeLabel(o){return{interesado:'Interesado',necesita_seguimiento:'Necesita seguimiento',no_interesado:'No interesado',cerrado_ganado:'Cerrado ganado',cerrado_perdido:'Cerrado perdido'}[o]||'';}
+
+// ── MOTIVOS de cancelación / pérdida ──
+const MOTIVOS_CANCELADA=[
+  ['no_show','No se presentó a la reunión'],
+  ['no_recordaba','No se acordaba'],
+  ['perdio_interes','Perdió el interés / cambió de opinión']
+];
+const MOTIVOS_PERDIDA=[
+  ['presupuesto','Por presupuesto'],
+  ['competidor','Tiene competidor'],
+  ['no_encaja','No le encaja la herramienta'],
+  ['permanencia','No le gusta la permanencia del contrato'],
+  ['dificil','Lo ve difícil'],
+  ['sin_urgencia','No ve la urgencia']
+];
+const MOTIVO_LABELS=Object.fromEntries([...MOTIVOS_CANCELADA,...MOTIVOS_PERDIDA]);
+function motivoLabel(m){return MOTIVO_LABELS[m]||'';}
 
 async function toggleMetricsPanel(){
   const btn=document.getElementById('btn-metrics-toggle');
