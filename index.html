@@ -734,6 +734,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .motivo-btn:hover{border-color:var(--teal-light);background:var(--surface-2);}
 .motivo-btn.cancel-type:hover{border-color:var(--red);background:var(--red-soft);color:var(--red);}
 .motivo-btn.perdida-type:hover{border-color:var(--amber);background:var(--amber-soft);color:#8a5e00;}
+.motivo-btn.outcome-int:hover{border-color:var(--green);background:var(--green-soft);}
+.motivo-btn.outcome-seg:hover{border-color:var(--amber);background:var(--amber-soft);}
+.motivo-btn.outcome-gan:hover{border-color:var(--lime);background:var(--lime-soft);}
+.motivo-btn.outcome-per:hover{border-color:var(--red);background:var(--red-soft);}
 .motivo-tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#f0e4e4;color:#9a4040;}
 .motivo-analysis{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media(max-width:780px){.motivo-analysis{grid-template-columns:1fr;}}
@@ -1728,6 +1732,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="modal-close" onclick="closeReglasModal()">✕</button>
     </div>
     <div class="modal-body" id="reglas-modal-body"></div>
+  </div>
+</div>
+
+<!-- MODAL OUTCOME (al marcar ejecutada) -->
+<div class="modal-overlay" id="outcome-modal">
+  <div class="modal" style="max-width:430px;">
+    <div class="modal-head">
+      <div class="modal-title">✓ Demo ejecutada — ¿cómo fue?</div>
+      <button class="modal-close" onclick="closeOutcomeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="outcome-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
+      <div class="motivo-btn-list">
+        <button class="motivo-btn outcome-int" onclick="applyOutcome('interesado')">🟢 Interesado<br><span style="font-weight:400;font-size:12px;color:var(--muted);">Hay interés, sigue el proceso</span></button>
+        <button class="motivo-btn outcome-seg" onclick="applyOutcome('necesita_seguimiento')">🔁 Necesita seguimiento<br><span style="font-weight:400;font-size:12px;color:var(--muted);">Pasará a tu lista de seguimientos pendientes</span></button>
+        <button class="motivo-btn outcome-gan" onclick="applyOutcome('cerrado_ganado')">💰 Cerrado ganado<br><span style="font-weight:400;font-size:12px;color:var(--muted);">Te pediré la fecha de la firma</span></button>
+        <button class="motivo-btn outcome-per" onclick="applyOutcome('cerrado_perdido')">💔 Cerrado perdido<br><span style="font-weight:400;font-size:12px;color:var(--muted);">Te pediré el motivo</span></button>
+      </div>
+      <button class="btn-cancel" style="width:100%;margin-top:12px;" onclick="applyOutcome('')">Marcar ejecutada sin definir aún</button>
+    </div>
   </div>
 </div>
 
@@ -4344,6 +4368,11 @@ async function saveDemo(){
 async function changeEstado(id,estado){
   // Si pasa a cancelada, pedimos el motivo primero
   if(estado==='cancelada'){openMotivoModal({id,tipo:'cancelada',estado:'cancelada'});return;}
+  // Si pasa a ejecutada, pedimos el outcome (salvo que ya lo tenga definido)
+  if(estado==='ejecutada'){
+    const d=demos.find(x=>x.id===id);
+    if(!d||!d.outcome){openOutcomeModal(id);return;}
+  }
   try{
     const patch={estado};
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
@@ -5091,12 +5120,44 @@ function renderLiveBanner(){
     <div class="live-banner-item">
       <span class="live-banner-item-name">${d.fecha<today?`📅 ${fmtDate(d.fecha)} · `:'🕐 '+(d.hora||'Hoy')+' · '}${d.sf_nombre||'Sin nombre'}</span>
       <div class="live-banner-btns">
-        <button class="live-quick-btn ga" onclick="openFirmaModal(${d.id})">💰 Ganado</button>
-        <button class="live-quick-btn ej" onclick="quickOutcome(${d.id},'ejecutada','interesado')">✓ Ejecutada</button>
+        <button class="live-quick-btn ej" onclick="openOutcomeModal(${d.id})">✓ Ejecutada</button>
         <button class="live-quick-btn re" onclick="reagendarConHora(${d.id})">🔄 Reagendar</button>
         <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
       </div>
     </div>`).join('');
+}
+
+// ── OUTCOME AL MARCAR EJECUTADA ──
+// Al pulsar "Ejecutada" se pide siempre el resultado. Según lo que elijan,
+// encadena con la fecha de firma (ganado) o con el motivo (perdido).
+let outcomeModalId=null;
+function openOutcomeModal(id){
+  const demo=demos.find(d=>d.id===id);
+  if(!demo)return;
+  outcomeModalId=id;
+  document.getElementById('outcome-demo-name').textContent='📋 '+(demo.sf_nombre||'Sin nombre');
+  document.getElementById('outcome-modal').classList.add('active');
+}
+function closeOutcomeModal(){document.getElementById('outcome-modal').classList.remove('active');outcomeModalId=null;}
+
+async function applyOutcome(outcome){
+  const id=outcomeModalId;
+  if(!id)return;
+  document.getElementById('outcome-modal').classList.remove('active');
+  // Ganado → pedimos fecha de firma (ese modal ya deja la demo como ejecutada)
+  if(outcome==='cerrado_ganado'){outcomeModalId=null;openFirmaModal(id);return;}
+  // Perdido → pedimos motivo, marcando también estado ejecutada
+  if(outcome==='cerrado_perdido'){outcomeModalId=null;openMotivoModal({id,tipo:'perdida',estado:'ejecutada',outcome:'cerrado_perdido'});return;}
+  // Resto: guardamos directamente como ejecutada
+  try{
+    const patch={estado:'ejecutada',outcome:outcome||null};
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast(outcome==='necesita_seguimiento'
+      ? '✓ Ejecutada · pasa a tus seguimientos pendientes'
+      : '✓ Demo marcada como ejecutada');
+    outcomeModalId=null;
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);outcomeModalId=null;}
 }
 
 // ── MARCAR GANADO RÁPIDO (con fecha de firma) ──
