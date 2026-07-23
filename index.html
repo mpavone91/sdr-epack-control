@@ -554,6 +554,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .live-banner-btns{display:flex;gap:6px;}
 .live-quick-btn{padding:5px 12px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
 .live-quick-btn.ej{background:var(--green);color:white;}
+.live-quick-btn.ga{background:var(--lime);color:var(--teal-dark);}
 .live-quick-btn.ca{background:var(--red);color:white;}
 .live-quick-btn.re{background:var(--amber);color:white;}
 
@@ -763,6 +764,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .gen-msg-body{width:100%;min-height:150px;resize:vertical;font-family:'Inter',sans-serif;font-size:13px;line-height:1.6;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:12px 14px;background:var(--surface-2);}
 .gen-empty{text-align:center;padding:40px 20px;color:var(--muted);}
 .gen-empty-icon{font-size:40px;margin-bottom:10px;opacity:0.5;}
+/* ── RITMO DE LLAMADAS (SDR) ── */
+.ritmo-box{border-radius:12px;padding:18px 20px;margin-top:14px;border:1px solid var(--border);background:var(--surface-2);}
+.ritmo-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.ritmo-title{font-size:13px;font-weight:700;color:var(--teal-dark);display:flex;align-items:center;gap:7px;}
+.ritmo-dias{font-size:12px;color:var(--muted);}
+.ritmo-main{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;}
+.ritmo-num{text-align:center;padding-right:18px;border-right:1px solid var(--border);}
+.ritmo-num-val{font-family:'Fraunces',serif;font-size:34px;font-weight:700;line-height:1;}
+.ritmo-num-val.verde{color:var(--green);}
+.ritmo-num-val.amarillo{color:var(--amber);}
+.ritmo-num-val.rojo{color:var(--red);}
+.ritmo-num-label{font-size:11px;color:var(--muted);margin-top:5px;font-weight:500;}
+.ritmo-bar-wrap{position:relative;height:24px;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:8px;}
+.ritmo-bar-fill{height:100%;border-radius:6px;transition:width 0.5s;min-width:2px;}
+.ritmo-bar-fill.verde{background:linear-gradient(90deg,#1fa856,#3ed47e);}
+.ritmo-bar-fill.amarillo{background:linear-gradient(90deg,#e8a317,#f5c542);}
+.ritmo-bar-fill.rojo{background:linear-gradient(90deg,#e23d3d,#f06565);}
+.ritmo-bar-meta{position:absolute;top:0;bottom:0;width:2px;background:var(--teal-dark);opacity:0.5;z-index:2;}
+.ritmo-msg{font-size:13px;line-height:1.6;color:var(--text);}
+.ritmo-msg b{color:var(--teal-dark);}
+.ritmo-sub{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);}
+.ritmo-sub-item{font-size:12px;color:var(--muted);}
+.ritmo-sub-item b{display:block;font-family:'Fraunces',serif;font-size:17px;color:var(--teal-dark);}
+@media(max-width:780px){.ritmo-main{grid-template-columns:1fr;}.ritmo-num{border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:12px;}}
 @media(max-width:780px){.vac-summary{grid-template-columns:repeat(2,1fr);}}
 
 @media(max-width:780px){
@@ -926,6 +951,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
       <div id="proy-container"></div>
 
+      <!-- Ritmo de llamadas -->
+      <div id="ritmo-llamadas"></div>
+
       <!-- Metrics toggle button -->
       <div style="margin-top:14px;display:flex;justify-content:flex-end;">
         <button class="btn-metrics-toggle" id="btn-metrics-toggle" onclick="toggleMetricsPanel()">
@@ -1036,9 +1064,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <button class="btn-primary" style="background:var(--teal);color:#fff;" onclick="exportExcel()">⬇️ Descargar Excel</button>
       </div>
     </div>
-
-    <!-- ALERTAS PROACTIVAS -->
-    <div id="alertas-proactivas-wrap"></div>
 
     <!-- MANAGER NAV -->
     <div class="mgr-nav">
@@ -1178,6 +1203,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="mgr-card">
         <div class="mgr-card-title">📞 Registro de llamadas — <span id="llamadas-month-label"></span></div>
         <p class="mgr-card-sub">Introduce el acumulado de llamadas del mes por SDR. Las demos se calculan solas de lo que registran ellos.</p>
+        <div id="llamadas-hoy-info" style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text);line-height:1.6;"></div>
         <div class="mgr-table-wrap"><table class="mgr-table" id="llamadas-table"></table></div>
       </div>
     </div>
@@ -1616,6 +1642,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   </div>
 </div>
 
+<!-- MODAL FECHA DE FIRMA (marcar ganado rápido) -->
+<div class="modal-overlay" id="firma-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <div class="modal-title">💰 ¡Venta cerrada!</div>
+      <button class="modal-close" onclick="closeFirmaModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="firma-demo-id"/>
+      <div id="firma-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
+      <div class="form-group">
+        <label class="form-label">📝 Fecha de la firma</label>
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+          <button type="button" class="quick-date-btn" onclick="setFirmaQuick(0)">Hoy</button>
+          <button type="button" class="quick-date-btn" onclick="setFirmaQuick(-1)">Ayer</button>
+        </div>
+        <input class="form-input" type="date" id="firma-fecha"/>
+        <div class="form-hint">La venta contará en el mes de esta fecha, no en el de la demo.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeFirmaModal()">Cancelar</button>
+        <button class="btn-save" onclick="confirmFirma()">💰 Marcar como ganada</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1694,16 +1747,16 @@ function isWorkday(date){
   const s=localDateStr(date);
   return!FESTIVOS_2026.includes(s);
 }
-function workdaysInMonth(){
-  const m=getTargetMonth();
+// Días hábiles (lun-vie, sin festivos) de CUALQUIER mes que le pases
+function workdaysInMonthOf(m){
   const year=m.getFullYear(),month=m.getMonth();
   const last=new Date(year,month+1,0).getDate();
   let total=0;
   for(let d=1;d<=last;d++){if(isWorkday(new Date(year,month,d)))total++;}
   return total;
 }
-function workdaysElapsed(){
-  const m=getTargetMonth();
+// Días hábiles transcurridos hasta hoy (si el mes ya pasó, devuelve el total)
+function workdaysElapsedOf(m){
   const year=m.getFullYear(),month=m.getMonth();
   const today=new Date();today.setHours(0,0,0,0);
   const last=new Date(year,month+1,0).getDate();
@@ -1715,6 +1768,27 @@ function workdaysElapsed(){
   }
   return elapsed;
 }
+function workdaysInMonth(){return workdaysInMonthOf(getTargetMonth());}
+function workdaysElapsed(){return workdaysElapsedOf(getTargetMonth());}
+
+// Objetivo de llamadas CONECTADAS por día hábil
+const META_CONECTADAS_DIA=30;
+
+// Calcula el ritmo de llamadas de un SDR para un mes dado
+function ritmoLlamadas(conectadas,demos,m){
+  const habiles=workdaysInMonthOf(m);
+  const transcurridos=Math.max(0,workdaysElapsedOf(m));
+  const restantes=Math.max(0,habiles-transcurridos);
+  const media=transcurridos>0?conectadas/transcurridos:0;
+  const esperadas=META_CONECTADAS_DIA*transcurridos;
+  const objetivoMes=META_CONECTADAS_DIA*habiles;
+  const faltan=Math.max(0,objetivoMes-conectadas);
+  const necesarioDia=restantes>0?Math.ceil(faltan/restantes):0;
+  const pctMeta=META_CONECTADAS_DIA>0?(media/META_CONECTADAS_DIA*100):0;
+  const conversion=conectadas>0?(demos/conectadas*100):0;
+  return{habiles,transcurridos,restantes,media,esperadas,objetivoMes,faltan,necesarioDia,pctMeta,conversion};
+}
+
 function isCurrentMonth(){return monthOffset===0;}
 function isPastMonth(){return monthOffset<0;}
 function isFutureMonth(){return monthOffset>0;}
@@ -1780,7 +1854,7 @@ async function enterApp(){
   document.getElementById('user-name').textContent=currentUser.nombre;
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('today-date').textContent=fmtDateLong();
-  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas()]);
+  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
   if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
@@ -1905,7 +1979,6 @@ function renderManager(){
   renderMgrCancel();
   renderMgrMotivos();
   renderHeatmap();
-  renderAlertasProactivas();
   renderMgrSdrSelector();
   renderLlamadasTable();
   renderObjetivosForm();
@@ -2361,15 +2434,33 @@ function renderLlamadasTable(){
   document.getElementById('llamadas-month-label').textContent=mgrMonthLabel();
   const m=mgrTargetMonth();
   const t=document.getElementById('llamadas-table');
+  // Caja informativa: hoy y días hábiles del mes
+  const infoEl=document.getElementById('llamadas-hoy-info');
+  if(infoEl){
+    const rInfo=ritmoLlamadas(0,0,m);
+    const esMesActual=mgrMonthOffset===0;
+    const objetivoAcum=META_CONECTADAS_DIA*rInfo.transcurridos;
+    infoEl.innerHTML=esMesActual
+      ? `📅 Hoy es <b>${fmtDateLong()}</b> · Llevamos <b>${rInfo.transcurridos} de ${rInfo.habiles} días hábiles</b> del mes (quedan ${rInfo.restantes}).<br>
+         🎯 Meta: <b>${META_CONECTADAS_DIA} conectadas por día hábil</b> → a día de hoy cada SDR debería llevar <b>${objetivoAcum} conectadas</b> acumuladas. Sábados y domingos no cuentan.`
+      : `📅 ${mgrMonthLabel()} tuvo <b>${rInfo.habiles} días hábiles</b>. Meta de referencia: <b>${META_CONECTADAS_DIA}/día</b> → <b>${META_CONECTADAS_DIA*rInfo.habiles} conectadas</b> en el mes completo.`;
+  }
   const pctPill=(val,green,yellow)=>{
     const cls=val>=green?'verde':val>=yellow?'amarillo':'rojo';
     return`<span class="pct-pill ${cls}">${val.toFixed(1)}%</span>`;
+  };
+  const r0=ritmoLlamadas(0,0,m);
+  const mediaPill=(media)=>{
+    const pct=media/META_CONECTADAS_DIA*100;
+    const cls=pct>=100?'verde':pct>=80?'amarillo':'rojo';
+    return`<span class="pct-pill ${cls}">${media.toFixed(1)}</span>`;
   };
   t.innerHTML=`
     <thead><tr>
       <th>SDR</th>
       <th>Llamadas hechas</th>
       <th>Conectadas</th>
+      <th>Conect./día<br><span style="font-weight:400;text-transform:none;">meta ${META_CONECTADAS_DIA}</span></th>
       <th>% Conexión</th>
       <th>Demos</th>
       <th>Llam/demo</th>
@@ -2385,10 +2476,12 @@ function renderLlamadasTable(){
       const pctConectaDemo=st.conectadas>0?(st.totalDemos/st.conectadas*100):0;
       // % demo a ganada: ganadas / demos ejecutadas
       const pctDemoGanada=st.ejecutadas>0?(st.totalCwd/st.ejecutadas*100):0;
+      const r=ritmoLlamadas(st.conectadas,st.totalDemos,m);
       return`<tr>
         <td>${s.nombre}</td>
         <td><input type="number" min="0" id="ll-h-${s.id}" value="${llam?.llamadas_hechas||0}"/></td>
         <td><input type="number" min="0" id="ll-c-${s.id}" value="${llam?.llamadas_conectadas||0}"/></td>
+        <td>${r.transcurridos>0?mediaPill(r.media):'—'}</td>
         <td>${pctPill(st.ratioConexion,70,50)}</td>
         <td><b>${st.totalDemos}</b></td>
         <td class="mini-ratio">${st.callsPerDemo.toFixed(1)}</td>
@@ -2402,6 +2495,7 @@ function renderLlamadasTable(){
       <td>TOTAL</td>
       <td>${allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_hechas||0);},0)}</td>
       <td>${allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_conectadas||0);},0)}</td>
+      <td>${(()=>{const c=allSdrs.reduce((a,s)=>a+sdrStats(s.id).conectadas,0);const media=r0.transcurridos>0?c/r0.transcurridos/allSdrs.length:0;return r0.transcurridos>0?'<b>'+media.toFixed(1)+'</b>':'—';})()}</td>
       <td>${(()=>{const h=allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_hechas||0);},0);const c=allSdrs.reduce((a,s)=>{const l=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());return a+(l?.llamadas_conectadas||0);},0);return h>0?(c/h*100).toFixed(1)+'%':'—';})()}</td>
       <td><b>${allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalDemos,0)}</b></td>
       <td>—</td>
@@ -3851,6 +3945,11 @@ function exportExcel(){
 
 
 // ── DATA LOADERS ──
+let misLlamadas=[];
+async function loadMisLlamadas(){
+  try{misLlamadas=await sb(`llamadas?sdr_id=eq.${currentUser.id}&select=*`)||[];}
+  catch(e){console.error('Error cargando llamadas:',e);misLlamadas=[];}
+}
 async function loadComerciales(){comerciales=await sb('comerciales?activo=eq.true&select=*&order=nombre.asc')||[];}
 async function loadCiudades(){ciudades=await sb('ciudades?activa=eq.true&select=*&order=nombre.asc')||[];}
 async function loadMessage(){
@@ -4286,6 +4385,7 @@ function getFilteredDemos(){
 function render(){
   updateMonthNavLabel();
   renderObjetivos();
+  renderRitmoLlamadas();
   renderStats();
   renderCancelPanel();
   renderComerciales();
@@ -4610,6 +4710,98 @@ function renderBar(prefix,actual,obj){
   fill.className='battery-fill '+color;
 }
 
+// ── RITMO DE LLAMADAS DEL SDR ──
+// Cruza SIEMPRE volumen y efectividad para que ninguna de las dos se pueda "maquillar":
+// ni inflar llamadas malas, ni hacer pocas llamadas para lucir un ratio bonito.
+function renderRitmoLlamadas(){
+  const cont=document.getElementById('ritmo-llamadas');
+  if(!cont)return;
+  if(isFutureMonth()){cont.innerHTML='';return;}
+
+  const m=getTargetMonth();
+  const reg=misLlamadas.find(l=>l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
+  const conectadas=reg?(reg.llamadas_conectadas||0):0;
+  const hechas=reg?(reg.llamadas_hechas||0):0;
+
+  // Demos creadas este mes (mismo criterio que los objetivos)
+  const demosMes=demosCreatedThisMonth().filter(d=>d.estado!=='cancelada').length;
+  const r=ritmoLlamadas(conectadas,demosMes,m);
+
+  if(!reg||conectadas===0){
+    cont.innerHTML=`<div class="ritmo-box">
+      <div class="ritmo-head"><div class="ritmo-title">📞 Tu ritmo de llamadas</div>
+      <div class="ritmo-dias">${r.transcurridos} de ${r.habiles} días hábiles</div></div>
+      <div class="ritmo-msg" style="color:var(--muted);">Aún no hay llamadas registradas para ${monthLabel()}. Tu manager las actualiza periódicamente — en cuanto las cargue, aquí verás tu media diaria frente a la meta de <b>${META_CONECTADAS_DIA} conectadas/día</b>.</div>
+    </div>`;
+    return;
+  }
+
+  const color=r.pctMeta>=100?'verde':r.pctMeta>=80?'amarillo':'rojo';
+  const barPct=Math.min(100,Math.round(r.pctMeta));
+  // La línea de meta se dibuja al 100% del ancho útil (escala 0-130% para que se vea si supera)
+  const escala=Math.max(130,Math.ceil(r.pctMeta/10)*10+10);
+  const barPctEsc=Math.min(100,Math.round(r.pctMeta/escala*100));
+  const metaPos=Math.round(100/escala*100);
+
+  // Efectividad: conectadas → demo
+  const conv=r.conversion;
+  const convBuena=conv>=8, convBaja=conv<5;
+
+  // Mensaje cruzado (volumen × efectividad)
+  let msg='';
+  if(r.pctMeta>=100){
+    if(convBuena)msg=`🔥 <b>Vas por encima de la meta</b> (${r.media.toFixed(1)}/día) <b>y además conviertes muy bien</b> (${conv.toFixed(1)}% de conectadas acaban en demo). Esta es la combinación que buscamos. Sigue exactamente así.`;
+    else if(convBaja)msg=`💪 <b>Buen volumen</b> (${r.media.toFixed(1)}/día, por encima de la meta), pero de cada 100 conectadas solo salen <b>${conf1(conv)} demos</b>. Aquí la palanca no es llamar más, es afinar el discurso: con tu volumen, subir el ratio dispararía tus demos.`;
+    else msg=`✅ <b>Vas por encima de la meta</b> (${r.media.toFixed(1)}/día) con una conversión correcta (${conv.toFixed(1)}%). Buen equilibrio entre volumen y calidad.`;
+  }else if(r.pctMeta>=80){
+    msg=`👍 Estás <b>cerca de la meta</b>: llevas <b>${r.media.toFixed(1)} conectadas/día</b> frente a las ${META_CONECTADAS_DIA} objetivo. Con <b>${Math.max(1,Math.ceil(META_CONECTADAS_DIA-r.media))} más al día</b> la alcanzas.`;
+    if(convBuena)msg+=` Y ojo, que tu conversión es muy buena (${conv.toFixed(1)}%) — cada llamada extra te rinde de verdad.`;
+  }else{
+    // Volumen bajo: el mensaje depende mucho de la efectividad
+    if(convBuena||conv>=5){
+      // Caso clave: buen ratio pero poco volumen → mostrar cuánto está dejando sobre la mesa
+      const extraConect=Math.max(0,(META_CONECTADAS_DIA-r.media)*r.restantes);
+      const extraDemos=Math.round(extraConect*conv/100);
+      msg=`📊 Tu <b>conversión es buena</b> (${conv.toFixed(1)}% de conectadas acaban en demo), pero tu volumen está bajo: <b>${r.media.toFixed(1)} conectadas/día</b> frente a las ${META_CONECTADAS_DIA} de meta.`;
+      if(extraDemos>0&&r.restantes>0)msg+=` Justo por eso interesa subirlo: si llegas a la meta lo que queda de mes, con tu propio ratio saldrían <b>~${extraDemos} demos más</b>. El volumen es tu palanca ahora mismo.`;
+    }else{
+      msg=`⚠️ Tu volumen está por debajo de la meta (<b>${r.media.toFixed(1)}/día</b> frente a ${META_CONECTADAS_DIA}) y la conversión también está floja (${conv.toFixed(1)}%). Empecemos por el volumen: más conversaciones te darán más margen para ajustar el discurso.`;
+    }
+  }
+
+  const pendiente=r.restantes>0&&r.necesarioDia>0
+    ? `<div class="ritmo-sub-item">Para llegar al objetivo del mes<b>${r.necesarioDia}/día</b><span style="font-size:11px;">los ${r.restantes} días que quedan</span></div>`
+    : '';
+
+  cont.innerHTML=`
+    <div class="ritmo-box">
+      <div class="ritmo-head">
+        <div class="ritmo-title">📞 Tu ritmo de llamadas <span style="font-weight:500;color:var(--muted);">· meta ${META_CONECTADAS_DIA} conectadas/día</span></div>
+        <div class="ritmo-dias">📅 ${r.transcurridos} de ${r.habiles} días hábiles${r.restantes>0?' · quedan '+r.restantes:''}</div>
+      </div>
+      <div class="ritmo-main">
+        <div class="ritmo-num">
+          <div class="ritmo-num-val ${color}">${r.media.toFixed(1)}</div>
+          <div class="ritmo-num-label">conectadas / día</div>
+        </div>
+        <div>
+          <div class="ritmo-bar-wrap">
+            <div class="ritmo-bar-meta" style="left:${metaPos}%;"></div>
+            <div class="ritmo-bar-fill ${color}" style="width:${barPctEsc}%;"></div>
+          </div>
+          <div class="ritmo-msg">${msg}</div>
+        </div>
+      </div>
+      <div class="ritmo-sub">
+        <div class="ritmo-sub-item">Conectadas este mes<b>${conectadas}</b></div>
+        <div class="ritmo-sub-item">Deberías llevar<b>${r.esperadas}</b></div>
+        <div class="ritmo-sub-item">Conectadas → demo<b>${conv.toFixed(1)}%</b></div>
+        ${pendiente}
+      </div>
+    </div>`;
+}
+function conf1(n){return (n).toFixed(1);}
+
 function renderProyeccion(actualOut,objOut,actualIn,objIn){
   const wTotal=workdaysInMonth();
   const wElapsed=isPastMonth()?wTotal:workdaysElapsed();
@@ -4835,11 +5027,40 @@ function renderLiveBanner(){
     <div class="live-banner-item">
       <span class="live-banner-item-name">${d.fecha<today?`📅 ${fmtDate(d.fecha)} · `:'🕐 '+(d.hora||'Hoy')+' · '}${d.sf_nombre||'Sin nombre'}</span>
       <div class="live-banner-btns">
+        <button class="live-quick-btn ga" onclick="openFirmaModal(${d.id})">💰 Ganado</button>
         <button class="live-quick-btn ej" onclick="quickOutcome(${d.id},'ejecutada','interesado')">✓ Ejecutada</button>
         <button class="live-quick-btn re" onclick="reagendarConHora(${d.id})">🔄 Reagendar</button>
         <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
       </div>
     </div>`).join('');
+}
+
+// ── MARCAR GANADO RÁPIDO (con fecha de firma) ──
+function openFirmaModal(id){
+  const demo=demos.find(d=>d.id===id);
+  if(!demo)return;
+  document.getElementById('firma-demo-id').value=id;
+  document.getElementById('firma-demo-name').textContent='🏆 '+(demo.sf_nombre||'Sin nombre');
+  document.getElementById('firma-fecha').value=demo.fecha_firma||todayStr();
+  document.getElementById('firma-modal').classList.add('active');
+}
+function closeFirmaModal(){document.getElementById('firma-modal').classList.remove('active');}
+function setFirmaQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('firma-fecha').value=localDateStr(d);}
+async function confirmFirma(){
+  const id=document.getElementById('firma-demo-id').value;
+  const fecha=document.getElementById('firma-fecha').value;
+  if(!fecha){showToast('⚠️ Pon la fecha de la firma');return;}
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({
+      estado:'ejecutada',
+      outcome:'cerrado_ganado',
+      fecha_firma:fecha,
+      motivo:null
+    })});
+    showToast('🎉 ¡Venta registrada! Firmada el '+fmtDate(fecha));
+    closeFirmaModal();
+    await loadDemos();
+  }catch(e){showToast('❌ Error al registrar la venta');console.error(e);}
 }
 
 async function quickOutcome(id,estado,outcome){
