@@ -788,6 +788,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .ritmo-sub-item{font-size:12px;color:var(--muted);}
 .ritmo-sub-item b{display:block;font-family:'Fraunces',serif;font-size:17px;color:var(--teal-dark);}
 @media(max-width:780px){.ritmo-main{grid-template-columns:1fr;}.ritmo-num{border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:12px;}}
+/* ── REGLAS SDR ── */
+.reglas-intro{background:linear-gradient(120deg,var(--teal-dark),var(--teal));color:#fff;border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+.reglas-intro-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--lime);margin-bottom:6px;}
+.reglas-intro-text{font-size:13.5px;line-height:1.65;color:rgba(255,255,255,0.85);white-space:pre-wrap;}
+.regla-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+.regla-item:last-child{border-bottom:none;}
+.regla-num{width:30px;height:30px;flex-shrink:0;border-radius:9px;background:var(--lime);color:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:15px;font-weight:700;}
+.regla-body{flex:1;min-width:0;}
+.regla-titulo{font-size:14.5px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;line-height:1.35;}
+.regla-texto{font-size:13.5px;line-height:1.65;color:var(--text);white-space:pre-wrap;}
+.reglas-updated{font-size:11.5px;color:var(--muted);text-align:center;margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);}
+/* Editor manager */
+.regla-edit-row{background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:14px 16px;margin-bottom:10px;}
+.regla-edit-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.regla-edit-num{width:28px;height:28px;flex-shrink:0;border-radius:8px;background:var(--teal-dark);color:var(--lime);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:13px;font-weight:700;}
+.regla-edit-actions{display:flex;gap:5px;margin-left:auto;}
+.regla-mini-btn{width:30px;height:30px;border:1px solid var(--border);background:var(--surface);border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.regla-mini-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
+.regla-mini-btn.del:hover{border-color:var(--red);background:var(--red);color:#fff;}
+.regla-inactiva{opacity:0.5;}
 @media(max-width:780px){.vac-summary{grid-template-columns:repeat(2,1fr);}}
 
 @media(max-width:780px){
@@ -872,6 +892,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="page-sub" id="today-date">—</div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openReglasModal()">📖 Reglas SDR</button>
         <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openVacacionesModal()">🏖️ Vacaciones</button>
         <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openNuevaTarea()">📌 Nueva tarea</button>
         <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
@@ -1075,6 +1096,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="mgr-nav-btn" onclick="setMgrTab('objetivos',this)">🎯 Objetivos</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('mensajes',this)">💬 Mensajes y tablón</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('vacaciones',this)">🏖️ Vacaciones <span id="vac-nav-badge"></span></button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('reglas',this)">📖 Reglas SDR</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('gestion',this)">⚙️ Comerciales y ciudades</button>
     </div>
 
@@ -1295,6 +1317,35 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           </div>
         </div>
         <div id="vaccal-container"></div>
+      </div>
+    </div>
+
+    <!-- TAB: REGLAS SDR -->
+    <div class="mgr-tab" id="mgrtab-reglas">
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">📢 Introducción / principio general</div>
+        <p class="mgr-card-sub">El texto que ven arriba del todo, antes de las reglas. Explica el espíritu de las normas.</p>
+        <textarea class="form-textarea" id="reglas-intro-text" style="min-height:90px;" placeholder="Ej: La idea es que cada uno tenga el control de sus cosas..."></textarea>
+        <button class="btn-primary" style="margin-top:12px;" onclick="saveReglasIntro()">Guardar introducción</button>
+      </div>
+
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">➕ Añadir una regla</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Título de la regla</label>
+          <input class="form-input" id="regla-nueva-titulo" placeholder="Ej: Cada lead tiene un dueño, y solo uno"/>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Explicación</label>
+          <textarea class="form-textarea" id="regla-nueva-texto" placeholder="Desarrolla la regla en una o dos frases claras."></textarea>
+        </div>
+        <button class="btn-primary" onclick="addRegla()">Añadir regla</button>
+      </div>
+
+      <div class="mgr-card">
+        <div class="mgr-card-title">📋 Reglas publicadas</div>
+        <p class="mgr-card-sub">Los SDR las ven en este orden desde su botón "Reglas SDR". Usa las flechas para reordenar.</p>
+        <div id="reglas-editor"></div>
       </div>
     </div>
 
@@ -1669,6 +1720,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   </div>
 </div>
 
+<!-- MODAL REGLAS SDR -->
+<div class="modal-overlay" id="reglas-modal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-head">
+      <div class="modal-title">📖 Reglas del equipo SDR</div>
+      <button class="modal-close" onclick="closeReglasModal()">✕</button>
+    </div>
+    <div class="modal-body" id="reglas-modal-body"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1893,6 +1955,7 @@ async function loadManagerData(){
     allDemos=allD||[];objetivos=objs||[];allLlamadas=llam||[];noticias=nots||[];
     await loadMensajesHoy();
     await loadVacaciones();
+    await loadReglas();
   }catch(e){showToast('❌ Error cargando datos del equipo');console.error(e);}
   finally{showLoadingMgr(false);}
 }
@@ -1987,6 +2050,7 @@ function renderManager(){
   renderGestionLists();
   renderVacManager();
   renderGenTopics();
+  renderReglasEditor();
 }
 
 // Helper: stats for previous month (used for delta comparisons)
@@ -6387,6 +6451,165 @@ function renderVacCalendario(){
     html+='<div style="margin-top:12px;padding:11px 14px;background:var(--surface-2);border-radius:9px;font-size:13px;color:var(--muted);text-align:center;">Nadie tiene vacaciones aprobadas este mes.</div>';
   }
   cont.innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════
+// REGLAS SDR — manual del equipo. El manager edita, los SDR consultan.
+// ════════════════════════════════════════════════════════
+let reglas=[];
+let reglasIntro='';
+
+async function loadReglas(){
+  try{
+    const rows=await sb('reglas?select=*&order=orden.asc')||[];
+    // La fila con orden = 0 guarda la introducción
+    const intro=rows.find(r=>r.orden===0);
+    reglasIntro=intro?(intro.texto||''):'';
+    reglas=rows.filter(r=>r.orden!==0);
+  }catch(e){console.error('Error cargando reglas:',e);reglas=[];reglasIntro='';}
+}
+
+function reglasUltimaActualizacion(){
+  const fechas=[...reglas.map(r=>r.updated_at||r.created_at)].filter(Boolean).sort();
+  if(!fechas.length)return null;
+  const d=new Date(fechas[fechas.length-1]);
+  return d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
+}
+
+// ── Vista SDR ──
+async function openReglasModal(){
+  document.getElementById('reglas-modal-body').innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);">Cargando…</div>';
+  document.getElementById('reglas-modal').classList.add('active');
+  await loadReglas();
+  renderReglasSdr();
+}
+function closeReglasModal(){document.getElementById('reglas-modal').classList.remove('active');}
+
+function renderReglasSdr(){
+  const el=document.getElementById('reglas-modal-body');
+  if(!el)return;
+  const activas=reglas.filter(r=>r.activa!==false);
+  if(!activas.length&&!reglasIntro){
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📖</div><div style="font-size:13px;">Aún no hay reglas publicadas.</div></div>';
+    return;
+  }
+  let html='';
+  if(reglasIntro){
+    html+=`<div class="reglas-intro">
+      <div class="reglas-intro-title">⚖️ El principio</div>
+      <div class="reglas-intro-text">${escapeHtmlTxt(reglasIntro)}</div>
+    </div>`;
+  }
+  html+=activas.map((r,i)=>`
+    <div class="regla-item">
+      <div class="regla-num">${i+1}</div>
+      <div class="regla-body">
+        <div class="regla-titulo">${escapeHtmlTxt(r.titulo||'')}</div>
+        ${r.texto?`<div class="regla-texto">${escapeHtmlTxt(r.texto)}</div>`:''}
+      </div>
+    </div>`).join('');
+  const upd=reglasUltimaActualizacion();
+  if(upd)html+=`<div class="reglas-updated">Última actualización: ${upd}</div>`;
+  el.innerHTML=html;
+}
+
+function escapeHtmlTxt(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── Editor manager ──
+function renderReglasEditor(){
+  const el=document.getElementById('reglas-editor');
+  if(!el)return;
+  const introEl=document.getElementById('reglas-intro-text');
+  if(introEl&&document.activeElement!==introEl)introEl.value=reglasIntro;
+  if(!reglas.length){
+    el.innerHTML='<div style="text-align:center;padding:26px;color:var(--muted);font-size:13px;">Aún no has añadido ninguna regla.</div>';
+    return;
+  }
+  el.innerHTML=reglas.map((r,i)=>`
+    <div class="regla-edit-row ${r.activa===false?'regla-inactiva':''}">
+      <div class="regla-edit-head">
+        <div class="regla-edit-num">${i+1}</div>
+        <input class="form-input" id="regla-t-${r.id}" value="${(r.titulo||'').replace(/"/g,'&quot;')}" style="flex:1;font-weight:600;"/>
+        <div class="regla-edit-actions">
+          <button class="regla-mini-btn" onclick="moveRegla(${r.id},-1)" title="Subir" ${i===0?'disabled style="opacity:0.3;"':''}>▲</button>
+          <button class="regla-mini-btn" onclick="moveRegla(${r.id},1)" title="Bajar" ${i===reglas.length-1?'disabled style="opacity:0.3;"':''}>▼</button>
+          <button class="regla-mini-btn" onclick="toggleRegla(${r.id},${r.activa===false})" title="${r.activa===false?'Publicar':'Ocultar'}">${r.activa===false?'👁️':'🚫'}</button>
+          <button class="regla-mini-btn del" onclick="deleteRegla(${r.id})" title="Eliminar">🗑️</button>
+        </div>
+      </div>
+      <textarea class="form-textarea" id="regla-x-${r.id}" style="min-height:60px;">${escapeHtmlTxt(r.texto||'')}</textarea>
+      <button class="btn-copy" style="margin-top:8px;" onclick="saveRegla(${r.id})">💾 Guardar cambios</button>
+    </div>`).join('');
+}
+
+async function saveReglasIntro(){
+  const texto=document.getElementById('reglas-intro-text').value.trim();
+  try{
+    const existentes=await sb('reglas?orden=eq.0&select=id');
+    if(existentes&&existentes.length){
+      await sb(`reglas?id=eq.${existentes[0].id}`,{method:'PATCH',body:JSON.stringify({texto,updated_at:new Date().toISOString()})});
+    }else{
+      await sb('reglas',{method:'POST',body:JSON.stringify({orden:0,titulo:'__intro__',texto,activa:true})});
+    }
+    showToast('✓ Introducción guardada');
+    await loadReglas();renderReglasEditor();
+  }catch(e){showToast('❌ Error (¿falta crear la tabla reglas?)');console.error(e);}
+}
+
+async function addRegla(){
+  const titulo=document.getElementById('regla-nueva-titulo').value.trim();
+  const texto=document.getElementById('regla-nueva-texto').value.trim();
+  if(!titulo){showToast('⚠️ Ponle un título a la regla');return;}
+  const maxOrden=reglas.length?Math.max(...reglas.map(r=>r.orden||0)):0;
+  try{
+    await sb('reglas',{method:'POST',body:JSON.stringify({orden:maxOrden+1,titulo,texto:texto||null,activa:true})});
+    showToast('✓ Regla añadida');
+    document.getElementById('regla-nueva-titulo').value='';
+    document.getElementById('regla-nueva-texto').value='';
+    await loadReglas();renderReglasEditor();
+  }catch(e){showToast('❌ Error añadiendo la regla');console.error(e);}
+}
+
+async function saveRegla(id){
+  const titulo=document.getElementById('regla-t-'+id).value.trim();
+  const texto=document.getElementById('regla-x-'+id).value.trim();
+  if(!titulo){showToast('⚠️ El título no puede quedar vacío');return;}
+  try{
+    await sb(`reglas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({titulo,texto:texto||null,updated_at:new Date().toISOString()})});
+    showToast('✓ Regla actualizada');
+    await loadReglas();renderReglasEditor();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+async function toggleRegla(id,activar){
+  try{
+    await sb(`reglas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activa:activar,updated_at:new Date().toISOString()})});
+    showToast(activar?'✓ Regla publicada':'✓ Regla oculta para los SDR');
+    await loadReglas();renderReglasEditor();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+async function deleteRegla(id){
+  if(!confirm('¿Eliminar esta regla? No se puede deshacer.'))return;
+  try{
+    await sb(`reglas?id=eq.${id}`,{method:'DELETE'});
+    showToast('✓ Regla eliminada');
+    await loadReglas();renderReglasEditor();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// Reordenar intercambiando el campo 'orden' con la regla vecina
+async function moveRegla(id,dir){
+  const i=reglas.findIndex(r=>r.id===id);
+  if(i<0)return;
+  const j=i+dir;
+  if(j<0||j>=reglas.length)return;
+  const a=reglas[i],b=reglas[j];
+  try{
+    await sb(`reglas?id=eq.${a.id}`,{method:'PATCH',body:JSON.stringify({orden:b.orden})});
+    await sb(`reglas?id=eq.${b.id}`,{method:'PATCH',body:JSON.stringify({orden:a.orden})});
+    await loadReglas();renderReglasEditor();
+  }catch(e){showToast('❌ Error reordenando');console.error(e);}
 }
 
 // ── INIT ──
