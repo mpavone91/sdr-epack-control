@@ -1309,6 +1309,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="vac-preview" id="vacadd-preview"></div>
       </div>
 
+      <!-- Vacaciones aprobadas (con opción de cancelar) -->
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-block-head" style="margin-bottom:6px;">
+          <div class="mgr-card-title" style="margin-bottom:0;">✅ Vacaciones aprobadas</div>
+          <select class="form-select" id="vac-aprob-filtro" onchange="renderVacAprobadas()" style="width:auto;padding:6px 28px 6px 12px;font-size:12px;">
+            <option value="proximas">Próximas y en curso</option>
+            <option value="todas">Todas del año</option>
+          </select>
+        </div>
+        <p class="mgr-card-sub">Si alguien necesita cambiar sus fechas, cancela aquí las vacaciones aprobadas y los días vuelven a su saldo.</p>
+        <div id="vac-aprobadas-list"></div>
+      </div>
+
       <!-- Calendario del equipo -->
       <div class="mgr-card">
         <div class="mgr-block-head" style="margin-bottom:14px;">
@@ -6304,6 +6317,7 @@ function renderVacManager(){
   renderVacPendientes();
   renderVacSaldos();
   renderVacAddSelect();
+  renderVacAprobadas();
   renderVacCalendario();
   renderVacNavBadge();
 }
@@ -6365,6 +6379,50 @@ async function rechazarVacaciones(id){
     showToast('✓ Solicitud rechazada');
     await loadVacaciones();renderVacManager();
   }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+function renderVacAprobadas(){
+  const el=document.getElementById('vac-aprobadas-list');
+  if(!el)return;
+  const filtroEl=document.getElementById('vac-aprob-filtro');
+  const filtro=filtroEl?filtroEl.value:'proximas';
+  const hoy=todayStr();
+  let aprob=vacaciones.filter(v=>v.estado==='aprobada');
+  if(filtro==='proximas')aprob=aprob.filter(v=>(v.fecha_fin||'')>=hoy);
+  aprob.sort((a,b)=>(a.fecha_inicio||'').localeCompare(b.fecha_inicio||''));
+  if(!aprob.length){
+    el.innerHTML='<div style="text-align:center;padding:22px;color:var(--muted);font-size:13px;">'+(filtro==='proximas'?'No hay vacaciones aprobadas próximas.':'No hay vacaciones aprobadas este año.')+'</div>';
+    return;
+  }
+  el.innerHTML=aprob.map(v=>{
+    const nom=vacPersonName(v.sdr_id);
+    const enCurso=(v.fecha_inicio||'')<=hoy&&(v.fecha_fin||'')>=hoy;
+    const pasada=(v.fecha_fin||'')<hoy;
+    const etiqueta=enCurso?'<span class="vac-status aprobada" style="margin-left:6px;">en curso</span>':pasada?'<span class="vac-status" style="background:#eaeaea;color:var(--muted);margin-left:6px;">ya disfrutada</span>':'';
+    return`
+    <div class="vac-item aprobada">
+      <div class="vac-item-info">
+        <div class="vac-item-range">👤 ${nom} · ${fmtVacRange(v)}${etiqueta}</div>
+        <div class="vac-item-meta">${v.dias} día${v.dias>1?'s':''} laborable${v.dias>1?'s':''}</div>
+        ${v.nota?`<div class="vac-item-nota">📝 ${(v.nota||'').replace(/</g,'&lt;')}</div>`:''}
+      </div>
+      <div class="vac-actions">
+        <button class="btn-reject" onclick="cancelarVacacionAprobada(${v.id})">✕ Cancelar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function cancelarVacacionAprobada(id){
+  const v=vacaciones.find(x=>x.id===id);
+  if(!v)return;
+  const nom=vacPersonName(v.sdr_id);
+  if(!confirm(`¿Cancelar estas vacaciones de ${nom} (${fmtVacRange(v)})?\n\nSe eliminarán de la agenda y los ${v.dias} día${v.dias>1?'s':''} volverán a su saldo.`))return;
+  try{
+    await sb(`vacaciones?id=eq.${id}`,{method:'DELETE'});
+    showToast('✓ Vacaciones canceladas · '+v.dias+' día'+(v.dias>1?'s':'')+' devueltos al saldo');
+    await loadVacaciones();renderVacManager();
+  }catch(e){showToast('❌ Error al cancelar');console.error(e);}
 }
 
 function renderVacSaldos(){
