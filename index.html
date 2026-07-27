@@ -6148,6 +6148,17 @@ const VAC_COLORS=['#2C4F5B','#7FD81F','#3b7dd8','#e8a317','#9333ea','#1fa856','#
 let vacaciones=[];
 let vacCalOffset=0;
 
+// Personas de la agenda de vacaciones: los SDR + el propio manager (para que
+// pueda registrarse y compartir la agenda completa con su jefe).
+function vacPeople(){
+  const people=[...allSdrs];
+  if(currentUser&&currentUser.rol==='manager'&&!people.some(p=>p.id===currentUser.id)){
+    people.push(currentUser);
+  }
+  return people;
+}
+function vacPersonName(id){const p=vacPeople().find(x=>x.id===id);return p?p.nombre:'—';}
+
 // Cuenta solo días laborables (excluye findes y festivos)
 function contarDiasLaborables(inicio,fin){
   if(!inicio||!fin)return 0;
@@ -6313,7 +6324,7 @@ function renderVacPendientes(){
     return;
   }
   el.innerHTML=pend.map(v=>{
-    const sdr=allSdrs.find(s=>s.id===v.sdr_id);
+    const sdr=vacPeople().find(s=>s.id===v.sdr_id);
     const s=vacSaldo(v.sdr_id,sdr);
     const excede=v.dias>s.restantes;
     return`
@@ -6334,7 +6345,7 @@ function renderVacPendientes(){
 async function aprobarVacaciones(id){
   const v=vacaciones.find(x=>x.id===id);
   if(!v)return;
-  const sdr=allSdrs.find(s=>s.id===v.sdr_id);
+  const sdr=vacPeople().find(s=>s.id===v.sdr_id);
   const s=vacSaldo(v.sdr_id,sdr);
   if(v.dias>s.restantes){
     if(!confirm(`⚠️ ${sdr?sdr.nombre:'El SDR'} solo tiene ${s.restantes} días y pide ${v.dias}. ¿Aprobar igualmente?`))return;
@@ -6359,13 +6370,15 @@ async function rechazarVacaciones(id){
 function renderVacSaldos(){
   const t=document.getElementById('vac-saldos-table');
   if(!t)return;
+  const people=vacPeople();
   t.innerHTML=`
-    <thead><tr><th>SDR</th><th>Días totales</th><th>Disfrutados</th><th>Pendientes</th><th>Restantes</th><th></th></tr></thead>
-    <tbody>${allSdrs.map(s=>{
+    <thead><tr><th>Persona</th><th>Días totales</th><th>Disfrutados</th><th>Pendientes</th><th>Restantes</th><th></th></tr></thead>
+    <tbody>${people.map(s=>{
       const v=vacSaldo(s.id,s);
       const color=v.restantes<=2?'var(--red)':v.restantes<=5?'var(--amber)':'var(--green)';
+      const esManager=currentUser&&s.id===currentUser.id;
       return`<tr>
-        <td>${s.nombre}</td>
+        <td>${s.nombre}${esManager?' <span style="font-size:10px;font-weight:700;color:var(--teal);background:#e0eef5;padding:1px 7px;border-radius:10px;">TÚ</span>':''}</td>
         <td><input type="number" min="0" max="40" id="vacdias-${s.id}" value="${v.total}"/></td>
         <td>${v.usados}</td>
         <td>${v.pendientes||'—'}</td>
@@ -6375,10 +6388,10 @@ function renderVacSaldos(){
     }).join('')}
     <tr class="row-total">
       <td>TOTAL</td>
-      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).total,0)}</td>
-      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).usados,0)}</td>
-      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).pendientes,0)}</td>
-      <td>${allSdrs.reduce((a,s)=>a+vacSaldo(s.id,s).restantes,0)}</td>
+      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).total,0)}</td>
+      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).usados,0)}</td>
+      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).pendientes,0)}</td>
+      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).restantes,0)}</td>
       <td></td>
     </tr>
     </tbody>`;
@@ -6390,6 +6403,8 @@ async function saveVacDias(sdrId){
   try{
     await sb(`sdr_users?id=eq.${sdrId}`,{method:'PATCH',body:JSON.stringify({dias_vacaciones:dias})});
     showToast('✓ Días actualizados');
+    // Si el manager edita sus propios días, refrescamos su sesión
+    if(currentUser&&currentUser.id===sdrId){currentUser.dias_vacaciones=dias;sessionStorage.setItem('sdr_user',JSON.stringify(currentUser));}
     await loadManagerData();
     await loadVacaciones();
     renderVacManager();
@@ -6400,7 +6415,7 @@ function renderVacAddSelect(){
   const sel=document.getElementById('vacadd-sdr');
   if(!sel)return;
   const cur=sel.value;
-  sel.innerHTML=allSdrs.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+  sel.innerHTML=vacPeople().map(s=>`<option value="${s.id}">${s.nombre}${currentUser&&s.id===currentUser.id?' (yo)':''}</option>`).join('');
   if(cur)sel.value=cur;
 }
 
@@ -6454,9 +6469,10 @@ function renderVacCalendario(){
   const lbl=document.getElementById('vaccal-label');
   if(lbl)lbl.textContent=`${meses[month]} ${year}`;
 
-  // Color por SDR
+  // Color por persona (SDR + manager)
+  const people=vacPeople();
   const colorFor={};
-  allSdrs.forEach((s,i)=>{colorFor[s.id]=VAC_COLORS[i%VAC_COLORS.length];});
+  people.forEach((s,i)=>{colorFor[s.id]=VAC_COLORS[i%VAC_COLORS.length];});
 
   // Aprobadas que tocan este mes
   const mStart=localDateStr(new Date(year,month,1));
@@ -6487,8 +6503,7 @@ function renderVacCalendario(){
     if(festivo)html+=`<div class="vaccal-festivo-tag">Festivo</div>`;
     if(!weekend&&!festivo){
       aprob.filter(v=>(v.fecha_inicio||'')<=ds&&(v.fecha_fin||'')>=ds).forEach(v=>{
-        const sdr=allSdrs.find(s=>s.id===v.sdr_id);
-        const nom=sdr?sdr.nombre:'—';
+        const nom=vacPersonName(v.sdr_id);
         html+=`<div class="vaccal-tag" style="background:${colorFor[v.sdr_id]||'#888'};" title="${nom}">${nom}</div>`;
       });
     }
@@ -6500,8 +6515,8 @@ function renderVacCalendario(){
 
   // Leyenda
   html+='<div class="vac-legend">';
-  allSdrs.forEach(s=>{
-    html+=`<div class="vac-legend-item"><span class="vac-legend-dot" style="background:${colorFor[s.id]};"></span>${s.nombre}</div>`;
+  people.forEach(s=>{
+    html+=`<div class="vac-legend-item"><span class="vac-legend-dot" style="background:${colorFor[s.id]};"></span>${s.nombre}${currentUser&&s.id===currentUser.id?' (tú)':''}</div>`;
   });
   html+='<div class="vac-legend-item"><span class="vac-legend-dot" style="background:#fdeaea;border:1px solid #f0c0c0;"></span>Festivo</div>';
   html+='</div>';
