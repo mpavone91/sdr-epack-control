@@ -1278,8 +1278,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
       <!-- Saldos del equipo -->
       <div class="mgr-card" style="margin-bottom:20px;">
-        <div class="mgr-card-title">📊 Saldo de días por SDR — 2026</div>
-        <p class="mgr-card-sub">Puedes ajustar los días totales de cada uno (por ejemplo, si entró a mitad de año se le prorratean).</p>
+        <div class="mgr-card-title">📊 Saldo de días por persona — 2026</div>
+        <p class="mgr-card-sub">Disfrutados = ya pasaron o están en curso · Programadas = aprobadas a futuro · Pendientes = esperan tu aprobación. Los restantes descuentan disfrutados y programadas. Puedes ajustar los días totales de cada uno.</p>
         <div class="mgr-table-wrap"><table class="mgr-table" id="vac-saldos-table"></table></div>
       </div>
 
@@ -6195,10 +6195,16 @@ function vacDiasTotales(sdr){
 // Saldo de un SDR: total, usados (aprobados), pendientes, restantes
 function vacSaldo(sdrId,sdrObj){
   const total=vadDiasFor(sdrId,sdrObj);
+  const hoy=todayStr();
   const delAnio=vacaciones.filter(v=>v.sdr_id===sdrId&&(v.fecha_inicio||'').startsWith(VAC_ANIO));
-  const usados=delAnio.filter(v=>v.estado==='aprobada').reduce((s,v)=>s+(v.dias||0),0);
+  const aprobadas=delAnio.filter(v=>v.estado==='aprobada');
+  // Disfrutadas = ya empezaron (incluye las que están en curso). Programadas = a futuro.
+  const disfrutados=aprobadas.filter(v=>(v.fecha_inicio||'')<=hoy).reduce((s,v)=>s+(v.dias||0),0);
+  const programados=aprobadas.filter(v=>(v.fecha_inicio||'')>hoy).reduce((s,v)=>s+(v.dias||0),0);
   const pend=delAnio.filter(v=>v.estado==='pendiente').reduce((s,v)=>s+(v.dias||0),0);
-  return{total,usados,pendientes:pend,restantes:total-usados};
+  // Las aprobadas (pasadas y futuras) gastan saldo; las pendientes aún no.
+  const restantes=total-disfrutados-programados;
+  return{total,disfrutados,programados,pendientes:pend,restantes,usados:disfrutados+programados};
 }
 function vadDiasFor(sdrId,sdrObj){
   const s=sdrObj||(allSdrs.find(x=>x.id===sdrId))||(currentUser&&currentUser.id===sdrId?currentUser:null);
@@ -6233,8 +6239,8 @@ function renderVacSummary(){
   const s=vacSaldo(currentUser.id,currentUser);
   document.getElementById('vac-summary').innerHTML=`
     <div class="vac-stat total"><div class="vac-stat-num">${s.total}</div><div class="vac-stat-label">Días totales</div></div>
-    <div class="vac-stat"><div class="vac-stat-num">${s.usados}</div><div class="vac-stat-label">Disfrutados</div></div>
-    <div class="vac-stat"><div class="vac-stat-num">${s.pendientes}</div><div class="vac-stat-label">Pendientes aprobar</div></div>
+    <div class="vac-stat"><div class="vac-stat-num">${s.disfrutados}</div><div class="vac-stat-label">Disfrutados</div></div>
+    <div class="vac-stat"><div class="vac-stat-num">${s.programados}</div><div class="vac-stat-label">Programadas</div></div>
     <div class="vac-stat restantes"><div class="vac-stat-num">${s.restantes}</div><div class="vac-stat-label">Te quedan</div></div>`;
 }
 
@@ -6430,7 +6436,7 @@ function renderVacSaldos(){
   if(!t)return;
   const people=vacPeople();
   t.innerHTML=`
-    <thead><tr><th>Persona</th><th>Días totales</th><th>Disfrutados</th><th>Pendientes</th><th>Restantes</th><th></th></tr></thead>
+    <thead><tr><th>Persona</th><th>Días totales</th><th>Disfrutados</th><th>Programadas</th><th>Pendientes</th><th>Restantes</th><th></th></tr></thead>
     <tbody>${people.map(s=>{
       const v=vacSaldo(s.id,s);
       const color=v.restantes<=2?'var(--red)':v.restantes<=5?'var(--amber)':'var(--green)';
@@ -6438,7 +6444,8 @@ function renderVacSaldos(){
       return`<tr>
         <td>${s.nombre}${esManager?' <span style="font-size:10px;font-weight:700;color:var(--teal);background:#e0eef5;padding:1px 7px;border-radius:10px;">TÚ</span>':''}</td>
         <td><input type="number" min="0" max="40" id="vacdias-${s.id}" value="${v.total}"/></td>
-        <td>${v.usados}</td>
+        <td>${v.disfrutados||'—'}</td>
+        <td>${v.programados?'<span style="color:var(--teal);font-weight:600;">'+v.programados+'</span>':'—'}</td>
         <td>${v.pendientes||'—'}</td>
         <td><span class="num" style="color:${color};">${v.restantes}</span></td>
         <td><button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="saveVacDias(${s.id})">Guardar</button></td>
@@ -6447,7 +6454,8 @@ function renderVacSaldos(){
     <tr class="row-total">
       <td>TOTAL</td>
       <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).total,0)}</td>
-      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).usados,0)}</td>
+      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).disfrutados,0)}</td>
+      <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).programados,0)}</td>
       <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).pendientes,0)}</td>
       <td>${people.reduce((a,s)=>a+vacSaldo(s.id,s).restantes,0)}</td>
       <td></td>
