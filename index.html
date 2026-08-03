@@ -812,6 +812,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .regla-mini-btn:hover{border-color:var(--lime);background:var(--lime-soft);}
 .regla-mini-btn.del:hover{border-color:var(--red);background:var(--red);color:#fff;}
 .regla-inactiva{opacity:0.5;}
+/* ── AUSENCIAS COMERCIALES (panel SDR) ── */
+.comcal-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:20px;}
+.comcal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;}
+.comcal-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--teal-dark);display:flex;align-items:center;gap:8px;}
+.comcal-toggle-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--teal-dark);padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;}
+.comcal-toggle-btn:hover{background:var(--lime-soft);border-color:var(--lime);}
+.comcal-sub{font-size:12.5px;color:var(--muted);margin:8px 0 14px;}
 @media(max-width:780px){.vac-summary{grid-template-columns:repeat(2,1fr);}}
 
 @media(max-width:780px){
@@ -908,6 +915,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="month-nav-label" id="month-nav-label">—</div>
       <button class="month-nav-btn" onclick="navMonth(1)" title="Mes siguiente">›</button>
       <button class="month-nav-today" id="month-nav-today" onclick="navMonthToday()">Hoy</button>
+    </div>
+
+    <!-- AUSENCIAS DE COMERCIALES (SDR) -->
+    <div id="comcal-sdr-wrap" class="comcal-panel">
+      <div class="comcal-head" onclick="toggleComCalSdr()">
+        <div class="comcal-title">🧑‍💼 Comerciales no disponibles <span id="comcal-sdr-badge"></span></div>
+        <button class="comcal-toggle-btn" id="comcal-sdr-toggle" type="button">Ocultar ▲</button>
+      </div>
+      <div id="comcal-sdr-body">
+        <div class="comcal-sub">Comerciales de vacaciones o ausentes. Evita agendarles demos estos días.</div>
+        <div class="cal-nav" style="margin-bottom:12px;">
+          <button class="cal-nav-btn" onclick="comCalNav('sdr',-1)">‹</button>
+          <div class="cal-week-label" id="comcal-label-sdr" style="min-width:150px;">—</div>
+          <button class="cal-nav-btn" onclick="comCalNav('sdr',1)">›</button>
+          <button class="cal-today-btn" onclick="comCalToday('sdr')">Hoy</button>
+        </div>
+        <div id="comcal-container-sdr"></div>
+      </div>
     </div>
 
     <!-- CROSS-MONTH REMINDERS -->
@@ -1326,6 +1351,42 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         </div>
         <p class="mgr-card-sub">Si alguien necesita cambiar sus fechas, cancela aquí las vacaciones aprobadas y los días vuelven a su saldo.</p>
         <div id="vac-aprobadas-list"></div>
+      </div>
+
+      <!-- Ausencias de comerciales -->
+      <div class="mgr-card" style="margin-bottom:20px;">
+        <div class="mgr-card-title">🧑‍💼 Ausencias de comerciales</div>
+        <p class="mgr-card-sub">Registra cuándo un comercial no está disponible para demos (vacaciones, baja, etc.). Los SDR lo verán en su panel para no agendarle demos esos días.</p>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.2fr auto;gap:10px;align-items:end;margin-bottom:16px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Comercial</label>
+            <select class="form-select" id="comaus-comercial"></select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Desde</label>
+            <input class="form-input" type="date" id="comaus-inicio"/>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Hasta</label>
+            <input class="form-input" type="date" id="comaus-fin"/>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Nota</label>
+            <input class="form-input" id="comaus-nota" placeholder="Opcional"/>
+          </div>
+          <button class="btn-primary" onclick="addComAus()">Registrar</button>
+        </div>
+        <div id="comaus-list" style="margin-bottom:18px;"></div>
+        <div class="mgr-block-head" style="margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--teal-dark);">🗓️ Calendario de ausencias</div>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="comCalNav('mgr',-1)">‹</button>
+            <div class="cal-week-label" id="comcal-label-mgr" style="min-width:150px;">—</div>
+            <button class="cal-nav-btn" onclick="comCalNav('mgr',1)">›</button>
+            <button class="cal-today-btn" onclick="comCalToday('mgr')">Hoy</button>
+          </div>
+        </div>
+        <div id="comcal-container-mgr"></div>
       </div>
 
       <!-- Calendario del equipo -->
@@ -1988,7 +2049,7 @@ async function enterApp(){
   document.getElementById('user-name').textContent=currentUser.nombre;
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('today-date').textContent=fmtDateLong();
-  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas(),loadConfig()]);
+  await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas(),loadConfig(),loadComercialAusencias()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
   if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
@@ -2029,6 +2090,7 @@ async function loadManagerData(){
     await loadVacaciones();
     await loadReglas();
     await loadConfig();
+    await loadComercialAusencias();
   }catch(e){showToast('❌ Error cargando datos del equipo');console.error(e);}
   finally{showLoadingMgr(false);}
 }
@@ -4529,6 +4591,7 @@ function getFilteredDemos(){
 // ── RENDER ──
 function render(){
   updateMonthNavLabel();
+  renderComercialCalendarSdr();
   renderObjetivos();
   renderRitmoLlamadas();
   renderStats();
@@ -6365,6 +6428,7 @@ function renderVacManager(){
   renderVacAprobadas();
   renderVacCalendario();
   renderVacNavBadge();
+  renderComAusManager();
 }
 
 function renderVacNavBadge(){
@@ -6632,6 +6696,155 @@ function renderVacCalendario(){
     html+='<div style="margin-top:12px;padding:11px 14px;background:var(--surface-2);border-radius:9px;font-size:13px;color:var(--muted);text-align:center;">Nadie tiene vacaciones aprobadas este mes.</div>';
   }
   cont.innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════
+// AUSENCIAS DE COMERCIALES — comerciales no disponibles para demos.
+// El manager las registra; SDR y manager las ven en un calendario.
+// ════════════════════════════════════════════════════════
+let comercialAusencias=[];
+let comCalOffset={sdr:0,mgr:0};
+let comCalCollapsedSdr=false;
+
+async function loadComercialAusencias(){
+  try{comercialAusencias=await sb('comercial_ausencias?select=*&order=fecha_inicio.asc')||[];}
+  catch(e){console.error('Error cargando ausencias comerciales:',e);comercialAusencias=[];}
+}
+
+function comColorFor(){
+  const map={};
+  comerciales.forEach((c,i)=>{map[c.id]=VAC_COLORS[i%VAC_COLORS.length];});
+  return map;
+}
+
+// Calendario mensual de ausencias de comerciales (reutilizable: ctx='sdr' o 'mgr')
+function renderComercialCalendar(ctx){
+  const cont=document.getElementById('comcal-container-'+ctx);
+  if(!cont)return;
+  const base=new Date();
+  const m=new Date(base.getFullYear(),base.getMonth()+comCalOffset[ctx],1);
+  const year=m.getFullYear(),month=m.getMonth();
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const lbl=document.getElementById('comcal-label-'+ctx);
+  if(lbl)lbl.textContent=`${meses[month]} ${year}`;
+
+  const colorFor=comColorFor();
+  const mStart=localDateStr(new Date(year,month,1));
+  const mEnd=localDateStr(new Date(year,month+1,0));
+  const aus=comercialAusencias.filter(a=>(a.fecha_inicio||'')<=mEnd&&(a.fecha_fin||'')>=mStart);
+
+  const firstDow=(new Date(year,month,1).getDay()+6)%7;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=todayStr();
+  const dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  let html='<div class="vaccal-grid">';
+  dayNames.forEach(d=>{html+=`<div class="vaccal-head">${d}</div>`;});
+  for(let i=0;i<firstDow;i++)html+='<div class="vaccal-day other"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dt=new Date(year,month,d);const ds=localDateStr(dt);
+    const dow=dt.getDay();const weekend=dow===0||dow===6;
+    const festivo=FESTIVOS_2026.includes(ds);const isToday=ds===today;
+    const cls=['vaccal-day'];if(weekend)cls.push('weekend');if(festivo)cls.push('festivo');if(isToday)cls.push('today');
+    html+=`<div class="${cls.join(' ')}"><div class="vaccal-daynum">${d}</div>`;
+    if(festivo)html+=`<div class="vaccal-festivo-tag">Festivo</div>`;
+    if(!weekend&&!festivo){
+      aus.filter(a=>(a.fecha_inicio||'')<=ds&&(a.fecha_fin||'')>=ds).forEach(a=>{
+        const nom=comercialName(a.comercial_id);
+        html+=`<div class="vaccal-tag" style="background:${colorFor[a.comercial_id]||'#888'};" title="${nom}">${nom}</div>`;
+      });
+    }
+    html+='</div>';
+  }
+  const rest=(7-((firstDow+daysInMonth)%7))%7;
+  for(let i=0;i<rest;i++)html+='<div class="vaccal-day other"></div>';
+  html+='</div>';
+
+  const comConAus=[...new Set(aus.map(a=>a.comercial_id))];
+  if(comConAus.length){
+    html+='<div class="vac-legend">';
+    comConAus.forEach(cid=>{
+      html+=`<div class="vac-legend-item"><span class="vac-legend-dot" style="background:${colorFor[cid]};"></span>${comercialName(cid)}</div>`;
+    });
+    html+='</div>';
+  }else{
+    html+='<div style="margin-top:12px;padding:11px 14px;background:var(--surface-2);border-radius:9px;font-size:13px;color:var(--muted);text-align:center;">Ningún comercial ausente este mes. 🎉</div>';
+  }
+  cont.innerHTML=html;
+}
+function comCalNav(ctx,d){comCalOffset[ctx]+=d;renderComercialCalendar(ctx);}
+function comCalToday(ctx){comCalOffset[ctx]=0;renderComercialCalendar(ctx);}
+
+// ── SDR: panel colapsable en su dashboard ──
+function toggleComCalSdr(){
+  comCalCollapsedSdr=!comCalCollapsedSdr;
+  const body=document.getElementById('comcal-sdr-body');
+  const btn=document.getElementById('comcal-sdr-toggle');
+  if(body)body.style.display=comCalCollapsedSdr?'none':'block';
+  if(btn)btn.textContent=comCalCollapsedSdr?'Mostrar ▼':'Ocultar ▲';
+}
+function renderComercialCalendarSdr(){
+  const wrap=document.getElementById('comcal-sdr-wrap');
+  if(!wrap)return;
+  // Aviso si hoy hay algún comercial ausente
+  const hoy=todayStr();
+  const hoyAus=comercialAusencias.filter(a=>(a.fecha_inicio||'')<=hoy&&(a.fecha_fin||'')>=hoy);
+  const badge=document.getElementById('comcal-sdr-badge');
+  if(badge)badge.innerHTML=hoyAus.length?`<span class="vac-alert-badge" style="background:var(--amber);color:#5a3d00;">${hoyAus.length} hoy</span>`:'';
+  renderComercialCalendar('sdr');
+}
+
+// ── Manager: gestión de ausencias ──
+function renderComAusManager(){
+  const sel=document.getElementById('comaus-comercial');
+  if(sel){const cur=sel.value;sel.innerHTML=comerciales.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');if(cur)sel.value=cur;}
+  const el=document.getElementById('comaus-list');
+  if(el){
+    const hoy=todayStr();
+    const list=comercialAusencias.filter(a=>(a.fecha_fin||'')>=hoy).sort((a,b)=>(a.fecha_inicio||'').localeCompare(b.fecha_inicio||''));
+    if(!list.length){
+      el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px;">No hay ausencias de comerciales próximas.</div>';
+    }else{
+      el.innerHTML=list.map(a=>{
+        const enCurso=(a.fecha_inicio||'')<=hoy&&(a.fecha_fin||'')>=hoy;
+        return`<div class="vac-item ${enCurso?'aprobada':'futura'}">
+          <div class="vac-item-info">
+            <div class="vac-item-range">🧑‍💼 ${comercialName(a.comercial_id)} · ${fmtVacRange(a)}${enCurso?' <span class="vac-status aprobada" style="margin-left:6px;">ausente ahora</span>':''}</div>
+            ${a.nota?`<div class="vac-item-nota">📝 ${(a.nota||'').replace(/</g,'&lt;')}</div>`:''}
+          </div>
+          <div class="vac-actions"><button class="btn-reject" onclick="deleteComAus(${a.id})">✕ Quitar</button></div>
+        </div>`;
+      }).join('');
+    }
+  }
+  renderComercialCalendar('mgr');
+}
+
+async function addComAus(){
+  const cid=parseInt(document.getElementById('comaus-comercial').value);
+  const ini=document.getElementById('comaus-inicio').value;
+  const fin=document.getElementById('comaus-fin').value;
+  const nota=document.getElementById('comaus-nota').value.trim();
+  if(!cid){showToast('⚠️ Selecciona un comercial');return;}
+  if(!ini||!fin){showToast('⚠️ Pon las dos fechas');return;}
+  if(fin<ini){showToast('⚠️ La fecha de fin es anterior a la de inicio');return;}
+  try{
+    await sb('comercial_ausencias',{method:'POST',body:JSON.stringify({comercial_id:cid,fecha_inicio:ini,fecha_fin:fin,nota:nota||null})});
+    showToast('✓ Ausencia registrada');
+    document.getElementById('comaus-inicio').value='';
+    document.getElementById('comaus-fin').value='';
+    document.getElementById('comaus-nota').value='';
+    await loadComercialAusencias();renderComAusManager();
+  }catch(e){showToast('❌ Error (¿falta crear la tabla comercial_ausencias?)');console.error(e);}
+}
+
+async function deleteComAus(id){
+  if(!confirm('¿Quitar esta ausencia del comercial?'))return;
+  try{
+    await sb(`comercial_ausencias?id=eq.${id}`,{method:'DELETE'});
+    showToast('✓ Ausencia eliminada');
+    await loadComercialAusencias();renderComAusManager();
+  }catch(e){showToast('❌ Error');console.error(e);}
 }
 
 // ════════════════════════════════════════════════════════
