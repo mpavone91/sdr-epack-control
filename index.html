@@ -133,6 +133,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .badge-estado.ejecutada{background:var(--green-soft);color:var(--green);}
 .badge-estado.cancelada{background:var(--red-soft);color:var(--red);}
 .badge-estado.reagendada{background:var(--amber-soft);color:var(--amber);}
+.search-results-banner{background:var(--lime-soft);border:1px solid var(--lime);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:13px;color:var(--teal-dark);font-weight:500;}
+.search-results-banner b{font-family:'Fraunces',serif;font-size:15px;}
 
 /* ── OUTCOME PILL ── */
 .outcome-pill{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500;}
@@ -1046,7 +1048,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="list-controls" id="list-controls-wrap">
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
-        <input class="search-input" id="demo-search" placeholder="Buscar por oportunidad, comercial, notas..." oninput="renderList()"/>
+        <input class="search-input" id="demo-search" placeholder="Buscar en todo el historial: nombre, comercial, ciudad, notas..." oninput="renderList()"/>
         <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
       </div>
       <div class="canal-filter-wrap">
@@ -2052,7 +2054,7 @@ async function enterApp(){
   await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas(),loadConfig(),loadComercialAusencias()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
-  if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
+  if(!liveInterval)liveInterval=setInterval(()=>{if(!normalizeSearch(getSearchQuery()))renderLiveView();renderLiveBanner();updateLiveClock();},60000);
 }
 
 // ── MANAGER STATE ──
@@ -4546,6 +4548,29 @@ async function deleteDemo(id){
 // ── FILTERING ──
 function getFilteredDemos(){
   const today=todayStr(),tomorrow=tomorrowStr(),week=weekDates();
+  const q=normalizeSearch(getSearchQuery());
+
+  // Con búsqueda activa: se busca en TODO el histórico, sin importar la
+  // pestaña o el mes seleccionado. Solo cancelada+descartada/perdida (papelera)
+  // queda fuera por defecto, igual que en el resto de vistas — salvo que el
+  // propio texto buscado sea lo que la identifica.
+  if(q){
+    let result=demos.filter(d=>{
+      const name=normalizeSearch(d.sf_nombre);
+      const notas=normalizeSearch(d.notas);
+      const com=normalizeSearch(comercialName(d.comercial_id));
+      const ciudad=normalizeSearch(ciudadName(d.ciudad_id));
+      const estadoTxt=normalizeSearch({agendada:'agendada',ejecutada:'ejecutada',cancelada:'cancelada',reagendada:'reagendada'}[d.estado]||'');
+      const outcomeTxt=normalizeSearch(outcomeLabel(d.outcome));
+      const oppCode=normalizeSearch(extractOppCode(d.sf_nombre)||extractOppCode(d.sf_url));
+      return name.includes(q)||notas.includes(q)||com.includes(q)||ciudad.includes(q)||
+             estadoTxt.includes(q)||outcomeTxt.includes(q)||(oppCode&&oppCode.includes(q));
+    });
+    if(comercialFilter)result=result.filter(d=>d.comercial_id==comercialFilter);
+    if(canalFilter!=='all')result=result.filter(d=>(d.canal||'outbound')===canalFilter);
+    return result;
+  }
+
   let result;
   switch(currentView){
     case'hoy':result=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');break;
@@ -4574,17 +4599,6 @@ function getFilteredDemos(){
   if(comercialFilter){result=result.filter(d=>d.comercial_id==comercialFilter);}
   // Canal filter
   if(canalFilter!=='all'){result=result.filter(d=>(d.canal||'outbound')===canalFilter);}
-  // Search filter
-  const q=getSearchQuery();
-  if(q){
-    result=result.filter(d=>{
-      const name=(d.sf_nombre||'').toLowerCase();
-      const notas=(d.notas||'').toLowerCase();
-      const com=comercialName(d.comercial_id).toLowerCase();
-      const ciudad=ciudadName(d.ciudad_id).toLowerCase();
-      return name.includes(q)||notas.includes(q)||com.includes(q)||ciudad.includes(q);
-    });
-  }
   return result;
 }
 
@@ -5130,6 +5144,8 @@ function getSearchQuery(){
   document.getElementById('search-clear').style.display=v?'block':'none';
   return v;
 }
+// Quita acentos para que "roman" encuentre "Román" y viceversa
+function normalizeSearch(s){return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function filterByComercial(id){
   comercialFilter=comercialFilter==id?null:id;
   renderComerciales();
@@ -5427,18 +5443,24 @@ function renderLiveView(){
   list.innerHTML=html;
 }
 
-function renderDemoCard(d,liveClass=''){
+function renderDemoCard(d,liveClass='',searchMode=false){
   const sfLink=sfHref(d)?`<a href="${sfHref(d)}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
-  const isReagendar=currentView==='reagendar';
+  // En modo búsqueda ignoramos el contexto de la pestaña actual: el resultado
+  // puede venir de cualquier vista, así que mostramos siempre el mismo layout
+  // con un badge de estado explícito para que quede claro qué es cada cosa.
+  const isReagendar=!searchMode&&currentView==='reagendar';
   const cardClass=isReagendar?'reagendar':liveClass?`live-${liveClass}`:'';
   const horaDisplay=d.hora?`<span class="live-hora-badge ${liveClass||'despues'}">${d.hora}</span>`:'';
   const plataformaMap={teams:'💻 Teams',whatsapp:'💬 WhatsApp',meet:'🎥 Meet',zoom:'📹 Zoom'};
+  const estadoLabels={agendada:'📅 Agendada',ejecutada:'✅ Ejecutada',cancelada:'❌ Cancelada',reagendada:'🔄 Reagendada'};
+  const estadoBadge=searchMode?`<span class="badge-estado ${d.estado}">${estadoLabels[d.estado]||d.estado}</span>`:'';
   return`
   <div class="demo-card ${cardClass}">
     <div class="demo-main">
       <div class="demo-top">
         ${horaDisplay}
         <span class="demo-name">${sfLink}</span>
+        ${estadoBadge}
         <span class="badge ${d.tipo}">${d.tipo==='presencial'?'📍 Presencial':'💻 Online'}</span>
         <span class="badge ${d.canal||'outbound'}">${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>
         ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
@@ -5460,7 +5482,7 @@ function renderDemoCard(d,liveClass=''){
             <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
             <button class="btn-ghost-red" onclick="descartarDemo(${d.id})">🗑️ Descartar</button>
           </div>`
-        :currentView==='viejas'
+        :!searchMode&&currentView==='viejas'
         ?`<div style="display:flex;flex-direction:column;gap:6px;">
             <select class="select-mini" onchange="changeEstadoOutcome(${d.id},this.value)" style="font-size:12px;">
               <option value="">Resolver...</option>
@@ -5469,7 +5491,7 @@ function renderDemoCard(d,liveClass=''){
             </select>
             <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})">⏰ Aplazar</button>
           </div>`
-        :currentView==='papelera'
+        :!searchMode&&currentView==='papelera'
         ?`<span class="badge ${d.estado==='cancelada'?'cancelada-badge':'perdida-badge'}">${d.estado==='cancelada'?'🗑️ Cancelada':'❌ Perdida'}</span>`
         :`<select class="select-mini" onchange="changeEstado(${d.id},this.value)">
             <option value="agendada" ${d.estado==='agendada'?'selected':''}>Agendada</option>
@@ -5790,11 +5812,26 @@ function goToView(view){
 
 function renderList(){
   const list=document.getElementById('demo-list');
+  const searching=!!normalizeSearch(getSearchQuery());
 
-  // Hoy uses the live view with semáforo
-  if(currentView==='hoy'||currentView==='enlive'){renderLiveView();return;}
+  // Hoy usa la vista en vivo con semáforo — PERO si hay una búsqueda activa,
+  // mostramos la lista normal con resultados de todo el histórico en su lugar.
+  if((currentView==='hoy'||currentView==='enlive')&&!searching){renderLiveView();return;}
 
   const filtered=getFilteredDemos();
+
+  if(searching){
+    if(!filtered.length){
+      const q=document.getElementById('demo-search').value.trim();
+      list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados para "${q.replace(/</g,'&lt;')}"</div><div class="empty-text">Buscamos en todo el histórico: nombre, comercial, ciudad, notas y estado. Prueba con menos palabras o revisa que esté bien escrito.</div></div>`;
+      return;
+    }
+    const sorted=[...filtered].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    list.innerHTML=`<div class="search-results-banner">🔍 <b>${filtered.length}</b> resultado${filtered.length!==1?'s':''} en todo el histórico</div>`+
+      sorted.map(d=>renderDemoCard(d,'',true)).join('');
+    return;
+  }
+
   if(!filtered.length){
     const empties={
       hoy:['📅','Sin demos hoy','No tienes demos agendadas para hoy. ¡A llamar!'],
@@ -6045,9 +6082,12 @@ function setView(view,btn){
   currentView=view;
   document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
+  // Cambiar de pestaña sale del modo búsqueda (si había una activa)
+  const searchEl=document.getElementById('demo-search');
+  if(searchEl&&searchEl.value){searchEl.value='';document.getElementById('search-clear').style.display='none';}
   // Auto-refresh for hoy (live view)
   if(view==='hoy'||view==='enlive'){
-    if(!liveInterval)liveInterval=setInterval(()=>{renderLiveView();renderLiveBanner();updateLiveClock();},60000);
+    if(!liveInterval)liveInterval=setInterval(()=>{if(!normalizeSearch(getSearchQuery()))renderLiveView();renderLiveBanner();updateLiveClock();},60000);
   }else{
     if(liveInterval){clearInterval(liveInterval);liveInterval=null;}
   }
