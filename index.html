@@ -893,11 +893,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div id="news-items"></div>
   </div>
 
-  <div class="live-banner warning" id="live-banner">
-    <div class="live-banner-title">⏰ Demos pendientes de confirmar</div>
-    <div class="live-banner-items" id="live-banner-items"></div>
-  </div>
-
   <div class="content">
     <div class="page-head">
       <div>
@@ -919,13 +914,37 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="month-nav-today" id="month-nav-today" onclick="navMonthToday()">Hoy</button>
     </div>
 
-    <!-- AUSENCIAS DE COMERCIALES (SDR) -->
+    <!-- DEMOS PENDIENTES DE CONFIRMAR (tarjeta colapsable) -->
+    <div class="xmonth-panel" id="live-banner" style="display:none;">
+      <div class="xmonth-head-row" onclick="toggleLiveBannerCollapse()">
+        <div class="xmonth-title">⏰ Demos pendientes de confirmar <span class="xmonth-total-badge" id="live-banner-total-badge"></span></div>
+        <button class="xmonth-collapse-btn collapsed" id="live-banner-collapse-btn" type="button" title="Contraer / expandir">▾</button>
+      </div>
+      <div id="live-banner-body" style="display:none;">
+        <div class="xmonth-subtitle">De hoy o de días pasados, sin resultado marcado todavía. Dales un cierre rápido.</div>
+        <div class="live-banner-items" id="live-banner-items"></div>
+      </div>
+    </div>
+
+    <!-- CROSS-MONTH REMINDERS (tarjeta colapsable) -->
+    <div class="xmonth-panel" id="xmonth-panel" style="display:none;">
+      <div class="xmonth-head-row" onclick="toggleXMonthCollapse()">
+        <div class="xmonth-title">📌 Pendientes de meses anteriores <span class="xmonth-total-badge" id="xmonth-total-badge"></span></div>
+        <button class="xmonth-collapse-btn collapsed" id="xmonth-collapse-btn" type="button" title="Contraer / expandir">▾</button>
+      </div>
+      <div id="xmonth-body" style="display:none;">
+        <div class="xmonth-subtitle">Estas demos siguen abiertas. Dales una resolución para que desaparezcan de aquí.</div>
+        <div class="xmonth-groups" id="xmonth-groups"></div>
+      </div>
+    </div>
+
+    <!-- AUSENCIAS DE COMERCIALES (tarjeta colapsable, oculta por defecto) -->
     <div id="comcal-sdr-wrap" class="comcal-panel">
       <div class="comcal-head" onclick="toggleComCalSdr()">
         <div class="comcal-title">🧑‍💼 Comerciales no disponibles <span id="comcal-sdr-badge"></span></div>
-        <button class="comcal-toggle-btn" id="comcal-sdr-toggle" type="button">Ocultar ▲</button>
+        <button class="comcal-toggle-btn" id="comcal-sdr-toggle" type="button">Mostrar ▼</button>
       </div>
-      <div id="comcal-sdr-body">
+      <div id="comcal-sdr-body" style="display:none;">
         <div class="comcal-sub">Comerciales de vacaciones o ausentes. Evita agendarles demos estos días.</div>
         <div class="cal-nav" style="margin-bottom:12px;">
           <button class="cal-nav-btn" onclick="comCalNav('sdr',-1)">‹</button>
@@ -934,18 +953,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <button class="cal-today-btn" onclick="comCalToday('sdr')">Hoy</button>
         </div>
         <div id="comcal-container-sdr"></div>
-      </div>
-    </div>
-
-    <!-- CROSS-MONTH REMINDERS -->
-    <div class="xmonth-panel" id="xmonth-panel" style="display:none;">
-      <div class="xmonth-head-row" onclick="toggleXMonthCollapse()">
-        <div class="xmonth-title">📌 Pendientes de meses anteriores <span class="xmonth-total-badge" id="xmonth-total-badge"></span></div>
-        <button class="xmonth-collapse-btn" id="xmonth-collapse-btn" type="button" title="Contraer / expandir">▾</button>
-      </div>
-      <div id="xmonth-body">
-        <div class="xmonth-subtitle">Estas demos siguen abiertas. Dales una resolución para que desaparezcan de aquí.</div>
-        <div class="xmonth-groups" id="xmonth-groups"></div>
       </div>
     </div>
 
@@ -4662,7 +4669,7 @@ function renderCancelPanel(){
 }
 
 // Estado del panel de pendientes: colapsado y "ver todo" por grupo
-let xmonthCollapsed=false;
+let xmonthCollapsed=true;
 let xmonthShowAll={follow:false,reagendar:false};
 const XMONTH_LIMIT=5;
 
@@ -5219,6 +5226,18 @@ function sortByHora(list){
   });
 }
 
+// Estado del panel "Demos pendientes de confirmar": colapsado y "ver todo"
+let liveBannerCollapsed=true;
+let liveBannerShowAll=false;
+function toggleLiveBannerCollapse(){
+  liveBannerCollapsed=!liveBannerCollapsed;
+  const body=document.getElementById('live-banner-body');
+  const btn=document.getElementById('live-banner-collapse-btn');
+  if(body)body.style.display=liveBannerCollapsed?'none':'block';
+  if(btn)btn.classList.toggle('collapsed',liveBannerCollapsed);
+}
+function toggleLiveBannerShowAll(){liveBannerShowAll=!liveBannerShowAll;renderLiveBanner();}
+
 function renderLiveBanner(){
   const today=todayStr();
   const now=madridNow();
@@ -5243,11 +5262,22 @@ function renderLiveBanner(){
     return false;
   });
 
-  const banner=document.getElementById('live-banner');
-  const items=document.getElementById('live-banner-items');
-  if(!pending.length){banner.classList.remove('show');return;}
-  banner.classList.add('show');
-  items.innerHTML=pending.map(d=>`
+  const panel=document.getElementById('live-banner');
+  if(!panel)return;
+  if(!pending.length){panel.style.display='none';return;}
+  panel.style.display='block';
+
+  // Badge, colapsado y "ver todo" — mismo patrón que "Pendientes de meses anteriores"
+  const badge=document.getElementById('live-banner-total-badge');
+  if(badge)badge.textContent=pending.length;
+  const body=document.getElementById('live-banner-body');
+  const cbtn=document.getElementById('live-banner-collapse-btn');
+  if(body)body.style.display=liveBannerCollapsed?'none':'block';
+  if(cbtn)cbtn.classList.toggle('collapsed',liveBannerCollapsed);
+
+  const LIMIT=5;
+  const visible=liveBannerShowAll?pending:pending.slice(0,LIMIT);
+  let html=visible.map(d=>`
     <div class="live-banner-item">
       <span class="live-banner-item-name">${d.fecha<today?`📅 ${fmtDate(d.fecha)} · `:'🕐 '+(d.hora||'Hoy')+' · '}${d.sf_nombre||'Sin nombre'}</span>
       <div class="live-banner-btns">
@@ -5256,6 +5286,10 @@ function renderLiveBanner(){
         <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
       </div>
     </div>`).join('');
+  if(pending.length>LIMIT){
+    html+=`<button class="xmonth-vertodo" onclick="toggleLiveBannerShowAll()">${liveBannerShowAll?'▴ Ver menos':'▾ Ver todo ('+pending.length+')'}</button>`;
+  }
+  document.getElementById('live-banner-items').innerHTML=html;
 }
 
 // ── OUTCOME AL MARCAR EJECUTADA ──
@@ -6744,7 +6778,7 @@ function renderVacCalendario(){
 // ════════════════════════════════════════════════════════
 let comercialAusencias=[];
 let comCalOffset={sdr:0,mgr:0};
-let comCalCollapsedSdr=false;
+let comCalCollapsedSdr=true;
 
 async function loadComercialAusencias(){
   try{comercialAusencias=await sb('comercial_ausencias?select=*&order=fecha_inicio.asc')||[];}
@@ -6831,6 +6865,11 @@ function renderComercialCalendarSdr(){
   const hoyAus=comercialAusencias.filter(a=>(a.fecha_inicio||'')<=hoy&&(a.fecha_fin||'')>=hoy);
   const badge=document.getElementById('comcal-sdr-badge');
   if(badge)badge.innerHTML=hoyAus.length?`<span class="vac-alert-badge" style="background:var(--amber);color:#5a3d00;">${hoyAus.length} hoy</span>`:'';
+  // Mantiene el estado colapsado/expandido sincronizado en cada render
+  const body=document.getElementById('comcal-sdr-body');
+  const btn=document.getElementById('comcal-sdr-toggle');
+  if(body)body.style.display=comCalCollapsedSdr?'none':'block';
+  if(btn)btn.textContent=comCalCollapsedSdr?'Mostrar ▼':'Ocultar ▲';
   renderComercialCalendar('sdr');
 }
 
