@@ -4977,7 +4977,6 @@ function cierreActionsHtml(d){
   return`<div class="pd-actions">
       <span class="pd-q">¿Se hizo?</span>
       <button class="pd-btn ok${open?' open':''}" onclick="toggleOutcomeRow(${d.id})">✅ Sí</button>
-      <button class="pd-btn warn" onclick="marcarNoShow(${d.id})" title="No se presentó: pasa a Por reagendar">🚫 No se presentó</button>
       <button class="pd-btn" onclick="openReagendarModal(${d.id})">🔄 Reagendar</button>
       <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'cancelada',estado:'cancelada'})">✕ Cancelada</button>
     </div>`;
@@ -5003,13 +5002,6 @@ function setOutcomeDirect(id,outcome){
   outcomeRowsOpen.delete(id);
   outcomeModalId=id;
   applyOutcome(outcome);
-}
-async function marcarNoShow(id){
-  try{
-    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'cancelada',motivo:'no_show'})});
-    showToast('🚫 No-show registrado · la tienes en "Por reagendar"');
-    await loadDemos();
-  }catch(e){showToast('❌ Error');console.error(e);}
 }
 async function snoozeFollow(id,days){
   const d=new Date();d.setDate(d.getDate()+days);
@@ -5206,7 +5198,7 @@ function renderPendientes(){
   const empties={
     cierre:['🎉','Ninguna demo sin cerrar','Todas tus demos pasadas tienen resultado. Así da gusto.'],
     follow:['✅','Follow-ups al día','Cuando una demo con interés cumpla una semana sin respuesta, aparecerá aquí.'],
-    reag:['🙌','Nada por reagendar','Las demos canceladas o no-show aparecerán aquí para recuperarlas.']
+    reag:['🙌','Nada por reagendar','Las demos canceladas aparecerán aquí para recuperarlas.']
   };
   if(!items.length){
     const e=empties[pendQueue];
@@ -5229,7 +5221,7 @@ function renderPendientes(){
     html+=`<div class="pd-intro">Demos con interés que llevan una semana o más sin decisión. Llama, y luego marca el resultado o pospón el recordatorio.</div>`;
     html+=visible.map(d=>pendCardHtml(d,'follow')).join('');
   }else{
-    html+=`<div class="pd-intro">Demos canceladas o no-show. Recupéralas con una nueva fecha o descártalas si no hay nada que hacer.</div>`;
+    html+=`<div class="pd-intro">Demos canceladas (también las que no se presentaron). Recupéralas con una nueva fecha o descártalas si no hay nada que hacer.</div>`;
     html+=visible.map(d=>pendCardHtml(d,'reag')).join('');
   }
   if(items.length>PEND_LIMIT)html+=`<button class="pd-more" onclick="togglePendShowAll('${pendQueue}')">${pendShowAll[pendQueue]?'▴ Ver menos':'▾ Ver las '+items.length}</button>`;
