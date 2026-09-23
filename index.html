@@ -874,6 +874,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="user-avatar" id="user-avatar">?</div>
         <span id="user-name">—</span>
       </div>
+      <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑 PIN</button>
       <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -1109,6 +1110,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
     <div class="topbar-right">
       <div class="user-chip"><div class="user-avatar" id="mgr-avatar">M</div><span id="mgr-name">Manager</span></div>
+      <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑 PIN</button>
       <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -1650,6 +1652,34 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 
 <!-- MODAL PROGRAMAR SEGUIMIENTO (aplazar con fecha) -->
+<div class="modal-overlay" id="pin-modal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head">
+      <div class="modal-title">🔑 Cambiar mi PIN</div>
+      <button class="modal-close" onclick="closePinModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">PIN actual</label>
+        <input class="form-input" type="password" inputmode="numeric" maxlength="4" id="pin-actual" autocomplete="current-password"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PIN nuevo (4 dígitos)</label>
+        <input class="form-input" type="password" inputmode="numeric" maxlength="4" id="pin-nuevo" autocomplete="new-password"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Repite el PIN nuevo</label>
+        <input class="form-input" type="password" inputmode="numeric" maxlength="4" id="pin-nuevo2" autocomplete="new-password"/>
+        <div class="form-hint">Evita 1234, 0000 o tu año de nacimiento.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closePinModal()">Cancelar</button>
+        <button class="btn-save" onclick="savePin()">Guardar PIN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="aplazar-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-head">
@@ -1866,14 +1896,33 @@ let selectedCanal='outbound';
 // Festivos Madrid 2026 (nacionales + autonómicos + locales Madrid ciudad)
 const FESTIVOS_2026=['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-05-01','2026-05-15','2026-08-15','2026-10-12','2026-11-02','2026-11-09','2026-12-07','2026-12-08','2026-12-25'];
 
+// Token de sesión emitido por el servidor (rpc sdr_login). El PIN nunca se compara en el navegador.
+let sessionToken=sessionStorage.getItem('sdr_token');
+
 async function sb(path,opts={}){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}});
+  const headers={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})};
+  if(sessionToken)headers['x-sdr-token']=sessionToken;
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers});
   const t=await r.text();
   if(!r.ok){
     console.error('Supabase error',r.status,t);
+    // 42501 = bloqueado por RLS: puede ser que la sesión haya caducado
+    if(currentUser&&!path.startsWith('rpc/')&&(r.status===401||r.status===403||t.includes('42501')))checkSession();
     throw new Error(`${r.status}: ${t}`);
   }
   return t?JSON.parse(t):null;
+}
+function rpc(fn,args={}){return sb(`rpc/${fn}`,{method:'POST',body:JSON.stringify(args)});}
+
+let checkingSession=false;
+async function checkSession(){
+  if(checkingSession)return;
+  checkingSession=true;
+  try{
+    const me=await rpc('sdr_me');
+    if(!me){showToast('⏳ Tu sesión ha caducado. Vuelve a entrar.');logout();}
+  }catch(e){console.error(e);}
+  finally{checkingSession=false;}
 }
 
 // ── DATES ──
@@ -2013,7 +2062,7 @@ function setupPinInputs(){
 
 async function loadLoginNames(){
   try{
-    const users=await sb('sdr_users?activo=eq.true&select=id,nombre,rol&order=nombre.asc');
+    const users=await rpc('sdr_login_names');
     const sel=document.getElementById('login-name');
     sel.innerHTML='<option value="">Selecciona tu nombre...</option>'+
       (users||[]).map(u=>`<option value="${u.id}">${u.nombre}${u.rol==='manager'?' (Manager)':''}</option>`).join('');
@@ -2027,25 +2076,53 @@ async function doLogin(){
   if(!userId||pin.length!==4){errEl.textContent='Selecciona tu nombre e introduce los 4 dígitos del PIN.';return;}
   errEl.textContent='';
   try{
-    const users=await sb(`sdr_users?id=eq.${userId}&select=*`);
-    if(!users||!users.length){errEl.textContent='Usuario no encontrado.';return;}
-    const user=users[0];
-    if(user.pin!==pin){errEl.textContent='PIN incorrecto. Inténtalo de nuevo.';clearPins();return;}
-    if(!user.activo){errEl.textContent='Tu cuenta está desactivada. Habla con tu manager.';return;}
-    currentUser=user;
-    sessionStorage.setItem('sdr_user',JSON.stringify(user));
+    const res=await rpc('sdr_login',{p_user_id:parseInt(userId),p_pin:pin});
+    if(!res||!res.ok){
+      const err=res&&res.error;
+      if(err==='bloqueado')errEl.textContent=`Demasiados intentos. Prueba de nuevo en ${res.minutos} min o habla con tu manager.`;
+      else if(err==='inactivo')errEl.textContent='Tu cuenta está desactivada. Habla con tu manager.';
+      else errEl.textContent='PIN incorrecto. Inténtalo de nuevo.';
+      clearPins();return;
+    }
+    sessionToken=res.token;
+    sessionStorage.setItem('sdr_token',sessionToken);
+    currentUser=res.user;
     enterApp();
   }catch(e){errEl.textContent='Error de conexión. Inténtalo de nuevo.';console.error(e);}
+}
+function openPinModal(){
+  ['pin-actual','pin-nuevo','pin-nuevo2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pin-modal').classList.add('active');
+  document.getElementById('pin-actual').focus();
+}
+function closePinModal(){document.getElementById('pin-modal').classList.remove('active');}
+async function savePin(){
+  const actual=document.getElementById('pin-actual').value;
+  const nuevo=document.getElementById('pin-nuevo').value;
+  const nuevo2=document.getElementById('pin-nuevo2').value;
+  if(!/^\d{4}$/.test(nuevo)){showToast('⚠️ El PIN nuevo debe tener 4 dígitos');return;}
+  if(nuevo!==nuevo2){showToast('⚠️ Los PIN nuevos no coinciden');return;}
+  if(nuevo===actual){showToast('⚠️ El PIN nuevo es igual al actual');return;}
+  try{
+    const res=await rpc('sdr_change_pin',{p_old:actual,p_new:nuevo});
+    if(res&&res.ok){showToast('✓ PIN actualizado');closePinModal();}
+    else if(res&&res.error==='pin_actual')showToast('❌ El PIN actual no es correcto');
+    else if(res&&res.error==='sesion'){showToast('⏳ Tu sesión ha caducado');logout();}
+    else showToast('❌ No se pudo cambiar el PIN');
+  }catch(e){showToast('❌ Error de conexión');console.error(e);}
 }
 function clearPins(){['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value='');document.getElementById('pin1').focus();}
 
 function logout(){
+  if(sessionToken)rpc('sdr_logout').catch(()=>{});
+  sessionToken=null;
+  sessionStorage.removeItem('sdr_token');
   sessionStorage.removeItem('sdr_user');
   currentUser=null;
   document.getElementById('app').classList.remove('active');
   document.getElementById('manager-app').classList.remove('active');
   document.getElementById('login-screen').style.display='flex';
-  clearPins();document.getElementById('login-name').value='';
+  clearPins();loadLoginNames().then(()=>{document.getElementById('login-name').value='';});
 }
 
 async function enterApp(){
@@ -6647,7 +6724,7 @@ async function saveVacDias(sdrId){
     await sb(`sdr_users?id=eq.${sdrId}`,{method:'PATCH',body:JSON.stringify({dias_vacaciones:dias})});
     showToast('✓ Días actualizados');
     // Si el manager edita sus propios días, refrescamos su sesión
-    if(currentUser&&currentUser.id===sdrId){currentUser.dias_vacaciones=dias;sessionStorage.setItem('sdr_user',JSON.stringify(currentUser));}
+    if(currentUser&&currentUser.id===sdrId){currentUser.dias_vacaciones=dias;}
     await loadManagerData();
     await loadVacaciones();
     renderVacManager();
@@ -7088,11 +7165,15 @@ async function moveRegla(id,dir){
 // ── INIT ──
 async function init(){
   setupPinInputs();
-  const saved=sessionStorage.getItem('sdr_user');
-  document.getElementById('loading').style.display='none';
-  if(saved){
-    try{currentUser=JSON.parse(saved);await enterApp();return;}catch(e){}
+  sessionStorage.removeItem('sdr_user'); // formato antiguo: ya no se confía en el usuario guardado en el navegador
+  if(sessionToken){
+    try{
+      const me=await rpc('sdr_me');
+      if(me){currentUser=me;document.getElementById('loading').style.display='none';await enterApp();return;}
+    }catch(e){console.error(e);}
+    sessionToken=null;sessionStorage.removeItem('sdr_token');
   }
+  document.getElementById('loading').style.display='none';
   await loadLoginNames();
   document.getElementById('login-screen').style.display='flex';
 }
