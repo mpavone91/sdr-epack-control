@@ -977,6 +977,29 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   .topbar-right{gap:8px;}
   .user-chip span,.pin-btn-txt{display:none;}
 }
+
+/* ── Selección múltiple en Pendientes ── */
+.pd-check{width:20px;height:20px;flex-shrink:0;accent-color:var(--teal-dark);cursor:pointer;}
+.pd-card.selected{border-color:var(--teal-dark);background:#f3f8f7;box-shadow:0 0 0 1px var(--teal-dark);}
+.pd-selectall{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--teal-dark);cursor:pointer;margin-bottom:10px;padding:6px 12px 6px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--border);}
+.pd-selectall input{width:18px;height:18px;accent-color:var(--teal-dark);cursor:pointer;}
+.pd-group-sel{margin-left:6px;background:none;border:1px solid var(--border);border-radius:7px;padding:2px 9px;font-family:'Inter',sans-serif;font-size:10.5px;font-weight:700;color:var(--teal);cursor:pointer;text-transform:none;letter-spacing:0;order:3;}
+.pd-group-sel:hover{border-color:var(--teal-dark);color:var(--teal-dark);}
+.pd-group::after{order:2;}
+.pd-bulk-bar{position:fixed;left:50%;bottom:20px;transform:translate(-50%,140%);display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:min(920px,calc(100vw - 32px));background:var(--teal-dark);color:white;border-radius:16px;padding:12px 14px 12px 20px;box-shadow:0 12px 40px rgba(0,0,0,0.3);z-index:60;transition:transform 0.2s ease;}
+.pd-bulk-bar.show{transform:translate(-50%,0);}
+.pd-bulk-count{font-size:14px;white-space:nowrap;}
+.pd-bulk-count b{font-size:18px;color:var(--lime);}
+.pd-bulk-q{font-size:12.5px;font-weight:700;color:rgba(255,255,255,0.8);margin-right:2px;}
+.pd-bulk-bar .pd-btn:not(.ok):not(.danger){background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);color:white;}
+.pd-bulk-bar .pd-btn:not(.ok):not(.danger):hover{background:rgba(255,255,255,0.2);}
+.pd-bulk-clear{width:32px;height:32px;border-radius:9px;border:none;background:rgba(255,255,255,0.12);color:white;cursor:pointer;font-size:14px;margin-left:auto;}
+.pd-bulk-clear:hover{background:rgba(255,255,255,0.25);}
+#panel-pendientes{padding-bottom:90px;}
+@media (max-width:900px){
+  .pd-bulk-bar{bottom:12px;gap:10px;padding:12px;}
+  .pd-bulk-bar .pd-actions{width:100%;}
+}
 </style>
 </head>
 <body>
@@ -4796,7 +4819,9 @@ let motivoModalCtx=null;
 function openMotivoModal(ctx){
   motivoModalCtx=ctx;
   const demo=demos.find(d=>d.id===ctx.id);
-  document.getElementById('motivo-modal-name').textContent=(demo?demo.sf_nombre||'Sin nombre':'')||'';
+  document.getElementById('motivo-modal-name').textContent=ctx.ids
+    ?`📦 ${ctx.ids.length} demos seleccionadas — se aplicará el mismo motivo a todas`
+    :(demo?demo.sf_nombre||'Sin nombre':'')||'';
   const opts=ctx.tipo==='cancelada'?MOTIVOS_CANCELADA:MOTIVOS_PERDIDA;
   document.getElementById('motivo-modal-title').textContent=ctx.tipo==='cancelada'?'❌ ¿Por qué se canceló?':'💔 ¿Por qué se perdió?';
   const btnCls=ctx.tipo==='cancelada'?'cancel-type':'perdida-type';
@@ -4806,13 +4831,15 @@ function openMotivoModal(ctx){
 function closeMotivoModal(){document.getElementById('motivo-modal').classList.remove('active');motivoModalCtx=null;}
 async function applyMotivo(motivo){
   if(!motivoModalCtx)return;
-  const{id,estado,outcome}=motivoModalCtx;
+  const{id,ids,estado,outcome}=motivoModalCtx;
   const patch={motivo:motivo||null};
   if(estado!==undefined)patch.estado=estado;
   if(outcome!==undefined)patch.outcome=outcome;
   try{
-    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
-    showToast('✓ Demo actualizada');
+    const filtro=ids?`id=in.(${ids.join(',')})`:`id=eq.${id}`;
+    const res=await sb(`demos?${filtro}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast(ids?`✓ ${(res||[]).length} demos actualizadas`:'✓ Demo actualizada');
+    if(ids)clearPendSel();
     closeMotivoModal();
     await loadDemos();
   }catch(e){showToast('❌ Error');console.error(e);}
@@ -4904,6 +4931,7 @@ function showPanel(p){
   currentPanel=p;
   document.querySelectorAll('.sdr-panel').forEach(s=>s.classList.toggle('active',s.id==='panel-'+p));
   document.querySelectorAll('.sdr-nav-btn[data-panel]').forEach(b=>b.classList.toggle('active',b.dataset.panel===p));
+  if(p!=='pendientes'&&pendSel.size){pendSel.clear();bulkStep=null;renderBulkBar();}
   // El selector de mes lo comparten "Mis demos" y "Mis métricas"
   const slot=document.getElementById('monthnav-slot-'+p);
   const nav=document.getElementById('month-nav');
@@ -5167,7 +5195,100 @@ function renderHomeManana(){
 let pendQueue=null; // 'cierre' | 'follow' | 'reag'
 const pendShowAll={cierre:false,follow:false,reag:false};
 const PEND_LIMIT=15;
-function setPendQueue(q){pendQueue=q;renderPendientes();}
+function setPendQueue(q){if(q!==pendQueue){pendSel.clear();bulkStep=null;}pendQueue=q;renderPendientes();}
+
+// ══════════ SELECCIÓN MÚLTIPLE EN PENDIENTES ══════════
+const pendSel=new Set();
+let pendGroupIds={};   // grupo → ids (cola "Por cerrar")
+let bulkStep=null;     // null | 'resultado'
+function currentPendItems(){return({cierre:colaCierre,follow:colaFollow,reag:colaReagendar}[pendQueue]||colaCierre)();}
+function togglePendSel(id,on){
+  if(on)pendSel.add(id);else pendSel.delete(id);
+  const card=document.getElementById('pdc-'+id);
+  if(card)card.classList.toggle('selected',on);
+  syncPendSelUI();
+}
+function selectPendIds(ids){
+  const all=ids.every(id=>pendSel.has(id));
+  ids.forEach(id=>all?pendSel.delete(id):pendSel.add(id));
+  // Si se selecciona algo que no se ve, mostramos la lista completa
+  if(!all&&ids.some(id=>!document.getElementById('pdc-'+id)))pendShowAll[pendQueue]=true;
+  renderPendientes();
+}
+function selectPendGroup(g){selectPendIds(pendGroupIds[g]||[]);}
+function selectAllPend(){selectPendIds(currentPendItems().map(d=>d.id));}
+function clearPendSel(){pendSel.clear();bulkStep=null;renderPendientes();}
+function syncPendSelUI(){
+  // Limpia ids que ya no están en la cola (resueltos)
+  const vivos=new Set(currentPendItems().map(d=>d.id));
+  [...pendSel].forEach(id=>{if(!vivos.has(id))pendSel.delete(id);});
+  const all=document.getElementById('pd-select-all');
+  if(all){all.checked=vivos.size>0&&pendSel.size===vivos.size;all.indeterminate=pendSel.size>0&&pendSel.size<vivos.size;}
+  document.querySelectorAll('[data-pd-group]').forEach(b=>{
+    const ids=pendGroupIds[b.dataset.pdGroup]||[];
+    b.textContent=ids.length&&ids.every(id=>pendSel.has(id))?'Quitar selección':'Seleccionar grupo';
+  });
+  renderBulkBar();
+}
+function renderBulkBar(){
+  let bar=document.getElementById('pd-bulk-bar');
+  if(!bar){
+    bar=document.createElement('div');bar.id='pd-bulk-bar';bar.className='pd-bulk-bar';
+    document.getElementById('panel-pendientes').appendChild(bar);
+  }
+  const n=pendSel.size;
+  if(!n){bar.classList.remove('show');bulkStep=null;return;}
+  bar.classList.add('show');
+  const txt=`<div class="pd-bulk-count"><b>${n}</b> ${n===1?'seleccionada':'seleccionadas'}</div>`;
+  let acts='';
+  if(pendQueue==='cierre'){
+    acts=bulkStep==='resultado'
+      ?`<span class="pd-bulk-q">¿Cómo fueron?</span>
+        <button class="pd-btn" onclick="bulkOutcome('interesado')">👍 Interesado</button>
+        <button class="pd-btn" onclick="bulkOutcome('necesita_seguimiento')">📞 Necesita seguimiento</button>
+        <button class="pd-btn" onclick="bulkOutcome('no_interesado')">👎 No interesado</button>
+        <button class="pd-btn danger" onclick="bulkMotivo('perdida')">💔 Perdidas</button>
+        <button class="pd-btn ghost" onclick="bulkStep=null;renderBulkBar()">← Volver</button>`
+      :`<button class="pd-btn ok" onclick="bulkStep='resultado';renderBulkBar()">✅ Se hicieron</button>
+        <button class="pd-btn danger" onclick="bulkMotivo('cancelada')">✕ Canceladas</button>`;
+  }else if(pendQueue==='follow'){
+    acts=`<button class="pd-btn danger" onclick="bulkMotivo('perdida')">💔 Perdidas</button>
+      <button class="pd-btn" onclick="bulkSnooze(3)">⏰ +3 días</button>
+      <button class="pd-btn" onclick="bulkSnooze(7)">⏰ +1 semana</button>`;
+  }else{
+    acts=`<button class="pd-btn danger" onclick="bulkDescartar()">🗑️ Descartar</button>`;
+  }
+  bar.innerHTML=`${txt}<div class="pd-actions">${acts}</div><button class="pd-bulk-clear" onclick="clearPendSel()" title="Quitar selección">✕</button>`;
+}
+async function bulkPatch(patch,okMsg){
+  const ids=[...pendSel];
+  if(!ids.length)return;
+  try{
+    const res=await sb(`demos?id=in.(${ids.join(',')})`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast(`✓ ${(res||[]).length} ${okMsg}`);
+    pendSel.clear();bulkStep=null;
+    await loadDemos();
+  }catch(e){showToast('❌ Error al actualizar');console.error(e);}
+}
+function bulkOutcome(outcome){
+  const n=pendSel.size;
+  if(!confirm(`¿Marcar ${n} demo${n===1?'':'s'} como ejecutada${n===1?'':'s'} · ${outcomeLabel(outcome)}?`))return;
+  bulkPatch({estado:'ejecutada',outcome},'demos marcadas como ejecutadas');
+}
+function bulkMotivo(tipo){
+  const ids=[...pendSel];
+  if(tipo==='cancelada')openMotivoModal({ids,tipo:'cancelada',estado:'cancelada'});
+  else openMotivoModal({ids,tipo:'perdida',estado:'ejecutada',outcome:'cerrado_perdido'});
+}
+function bulkSnooze(days){
+  const d=new Date();d.setDate(d.getDate()+days);
+  bulkPatch({seguimiento_aplazado_hasta:localDateStr(d)},'follow-ups pospuestos al '+fmtDate(localDateStr(d)));
+}
+function bulkDescartar(){
+  const n=pendSel.size;
+  if(!confirm(`¿Descartar ${n} demo${n===1?'':'s'}? Irán a la papelera y seguirán contando en el ratio de cancelación.`))return;
+  bulkPatch({descartada:true},'demos movidas a la papelera');
+}
 function togglePendShowAll(q){pendShowAll[q]=!pendShowAll[q];renderPendientes();}
 function updatePendBadge(){
   const cierre=colaCierre();
@@ -5203,18 +5324,21 @@ function renderPendientes(){
   if(!items.length){
     const e=empties[pendQueue];
     listEl.innerHTML=`<div class="pd-empty"><div class="pd-empty-icon">${e[0]}</div><div class="pd-empty-title">${e[1]}</div><div class="pd-empty-text">${e[2]}</div></div>`;
+    pendSel.clear();renderBulkBar();
     return;
   }
   const visible=pendShowAll[pendQueue]?items:items.slice(0,PEND_LIMIT);
-  let html='';
+  let html=`<label class="pd-selectall"><input type="checkbox" id="pd-select-all" onchange="selectAllPend()"/> Seleccionar todas (${items.length})</label>`;
   if(pendQueue==='cierre'){
     html+=`<div class="pd-intro">Demos que ya pasaron y no tienen resultado. Pulsa <b>✅ Sí</b> y elige cómo fue: se cierra en dos clics.</div>`;
     if(oldCierre)html+=`<div class="pd-alert">⚠️ ${oldCierre===1?'Tienes 1 demo':'Tienes '+oldCierre+' demos'} de hace 2 días o más sin cerrar. Empieza por ahí: cuanto más esperas, menos te acuerdas.</div>`;
     const grupo=d=>{const n=diasDesde(d.fecha);return n<=0?'Hoy':n===1?'Ayer':n<7?'Esta semana':'Hace más de una semana';};
+    pendGroupIds={};
+    items.forEach(d=>{(pendGroupIds[grupo(d)]=pendGroupIds[grupo(d)]||[]).push(d.id);});
     let last='';
     visible.forEach(d=>{
       const g=grupo(d);
-      if(g!==last){html+=`<div class="pd-group${g==='Hace más de una semana'?' old':''}">${g}</div>`;last=g;}
+      if(g!==last){html+=`<div class="pd-group${g==='Hace más de una semana'?' old':''}">${g} · ${pendGroupIds[g].length}<button class="pd-group-sel" data-pd-group="${g}" onclick="selectPendGroup('${g}')">Seleccionar grupo</button></div>`;last=g;}
       html+=pendCardHtml(d,'cierre');
     });
   }else if(pendQueue==='follow'){
@@ -5226,6 +5350,7 @@ function renderPendientes(){
   }
   if(items.length>PEND_LIMIT)html+=`<button class="pd-more" onclick="togglePendShowAll('${pendQueue}')">${pendShowAll[pendQueue]?'▴ Ver menos':'▾ Ver las '+items.length}</button>`;
   listEl.innerHTML=html;
+  syncPendSelUI();
 }
 function pendCardHtml(d,q){
   const n=diasDesde(d.fecha);
@@ -5253,8 +5378,10 @@ function pendCardHtml(d,q){
       </div>`;
   }
   const outcome=q==='follow'&&d.outcome?` · <b>${escHtml(outcomeLabel(d.outcome))}</b>`:'';
-  return`<div class="pd-card">
+  const sel=pendSel.has(d.id);
+  return`<div class="pd-card${sel?' selected':''}" id="pdc-${d.id}">
     <div class="pd-row">
+      <input type="checkbox" class="pd-check" ${sel?'checked':''} onchange="togglePendSel(${d.id},this.checked)" title="Seleccionar para acción en bloque" aria-label="Seleccionar"/>
       ${when}
       <div class="pd-info"><div class="pd-name">${demoNameHtml(d)}</div><div class="pd-meta">${demoMetaHtml(d)}${outcome}</div></div>
       ${actions}
