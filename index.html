@@ -830,6 +830,151 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   .message-banner{margin:16px;}
   .content{padding:0 16px 40px;}
 }
+
+/* ══════════ LAYOUT SDR: MENÚ LATERAL + PANELES ══════════ */
+.sdr-shell{display:flex;align-items:flex-start;min-height:calc(100vh - 60px);}
+.sdr-sidebar{position:sticky;top:60px;width:220px;flex-shrink:0;height:calc(100vh - 60px);background:var(--surface);border-right:1px solid var(--border);padding:18px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+.sdr-nav-btn{display:flex;align-items:center;gap:11px;width:100%;padding:11px 14px;border:none;background:none;border-radius:11px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;text-align:left;transition:all 0.15s;white-space:nowrap;}
+.sdr-nav-btn:hover{background:var(--surface-2);color:var(--teal-dark);}
+.sdr-nav-btn.active{background:var(--lime-soft);color:var(--teal-dark);}
+.sdr-nav-btn.active .sdr-nav-ico{transform:scale(1.1);}
+.sdr-nav-btn.secondary{font-size:13px;font-weight:500;padding:9px 14px;}
+.sdr-nav-ico{font-size:17px;width:22px;text-align:center;transition:transform 0.15s;}
+.sdr-nav-txt{flex:1;}
+.sdr-nav-badge{display:none;min-width:22px;padding:1px 7px;border-radius:20px;font-size:11.5px;font-weight:700;text-align:center;background:var(--amber);color:white;}
+.sdr-nav-badge.show{display:inline-block;}
+.sdr-nav-badge.urgent{background:var(--red);}
+.sdr-nav-badge.info{background:var(--teal-light);}
+.sdr-nav-sep{height:1px;background:var(--border);margin:12px 6px;}
+.sdr-main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1180px;}
+.sdr-panel{display:none;}
+.sdr-panel.active{display:block;animation:panelIn 0.18s ease;}
+@keyframes panelIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.sdr-panel .news-banner{margin:0 0 20px;}
+.sdr-panel .message-banner.compact{margin:0 0 18px;padding:14px 20px;border-radius:14px;}
+.sdr-panel .message-banner.compact .message-text{font-size:15px;}
+.sdr-panel .message-banner.compact::after{font-size:80px;top:-14px;}
+.monthnav-slot:empty{display:none;}
+.btn-primary.btn-soft{background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);}
+.btn-primary.btn-soft:hover{background:var(--surface-2);}
+
+/* ── INICIO ── */
+.home-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px;}
+.home-kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all 0.15s;text-align:left;font-family:'Inter',sans-serif;}
+.home-kpi:hover{border-color:var(--lime);box-shadow:0 4px 14px rgba(0,0,0,0.05);}
+.home-kpi-num{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--teal-dark);line-height:1.1;}
+.home-kpi-label{font-size:12.5px;font-weight:600;color:var(--text);margin-top:2px;}
+.home-kpi-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.home-kpi.alert{background:var(--red-soft);border-color:#f3c2c2;}
+.home-kpi.alert .home-kpi-num{color:var(--red);}
+.home-kpi.warn{background:var(--amber-soft);border-color:#f0d58a;}
+.home-kpi.warn .home-kpi-num{color:var(--amber);}
+.home-kpi.ok .home-kpi-num{color:var(--green);}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:18px;}
+.home-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.home-card-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);}
+.home-card-sub{font-size:13px;color:var(--muted);margin:2px 0 14px;}
+.home-card-count{font-size:12.5px;font-weight:600;color:var(--muted);}
+.home-news-chip{display:flex;align-items:center;gap:8px;background:var(--amber-soft);border:1px solid #f0d58a;color:#7a4e00;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:18px;cursor:pointer;}
+.home-news-chip:hover{border-color:var(--amber);}
+.home-empty{text-align:center;padding:22px 10px;color:var(--muted);font-size:14px;}
+.home-empty b{display:block;color:var(--teal-dark);font-size:15px;margin-bottom:2px;}
+
+/* Tarjeta de demo en la agenda */
+.ag-item{display:flex;align-items:stretch;gap:14px;border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface);transition:border-color 0.15s;}
+.ag-item.ahora{border-left-color:var(--green);background:#f6fcf8;}
+.ag-item.proxima{border-left-color:var(--amber);}
+.ag-item.pasada,.ag-item.cierre{border-left-color:var(--muted);}
+.ag-item.cierre{background:#fffaf0;border-left-color:var(--amber);}
+.ag-item.cerrada{opacity:0.75;border-left-color:var(--green);}
+.ag-item.confirmada:not(.cerrada):not(.cierre){border-left-color:var(--lime-dark);}
+.ag-time{width:62px;flex-shrink:0;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+.ag-time-h{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);line-height:1;}
+.ag-time-s{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:5px;color:var(--muted);}
+.ag-item.ahora .ag-time-s{color:var(--green);}
+.ag-item.proxima .ag-time-s{color:var(--amber);}
+.ag-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.ag-name{font-size:14.5px;font-weight:700;color:var(--teal-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ag-name a{color:inherit;text-decoration:none;}
+.ag-name a:hover{text-decoration:underline;}
+.ag-meta{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 12px;}
+.ag-note{font-size:12px;color:var(--text);margin-top:4px;background:var(--surface-2);border-radius:7px;padding:4px 8px;}
+.ag-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+.ag-conf{padding:9px 16px;border-radius:10px;border:1.5px solid var(--lime);background:var(--surface);color:var(--teal-dark);font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.ag-conf:hover{background:var(--lime-soft);}
+.ag-conf.on{background:var(--lime);border-color:var(--lime);}
+.ag-conf.on:hover{background:var(--lime-dark);border-color:var(--lime-dark);}
+.ag-wa{padding:8px 12px;border-radius:10px;border:1.5px dashed var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:not-allowed;font-family:'Inter',sans-serif;white-space:nowrap;}
+.ag-wa small{font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;background:var(--surface-2);border-radius:5px;padding:1px 5px;margin-left:3px;}
+.ag-icon{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;}
+.ag-icon:hover{background:var(--surface-2);}
+.ag-done{font-size:12.5px;font-weight:700;color:var(--green);}
+
+/* ── PENDIENTES ── */
+.pd-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.pd-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.pd-tab:hover{border-color:var(--teal-light);color:var(--teal-dark);}
+.pd-tab.active{border-color:var(--teal-dark);background:var(--teal-dark);color:white;}
+.pd-tab-count{min-width:22px;padding:1px 7px;border-radius:20px;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--teal-dark);text-align:center;}
+.pd-tab-count.hot{background:var(--amber);color:white;}
+.pd-tab-count.urgent{background:var(--red);color:white;}
+.pd-intro{font-size:13px;color:var(--muted);margin-bottom:14px;}
+.pd-alert{background:var(--red-soft);border:1px solid #f3c2c2;color:#9a2020;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;margin-bottom:14px;}
+.pd-group{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+.pd-group::after{content:'';flex:1;height:1px;background:var(--border);}
+.pd-group.old{color:var(--red);}
+.pd-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px 16px;margin-bottom:9px;}
+.pd-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.pd-when{width:92px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--teal-dark);line-height:1.35;}
+.pd-when small{display:block;font-weight:600;color:var(--muted);font-size:11px;}
+.pd-when.old small{color:var(--red);}
+.pd-info{flex:1;min-width:180px;}
+.pd-name{font-size:14px;font-weight:700;color:var(--teal-dark);}
+.pd-name a{color:inherit;text-decoration:none;}
+.pd-name a:hover{text-decoration:underline;}
+.pd-meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:3px 10px;}
+.pd-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.pd-q{font-size:12px;font-weight:700;color:var(--muted);margin-right:2px;}
+.pd-btn{padding:8px 13px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:700;color:var(--teal-dark);cursor:pointer;transition:all 0.12s;white-space:nowrap;}
+.pd-btn:hover{border-color:var(--teal-light);background:var(--surface-2);}
+.pd-btn.ok{background:var(--green);border-color:var(--green);color:white;}
+.pd-btn.ok:hover{filter:brightness(0.95);}
+.pd-btn.ok.open{box-shadow:0 0 0 3px var(--green-soft);}
+.pd-btn.win{background:var(--lime);border-color:var(--lime);}
+.pd-btn.warn{border-color:#f0d58a;background:var(--amber-soft);color:#8a5e00;}
+.pd-btn.danger{border-color:#f3c2c2;background:var(--red-soft);color:var(--red);}
+.pd-btn.ghost{border-style:dashed;color:var(--muted);}
+.pd-outcomes{display:none;margin-top:12px;padding:12px 14px;background:var(--green-soft);border-radius:10px;}
+.pd-outcomes.open{display:block;}
+.pd-outcomes-label{font-size:12px;font-weight:700;color:#15683a;margin-bottom:8px;}
+.pd-outcomes .pd-actions{gap:6px;}
+.pd-empty{background:var(--surface);border:1px dashed var(--border);border-radius:16px;text-align:center;padding:40px 20px;}
+.pd-empty-icon{font-size:36px;}
+.pd-empty-title{font-family:'Fraunces',serif;font-size:19px;font-weight:700;color:var(--teal-dark);margin-top:6px;}
+.pd-empty-text{font-size:13.5px;color:var(--muted);margin-top:4px;}
+.pd-more{width:100%;background:none;border:1px dashed var(--border);border-radius:10px;padding:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;}
+.pd-more:hover{border-style:solid;color:var(--teal-dark);}
+.conf-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--lime-soft);color:var(--lime-dark);white-space:nowrap;}
+.cal-event.confirmada .cal-event-name::before{content:'✓ ';font-weight:700;}
+
+@media (max-width:900px){
+  .sdr-shell{display:block;}
+  .sdr-sidebar{top:60px;width:auto;height:auto;flex-direction:row;padding:8px 10px;border-right:none;border-bottom:1px solid var(--border);overflow-x:auto;z-index:45;gap:4px;}
+  .sdr-nav-btn{width:auto;padding:9px 12px;font-size:13px;}
+  .sdr-nav-sep{width:1px;height:auto;margin:4px 4px;}
+  .sdr-main{padding:18px 16px 60px;}
+  .home-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .ag-item{flex-wrap:wrap;}
+  .ag-actions{width:100%;justify-content:flex-start;}
+  .pd-when{width:auto;}
+}
+@media (max-width:560px){
+  .sdr-nav-btn.secondary .sdr-nav-txt{display:none;}
+  .topbar{padding:0 14px;}
+  .topbar-title{font-size:16px;white-space:nowrap;}
+  .topbar-right{gap:8px;}
+  .user-chip span,.pin-btn-txt{display:none;}
+}
 </style>
 </head>
 <body>
@@ -874,88 +1019,148 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="user-avatar" id="user-avatar">?</div>
         <span id="user-name">—</span>
       </div>
-      <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑 PIN</button>
+      <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑<span class="pin-btn-txt"> PIN</span></button>
       <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
 
-  <div id="kudos-banner-wrap"></div>
+  <div class="sdr-shell">
+    <!-- MENÚ LATERAL -->
+    <nav class="sdr-sidebar" id="sdr-sidebar">
+      <button class="sdr-nav-btn active" data-panel="inicio" onclick="showPanel('inicio')"><span class="sdr-nav-ico">🏠</span><span class="sdr-nav-txt">Inicio</span></button>
+      <button class="sdr-nav-btn" data-panel="pendientes" onclick="showPanel('pendientes')"><span class="sdr-nav-ico">⏳</span><span class="sdr-nav-txt">Pendientes</span><span class="sdr-nav-badge" id="nav-badge-pendientes"></span></button>
+      <button class="sdr-nav-btn" data-panel="demos" onclick="showPanel('demos')"><span class="sdr-nav-ico">📋</span><span class="sdr-nav-txt">Mis demos</span></button>
+      <button class="sdr-nav-btn" data-panel="metricas" onclick="showPanel('metricas')"><span class="sdr-nav-ico">📊</span><span class="sdr-nav-txt">Mis métricas</span></button>
+      <button class="sdr-nav-btn" data-panel="equipo" onclick="showPanel('equipo')"><span class="sdr-nav-ico">👥</span><span class="sdr-nav-txt">Equipo</span><span class="sdr-nav-badge info" id="nav-badge-equipo"></span></button>
+      <div class="sdr-nav-sep"></div>
+      <button class="sdr-nav-btn secondary" onclick="openNuevaTarea()"><span class="sdr-nav-ico">📌</span><span class="sdr-nav-txt">Nueva tarea</span></button>
+      <button class="sdr-nav-btn secondary" onclick="openVacacionesModal()"><span class="sdr-nav-ico">🏖️</span><span class="sdr-nav-txt">Vacaciones</span></button>
+      <button class="sdr-nav-btn secondary" onclick="openReglasModal()"><span class="sdr-nav-ico">📖</span><span class="sdr-nav-txt">Reglas SDR</span></button>
+    </nav>
 
-  <div class="message-banner">
-    <div class="message-icon">💡</div>
-    <div>
-      <div class="message-label">Mensaje del día</div>
-      <div class="message-text" id="message-text">Cargando...</div>
-    </div>
-  </div>
+    <main class="sdr-main">
+      <!-- ═════ INICIO ═════ -->
+      <section class="sdr-panel active" id="panel-inicio">
+        <div id="kudos-banner-wrap"></div>
+        <div class="page-head">
+          <div>
+            <div class="page-title">Hola, <span id="hello-name">—</span> 👋</div>
+            <div class="page-sub" id="today-date">—</div>
+          </div>
+          <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
+        </div>
 
-  <div class="news-banner" id="news-banner">
-    <div class="news-banner-title">📰 Tablón del equipo</div>
-    <div id="news-items"></div>
-  </div>
+        <div class="message-banner compact">
+          <div class="message-icon">💡</div>
+          <div>
+            <div class="message-label">Mensaje del día</div>
+            <div class="message-text" id="message-text">Cargando...</div>
+          </div>
+        </div>
 
-  <div class="content">
-    <div class="page-head">
-      <div>
-        <div class="page-title">Mis demos</div>
-        <div class="page-sub" id="today-date">—</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openReglasModal()">📖 Reglas SDR</button>
-        <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openVacacionesModal()">🏖️ Vacaciones</button>
-        <button class="btn-primary" style="background:var(--surface);color:var(--teal-dark);border:1.5px solid var(--border);" onclick="openNuevaTarea()">📌 Nueva tarea</button>
-        <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
-      </div>
-    </div>
+        <div class="home-kpis" id="home-kpis"></div>
 
-    <div class="month-nav">
+        <div class="home-card">
+          <div class="home-card-head">
+            <div class="home-card-title">📅 Agenda de hoy</div>
+            <span class="live-clock" id="live-clock"></span>
+          </div>
+          <div class="home-card-sub">Confirma cada demo con el cliente antes de la hora. Cuando pase, marca cómo fue.</div>
+          <div id="home-agenda"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-head">
+            <div class="home-card-title" id="home-manana-title">⏭️ Próximo día</div>
+            <span class="home-card-count" id="home-manana-count"></span>
+          </div>
+          <div class="home-card-sub">Adelántate: confirma hoy las demos del próximo día laborable.</div>
+          <div id="home-manana"></div>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-head"><div class="home-card-title">🗓️ Calendario de la semana</div></div>
+          <div id="calendar-view-wrap"></div>
+        </div>
+      </section>
+
+      <!-- ═════ PENDIENTES ═════ -->
+      <section class="sdr-panel" id="panel-pendientes">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Pendientes</div>
+            <div class="page-sub">Deja esta bandeja a cero cada día. Lo que resuelves desaparece de aquí.</div>
+          </div>
+        </div>
+        <div class="pd-tabs" id="pd-tabs"></div>
+        <div id="pd-list"></div>
+      </section>
+
+      <!-- ═════ MIS DEMOS ═════ -->
+      <section class="sdr-panel" id="panel-demos">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Mis demos</div>
+            <div class="page-sub">Todo tu histórico: busca, filtra por comercial o canal y edita.</div>
+          </div>
+          <button class="btn-primary" onclick="openDemoModal()">+ Nueva demo</button>
+        </div>
+        <div class="monthnav-slot" id="monthnav-slot-demos">
+    <div class="month-nav" id="month-nav">
       <button class="month-nav-btn" onclick="navMonth(-1)" title="Mes anterior">‹</button>
       <div class="month-nav-label" id="month-nav-label">—</div>
       <button class="month-nav-btn" onclick="navMonth(1)" title="Mes siguiente">›</button>
       <button class="month-nav-today" id="month-nav-today" onclick="navMonthToday()">Hoy</button>
     </div>
-
-    <!-- DEMOS PENDIENTES DE CONFIRMAR (tarjeta colapsable) -->
-    <div class="xmonth-panel" id="live-banner" style="display:none;">
-      <div class="xmonth-head-row" onclick="toggleLiveBannerCollapse()">
-        <div class="xmonth-title">⏰ Demos pendientes de confirmar <span class="xmonth-total-badge" id="live-banner-total-badge"></span></div>
-        <button class="xmonth-collapse-btn collapsed" id="live-banner-collapse-btn" type="button" title="Contraer / expandir">▾</button>
-      </div>
-      <div id="live-banner-body" style="display:none;">
-        <div class="xmonth-subtitle">De hoy o de días pasados, sin resultado marcado todavía. Dales un cierre rápido.</div>
-        <div class="live-banner-items" id="live-banner-items"></div>
-      </div>
-    </div>
-
-    <!-- CROSS-MONTH REMINDERS (tarjeta colapsable) -->
-    <div class="xmonth-panel" id="xmonth-panel" style="display:none;">
-      <div class="xmonth-head-row" onclick="toggleXMonthCollapse()">
-        <div class="xmonth-title">📌 Pendientes de meses anteriores <span class="xmonth-total-badge" id="xmonth-total-badge"></span></div>
-        <button class="xmonth-collapse-btn collapsed" id="xmonth-collapse-btn" type="button" title="Contraer / expandir">▾</button>
-      </div>
-      <div id="xmonth-body" style="display:none;">
-        <div class="xmonth-subtitle">Estas demos siguen abiertas. Dales una resolución para que desaparezcan de aquí.</div>
-        <div class="xmonth-groups" id="xmonth-groups"></div>
-      </div>
-    </div>
-
-    <!-- AUSENCIAS DE COMERCIALES (tarjeta colapsable, oculta por defecto) -->
-    <div id="comcal-sdr-wrap" class="comcal-panel">
-      <div class="comcal-head" onclick="toggleComCalSdr()">
-        <div class="comcal-title">🧑‍💼 Comerciales no disponibles <span id="comcal-sdr-badge"></span></div>
-        <button class="comcal-toggle-btn" id="comcal-sdr-toggle" type="button">Mostrar ▼</button>
-      </div>
-      <div id="comcal-sdr-body" style="display:none;">
-        <div class="comcal-sub">Comerciales de vacaciones o ausentes. Evita agendarles demos estos días.</div>
-        <div class="cal-nav" style="margin-bottom:12px;">
-          <button class="cal-nav-btn" onclick="comCalNav('sdr',-1)">‹</button>
-          <div class="cal-week-label" id="comcal-label-sdr" style="min-width:150px;">—</div>
-          <button class="cal-nav-btn" onclick="comCalNav('sdr',1)">›</button>
-          <button class="cal-today-btn" onclick="comCalToday('sdr')">Hoy</button>
         </div>
-        <div id="comcal-container-sdr"></div>
+
+    <!-- COMERCIALES (arriba, compacto) -->
+    <div class="comerciales-section" id="comerciales-section" style="margin-bottom:16px;">
+      <div class="com-section-title" style="font-size:14px;margin-bottom:10px;">👥 Por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
+      <div class="comerciales-grid" id="comerciales-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>
+    </div>
+
+    <!-- SEARCH + CANAL FILTER -->
+    <div class="list-controls" id="list-controls-wrap">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="demo-search" placeholder="Buscar en todo el historial: nombre, comercial, ciudad, notas..." oninput="renderList()"/>
+        <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
+      </div>
+      <div class="canal-filter-wrap">
+        <button class="canal-filter-btn active" id="cf-all" onclick="setCanalFilter('all',this)">Todos</button>
+        <button class="canal-filter-btn" id="cf-outbound" onclick="setCanalFilter('outbound',this)">🎯 Outbound</button>
+        <button class="canal-filter-btn" id="cf-inbound" onclick="setCanalFilter('inbound',this)">📥 Inbound</button>
       </div>
     </div>
+
+    <!-- LIST VIEW (tabs + list) -->
+    <div id="list-view-wrap">
+      <div class="view-tabs">
+        <button class="view-tab" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
+        <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
+        <button class="view-tab active" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
+        <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
+        <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
+        <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
+        <button class="view-tab" onclick="setView('papelera',this)">🗑️ Papelera <span class="count" id="c-papelera">0</span></button>
+      </div>
+
+      <div class="demo-view active" id="view-content">
+        <div class="demo-list" id="demo-list"></div>
+      </div>
+    </div>
+      </section>
+
+      <!-- ═════ MIS MÉTRICAS ═════ -->
+      <section class="sdr-panel" id="panel-metricas">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Mis métricas</div>
+            <div class="page-sub">Tus objetivos, tus llamadas y cómo vas este mes.</div>
+          </div>
+        </div>
+        <div class="monthnav-slot" id="monthnav-slot-metricas"></div>
 
     <!-- OBJETIVOS -->
     <div class="objetivos-panel" id="objetivos-panel">
@@ -1039,54 +1244,44 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="cancel-panel-title">📉 Desglose de cancelación</div>
       <div class="cancel-grid" id="cancel-grid"></div>
     </div>
+      </section>
 
-    <!-- COMERCIALES (arriba, compacto) -->
-    <div class="comerciales-section" id="comerciales-section" style="margin-bottom:16px;">
-      <div class="com-section-title" style="font-size:14px;margin-bottom:10px;">👥 Por comercial <span id="com-filter-clear" style="display:none;font-size:12px;font-weight:500;color:var(--lime-dark);cursor:pointer;" onclick="clearComercialFilter()">· Quitar filtro</span></div>
-      <div class="comerciales-grid" id="comerciales-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>
+      <!-- ═════ EQUIPO ═════ -->
+      <section class="sdr-panel" id="panel-equipo">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Equipo</div>
+            <div class="page-sub">Novedades, comerciales no disponibles, reglas y vacaciones.</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn-primary btn-soft" onclick="openReglasModal()">📖 Reglas SDR</button>
+            <button class="btn-primary btn-soft" onclick="openVacacionesModal()">🏖️ Vacaciones</button>
+          </div>
+        </div>
+    <div class="news-banner" id="news-banner">
+      <div class="news-banner-title">📰 Tablón del equipo</div>
+      <div id="news-items"></div>
     </div>
 
-    <!-- VIEW MODE TOGGLE -->
-    <div class="viewmode-toggle">
-      <button class="viewmode-btn active" id="vm-lista" onclick="setViewMode('lista')">📋 Lista</button>
-      <button class="viewmode-btn" id="vm-calendario" onclick="setViewMode('calendario')">🗓️ Calendario</button>
-    </div>
-
-    <!-- SEARCH + CANAL FILTER -->
-    <div class="list-controls" id="list-controls-wrap">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input class="search-input" id="demo-search" placeholder="Buscar en todo el historial: nombre, comercial, ciudad, notas..." oninput="renderList()"/>
-        <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
+    <!-- AUSENCIAS DE COMERCIALES (tarjeta colapsable, oculta por defecto) -->
+    <div id="comcal-sdr-wrap" class="comcal-panel">
+      <div class="comcal-head" onclick="toggleComCalSdr()">
+        <div class="comcal-title">🧑‍💼 Comerciales no disponibles <span id="comcal-sdr-badge"></span></div>
+        <button class="comcal-toggle-btn" id="comcal-sdr-toggle" type="button">Mostrar ▼</button>
       </div>
-      <div class="canal-filter-wrap">
-        <button class="canal-filter-btn active" id="cf-all" onclick="setCanalFilter('all',this)">Todos</button>
-        <button class="canal-filter-btn" id="cf-outbound" onclick="setCanalFilter('outbound',this)">🎯 Outbound</button>
-        <button class="canal-filter-btn" id="cf-inbound" onclick="setCanalFilter('inbound',this)">📥 Inbound</button>
+      <div id="comcal-sdr-body" style="display:none;">
+        <div class="comcal-sub">Comerciales de vacaciones o ausentes. Evita agendarles demos estos días.</div>
+        <div class="cal-nav" style="margin-bottom:12px;">
+          <button class="cal-nav-btn" onclick="comCalNav('sdr',-1)">‹</button>
+          <div class="cal-week-label" id="comcal-label-sdr" style="min-width:150px;">—</div>
+          <button class="cal-nav-btn" onclick="comCalNav('sdr',1)">›</button>
+          <button class="cal-today-btn" onclick="comCalToday('sdr')">Hoy</button>
+        </div>
+        <div id="comcal-container-sdr"></div>
       </div>
     </div>
-
-    <!-- LIST VIEW (tabs + list) -->
-    <div id="list-view-wrap">
-      <div class="view-tabs">
-        <button class="view-tab active" onclick="setView('hoy',this)">📅 Hoy <span class="count" id="c-hoy">0</span></button>
-        <button class="view-tab" onclick="setView('manana',this)">⏭️ Mañana <span class="count" id="c-manana">0</span></button>
-        <button class="view-tab" onclick="setView('semana',this)">🗓️ Semana <span class="count" id="c-semana">0</span></button>
-        <button class="view-tab" onclick="setView('todas',this)">📋 Todas <span class="count" id="c-todas">0</span></button>
-        <button class="view-tab" onclick="setView('ganadas',this)">💰 Ganadas <span class="count" id="c-ganadas">0</span></button>
-        <button class="view-tab" onclick="setView('perdidas',this)">❌ Perdidas <span class="count" id="c-perdidas">0</span></button>
-        <button class="view-tab alert" onclick="setView('reagendar',this)">🔄 Reagendar <span class="count" id="c-reagendar">0</span></button>
-        <button class="view-tab alert" onclick="setView('viejas',this)">⏰ Follow up <span class="count" id="c-viejas">0</span></button>
-        <button class="view-tab" onclick="setView('papelera',this)">🗑️ Papelera <span class="count" id="c-papelera">0</span></button>
-      </div>
-
-      <div class="demo-view active" id="view-content">
-        <div class="demo-list" id="demo-list"></div>
-      </div>
-    </div>
-
-    <!-- CALENDAR VIEW -->
-    <div id="calendar-view-wrap" style="display:none;"></div>
+      </section>
+    </main>
   </div>
 </div>
 
@@ -1110,7 +1305,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
     <div class="topbar-right">
       <div class="user-chip"><div class="user-avatar" id="mgr-avatar">M</div><span id="mgr-name">Manager</span></div>
-      <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑 PIN</button>
+      <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑<span class="pin-btn-txt"> PIN</span></button>
       <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -1887,7 +2082,7 @@ let ciudades=[];
 let demos=[];
 let objetivos=[];
 let noticias=[];
-let currentView='hoy';
+let currentView='semana';
 let monthOffset=0; // 0=current, -1=prev, 1=next
 let comercialFilter=null;
 let canalFilter='all';
@@ -2134,11 +2329,14 @@ async function enterApp(){
   document.getElementById('app').classList.add('active');
   document.getElementById('user-name').textContent=currentUser.nombre;
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
+  document.getElementById('hello-name').textContent=currentUser.nombre.split(' ')[0];
   document.getElementById('today-date').textContent=fmtDateLong();
   await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas(),loadConfig(),loadComercialAusencias()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
-  if(!liveInterval)liveInterval=setInterval(()=>{if(!normalizeSearch(getSearchQuery()))renderLiveView();renderLiveBanner();updateLiveClock();},60000);
+  if(!liveInterval)liveInterval=setInterval(()=>{renderHome();renderPendientes();updateLiveClock();},60000);
+  let savedPanel=null;try{savedPanel=sessionStorage.getItem('sdr_panel');}catch(e){}
+  showPanel(savedPanel||'inicio');
 }
 
 // ── MANAGER STATE ──
@@ -4258,6 +4456,8 @@ async function loadNoticias(){
     document.getElementById('news-items').innerHTML=noticias.map(n=>`<div class="news-item">• ${n.mensaje}</div>`).join('');
     banner.classList.add('show');
   }else{banner.classList.remove('show');}
+  const nb=document.getElementById('nav-badge-equipo');
+  if(nb){nb.textContent=noticias.length||'';nb.classList.toggle('show',noticias.length>0);}
 }
 async function loadDemos(){
   demos=await sb(`demos?sdr_id=eq.${currentUser.id}&select=*&order=fecha.asc`)||[];
@@ -4686,6 +4886,347 @@ function getFilteredDemos(){
   return result;
 }
 
+// ══════════ NAVEGACIÓN LATERAL (SDR) ══════════
+let currentPanel='inicio';
+let metricsAutoOpened=false;
+function showPanel(p){
+  if(!document.getElementById('panel-'+p))p='inicio';
+  currentPanel=p;
+  document.querySelectorAll('.sdr-panel').forEach(s=>s.classList.toggle('active',s.id==='panel-'+p));
+  document.querySelectorAll('.sdr-nav-btn[data-panel]').forEach(b=>b.classList.toggle('active',b.dataset.panel===p));
+  // El selector de mes lo comparten "Mis demos" y "Mis métricas"
+  const slot=document.getElementById('monthnav-slot-'+p);
+  const nav=document.getElementById('month-nav');
+  if(slot&&nav&&nav.parentElement!==slot)slot.appendChild(nav);
+  try{sessionStorage.setItem('sdr_panel',p);}catch(e){}
+  window.scrollTo(0,0);
+  if(p==='metricas'&&!metricsAutoOpened){
+    metricsAutoOpened=true;
+    const mp=document.getElementById('metrics-panel-inline');
+    if(mp&&mp.style.display!=='block')toggleMetricsPanel();
+  }
+}
+
+// ══════════ COLAS DE PENDIENTES ══════════
+// Por cerrar: la demo ya pasó (30 min después de la hora) y no tiene resultado
+function isPendingCierre(d,now=madridNow()){
+  if(d.estado==='cancelada'||d.estado==='reagendada')return false;
+  if(d.outcome||!d.fecha)return false;
+  const today=todayStr();
+  if(d.fecha<today)return true;
+  if(d.fecha>today)return false;
+  if(!d.hora)return now.getHours()>=17;
+  const[h,m]=d.hora.split(':').map(Number);
+  const t=new Date(now);t.setHours(h,m,0,0);
+  return(now-t)/60000>30;
+}
+function colaCierre(){
+  const now=madridNow();
+  return demos.filter(d=>isPendingCierre(d,now)).sort((a,b)=>
+    (b.fecha||'').localeCompare(a.fecha||'')||(a.hora||'99:99').localeCompare(b.hora||'99:99'));
+}
+// Follow up: ejecutadas con interés, 7+ días después de la demo y sin recordatorio futuro
+function colaFollow(){
+  const today=todayStr();
+  const cut=new Date();cut.setDate(cut.getDate()-7);
+  const cutStr=localDateStr(cut);
+  return demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&
+    (d.fecha||'')<=cutStr&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today))
+    .sort((a,b)=>(a.seguimiento_aplazado_hasta||a.fecha||'').localeCompare(b.seguimiento_aplazado_hasta||b.fecha||''));
+}
+function colaReagendar(){
+  return demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido')
+    .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+}
+function diasDesde(fecha){
+  if(!fecha)return 0;
+  const[y,m,d]=fecha.split('-').map(Number);
+  const f=new Date(y,m-1,d);const t=new Date();t.setHours(0,0,0,0);
+  return Math.round((t-f)/86400000);
+}
+function nextWorkdayStr(){
+  const d=new Date();
+  do{d.setDate(d.getDate()+1);}while(!isWorkday(d));
+  return localDateStr(d);
+}
+function escHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function demoNameHtml(d){
+  const n=escHtml(d.sf_nombre||'Sin nombre');
+  return sfHref(d)?`<a href="${sfHref(d)}" target="_blank" rel="noopener">${n}</a>`:n;
+}
+function demoMetaHtml(d){
+  const plataformaMap={teams:'💻 Teams',whatsapp:'💬 WhatsApp',meet:'🎥 Meet',zoom:'📹 Zoom'};
+  const tipo=d.tipo==='presencial'?'📍 Presencial · '+escHtml(ciudadName(d.ciudad_id)):(plataformaMap[d.plataforma]||'💻 Online');
+  return`<span>👤 ${escHtml(comercialName(d.comercial_id))}</span><span>${tipo}</span><span>${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>`;
+}
+
+// Botones "¿Se hizo?" — mismos en Inicio y en Pendientes
+const outcomeRowsOpen=new Set();
+function cierreActionsHtml(d){
+  const open=outcomeRowsOpen.has(d.id);
+  return`<div class="pd-actions">
+      <span class="pd-q">¿Se hizo?</span>
+      <button class="pd-btn ok${open?' open':''}" onclick="toggleOutcomeRow(${d.id})">✅ Sí</button>
+      <button class="pd-btn warn" onclick="marcarNoShow(${d.id})" title="No se presentó: pasa a Por reagendar">🚫 No se presentó</button>
+      <button class="pd-btn" onclick="openReagendarModal(${d.id})">🔄 Reagendar</button>
+      <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'cancelada',estado:'cancelada'})">✕ Cancelada</button>
+    </div>`;
+}
+function outcomeRowHtml(d){
+  return`<div class="pd-outcomes${outcomeRowsOpen.has(d.id)?' open':''}" id="pdo-${d.id}">
+      <div class="pd-outcomes-label">¿Cómo fue la demo?</div>
+      <div class="pd-actions">
+        <button class="pd-btn" onclick="setOutcomeDirect(${d.id},'interesado')">👍 Interesado</button>
+        <button class="pd-btn" onclick="setOutcomeDirect(${d.id},'necesita_seguimiento')">📞 Necesita seguimiento</button>
+        <button class="pd-btn" onclick="setOutcomeDirect(${d.id},'no_interesado')">👎 No interesado</button>
+        <button class="pd-btn win" onclick="setOutcomeDirect(${d.id},'cerrado_ganado')">🏆 Firmada</button>
+        <button class="pd-btn danger" onclick="setOutcomeDirect(${d.id},'cerrado_perdido')">💔 Perdida</button>
+      </div>
+    </div>`;
+}
+function toggleOutcomeRow(id){
+  if(outcomeRowsOpen.has(id))outcomeRowsOpen.delete(id);else outcomeRowsOpen.add(id);
+  document.querySelectorAll(`#pdo-${id}`).forEach(el=>el.classList.toggle('open',outcomeRowsOpen.has(id)));
+  document.querySelectorAll(`[onclick="toggleOutcomeRow(${id})"]`).forEach(el=>el.classList.toggle('open',outcomeRowsOpen.has(id)));
+}
+function setOutcomeDirect(id,outcome){
+  outcomeRowsOpen.delete(id);
+  outcomeModalId=id;
+  applyOutcome(outcome);
+}
+async function marcarNoShow(id){
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({estado:'cancelada',motivo:'no_show'})});
+    showToast('🚫 No-show registrado · la tienes en "Por reagendar"');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+async function snoozeFollow(id,days){
+  const d=new Date();d.setDate(d.getDate()+days);
+  const fecha=localDateStr(d);
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
+    showToast('⏰ Te lo recordamos el '+fmtDate(fecha));
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ══════════ CONFIRMAR ASISTENCIA ══════════
+async function toggleConfirmada(id){
+  const d=demos.find(x=>x.id===id);
+  if(!d)return;
+  const val=d.confirmada_at?null:new Date().toISOString();
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({confirmada_at:val})});
+    d.confirmada_at=val;
+    renderHome();renderCalendar();
+    showToast(val?'✓ Demo confirmada':'Confirmación quitada');
+  }catch(e){
+    console.error(e);
+    showToast(String(e.message).includes('confirmada_at')?'⚠️ Falta activar "confirmada" en la base de datos':'❌ Error al confirmar');
+  }
+}
+function confirmActionsHtml(d){
+  const on=!!d.confirmada_at;
+  return`<button class="ag-conf${on?' on':''}" onclick="toggleConfirmada(${d.id})" title="${on?'Quitar confirmación':'Marcar que el cliente ha confirmado'}">${on?'✓ Confirmada':'Confirmar'}</button>
+    <button class="ag-wa" disabled title="Próximamente: enviar la confirmación por WhatsApp">💬 WhatsApp<small>pronto</small></button>`;
+}
+
+// ══════════ INICIO ══════════
+function renderHome(){
+  if(!document.getElementById('home-agenda'))return;
+  renderHomeKpis();
+  renderHomeAgenda();
+  renderHomeManana();
+  updatePendBadge();
+}
+function renderHomeKpis(){
+  const today=todayStr();
+  const hoy=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');
+  const porConfirmar=hoy.filter(d=>!d.confirmada_at&&!d.outcome&&!isPendingCierre(d)).length;
+  const cierre=colaCierre(),follow=colaFollow();
+  const viejas=cierre.filter(d=>diasDesde(d.fecha)>=2).length;
+  // Progreso del mes en curso (independiente del mes que se esté viendo en otros paneles)
+  const now=new Date();
+  const mS=localDateStr(new Date(now.getFullYear(),now.getMonth(),1)),mE=localDateStr(new Date(now.getFullYear(),now.getMonth()+1,0));
+  const creadas=demos.filter(d=>{const a=demoAgendadoDate(d);return a>=mS&&a<=mE&&d.estado!=='cancelada';}).length;
+  const o=objetivos.find(x=>x.mes===now.getMonth()+1&&x.anio===now.getFullYear());
+  const obj=o?((o.demos_objetivo_outbound||0)+(o.demos_objetivo_inbound||0)):0;
+  const kpi=(cls,num,label,sub,onclick)=>`<button class="home-kpi ${cls}" onclick="${onclick}"><div class="home-kpi-num">${num}</div><div class="home-kpi-label">${label}</div><div class="home-kpi-sub">${sub}</div></button>`;
+  document.getElementById('home-kpis').innerHTML=
+    kpi(porConfirmar?'warn':'ok',hoy.length,'Demos hoy',hoy.length?(porConfirmar?`${porConfirmar} sin confirmar`:'Todas confirmadas ✓'):'Agenda libre',"document.getElementById('home-agenda').scrollIntoView({behavior:'smooth',block:'center'})")+
+    kpi(viejas?'alert':cierre.length?'warn':'ok',cierre.length,'Por cerrar',cierre.length?(viejas?`${viejas} de hace 2+ días`:'¿Se hicieron?'):'Todo al día ✓',"showPanel('pendientes');setPendQueue('cierre')")+
+    kpi(follow.length?'warn':'ok',follow.length,'Follow-ups',follow.length?'Toca llamar':'Todo al día ✓',"showPanel('pendientes');setPendQueue('follow')")+
+    kpi('',obj?`${creadas}<span style="font-size:15px;color:var(--muted);">/${obj}</span>`:creadas,'Demos del mes',obj?`${Math.round(creadas/obj*100)}% del objetivo`:'Sin objetivo cargado',"showPanel('metricas')");
+  const nc=document.getElementById('home-news-chip');
+  if(noticias&&noticias.length){
+    if(!nc){
+      const chip=document.createElement('div');
+      chip.id='home-news-chip';chip.className='home-news-chip';
+      chip.onclick=()=>showPanel('equipo');
+      document.getElementById('home-kpis').after(chip);
+    }
+    document.getElementById('home-news-chip').innerHTML=`📰 ${noticias.length===1?'Hay 1 novedad':'Hay '+noticias.length+' novedades'} en el tablón del equipo <span style="margin-left:auto;">Ver →</span>`;
+  }else if(nc)nc.remove();
+}
+function agendaItemHtml(d,forToday){
+  const st=forToday?demoStatus(d):'despues';
+  const cierre=forToday&&isPendingCierre(d);
+  const cerrada=!!d.outcome||d.estado==='ejecutada';
+  let cls=cerrada?'cerrada':cierre?'cierre':st;
+  if(d.confirmada_at)cls+=' confirmada';
+  const hora=d.hora?d.hora.slice(0,5):'—';
+  let sub='';
+  if(cerrada)sub='Hecha';
+  else if(cierre)sub='¿Cómo fue?';
+  else if(st==='ahora')sub='En curso';
+  else if(st==='proxima'){
+    const[h,m]=d.hora.split(':').map(Number);const t=new Date();t.setHours(h,m,0,0);
+    sub='En '+Math.max(1,Math.round((t-new Date())/60000))+' min';
+  }else if(!d.hora)sub='Sin hora';
+  let actions;
+  if(cerrada)actions=`<span class="ag-done">✓ ${escHtml(outcomeLabel(d.outcome)||'Ejecutada')}</span>`;
+  else if(cierre)actions=cierreActionsHtml(d);
+  else actions=confirmActionsHtml(d)+
+    `<button class="ag-icon" onclick="openReagendarModal(${d.id})" title="Reagendar">🔄</button>
+     <button class="ag-icon" onclick="openMotivoModal({id:${d.id},tipo:'cancelada',estado:'cancelada'})" title="Cancelada">✕</button>`;
+  actions+=`<button class="ag-icon" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="Editar">✏️</button>`;
+  return`<div class="ag-item ${cls}">
+    <div class="ag-time"><div class="ag-time-h">${hora}</div>${sub?`<div class="ag-time-s">${sub}</div>`:''}</div>
+    <div class="ag-body">
+      <div class="ag-name">${demoNameHtml(d)}</div>
+      <div class="ag-meta">${demoMetaHtml(d)}</div>
+      ${d.notas?`<div class="ag-note">📝 ${escHtml(d.notas)}</div>`:''}
+    </div>
+    <div class="ag-actions">${actions}</div>
+  </div>${cierre?outcomeRowHtml(d):''}`;
+}
+function renderHomeAgenda(){
+  const today=todayStr();
+  const list=sortByHora(demos.filter(d=>d.fecha===today&&d.estado!=='cancelada'));
+  const el=document.getElementById('home-agenda');
+  if(!list.length){
+    el.innerHTML=`<div class="home-empty"><b>Sin demos hoy</b>Buen momento para llamar y llenar la agenda de la semana 📞</div>`;
+    return;
+  }
+  el.innerHTML=list.map(d=>agendaItemHtml(d,true)).join('');
+  updateLiveClock();
+}
+function renderHomeManana(){
+  const next=nextWorkdayStr();
+  const list=sortByHora(demos.filter(d=>d.fecha===next&&d.estado!=='cancelada'));
+  const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const[y,m,dd]=next.split('-').map(Number);
+  const dow=dias[new Date(y,m-1,dd).getDay()];
+  const label=next===tomorrowStr()?'Mañana':'El '+dow;
+  document.getElementById('home-manana-title').textContent=`⏭️ ${label} · ${fmtDate(next)}`;
+  const conf=list.filter(d=>d.confirmada_at).length;
+  document.getElementById('home-manana-count').textContent=list.length?`${conf}/${list.length} confirmadas`:'';
+  document.getElementById('home-manana').innerHTML=list.length
+    ?list.map(d=>agendaItemHtml(d,false)).join('')
+    :`<div class="home-empty"><b>Nada agendado todavía</b>Las demos del ${dow} aparecerán aquí para confirmarlas.</div>`;
+}
+
+// ══════════ PENDIENTES ══════════
+let pendQueue=null; // 'cierre' | 'follow' | 'reag'
+const pendShowAll={cierre:false,follow:false,reag:false};
+const PEND_LIMIT=15;
+function setPendQueue(q){pendQueue=q;renderPendientes();}
+function togglePendShowAll(q){pendShowAll[q]=!pendShowAll[q];renderPendientes();}
+function updatePendBadge(){
+  const cierre=colaCierre();
+  const total=cierre.length+colaFollow().length+colaReagendar().length;
+  const b=document.getElementById('nav-badge-pendientes');
+  if(!b)return;
+  b.textContent=total||'';
+  b.classList.toggle('show',total>0);
+  b.classList.toggle('urgent',cierre.some(d=>diasDesde(d.fecha)>=2));
+}
+function renderPendientes(){
+  const tabsEl=document.getElementById('pd-tabs');
+  if(!tabsEl)return;
+  const cierre=colaCierre(),follow=colaFollow(),reag=colaReagendar();
+  const counts={cierre:cierre.length,follow:follow.length,reag:reag.length};
+  if(!pendQueue)pendQueue=cierre.length?'cierre':follow.length?'follow':reag.length?'reag':'cierre';
+  const oldCierre=cierre.filter(d=>diasDesde(d.fecha)>=2).length;
+  const tab=(q,label)=>{
+    const n=counts[q];
+    const hot=q==='cierre'&&oldCierre?'urgent':n?'hot':'';
+    return`<button class="pd-tab${pendQueue===q?' active':''}" onclick="setPendQueue('${q}')">${label} <span class="pd-tab-count ${hot}">${n}</span></button>`;
+  };
+  tabsEl.innerHTML=tab('cierre','📋 Por cerrar')+tab('follow','📞 Follow-up')+tab('reag','🔄 Por reagendar');
+  updatePendBadge();
+
+  const listEl=document.getElementById('pd-list');
+  const items={cierre,follow,reag}[pendQueue];
+  const empties={
+    cierre:['🎉','Ninguna demo sin cerrar','Todas tus demos pasadas tienen resultado. Así da gusto.'],
+    follow:['✅','Follow-ups al día','Cuando una demo con interés cumpla una semana sin respuesta, aparecerá aquí.'],
+    reag:['🙌','Nada por reagendar','Las demos canceladas o no-show aparecerán aquí para recuperarlas.']
+  };
+  if(!items.length){
+    const e=empties[pendQueue];
+    listEl.innerHTML=`<div class="pd-empty"><div class="pd-empty-icon">${e[0]}</div><div class="pd-empty-title">${e[1]}</div><div class="pd-empty-text">${e[2]}</div></div>`;
+    return;
+  }
+  const visible=pendShowAll[pendQueue]?items:items.slice(0,PEND_LIMIT);
+  let html='';
+  if(pendQueue==='cierre'){
+    html+=`<div class="pd-intro">Demos que ya pasaron y no tienen resultado. Pulsa <b>✅ Sí</b> y elige cómo fue: se cierra en dos clics.</div>`;
+    if(oldCierre)html+=`<div class="pd-alert">⚠️ ${oldCierre===1?'Tienes 1 demo':'Tienes '+oldCierre+' demos'} de hace 2 días o más sin cerrar. Empieza por ahí: cuanto más esperas, menos te acuerdas.</div>`;
+    const grupo=d=>{const n=diasDesde(d.fecha);return n<=0?'Hoy':n===1?'Ayer':n<7?'Esta semana':'Hace más de una semana';};
+    let last='';
+    visible.forEach(d=>{
+      const g=grupo(d);
+      if(g!==last){html+=`<div class="pd-group${g==='Hace más de una semana'?' old':''}">${g}</div>`;last=g;}
+      html+=pendCardHtml(d,'cierre');
+    });
+  }else if(pendQueue==='follow'){
+    html+=`<div class="pd-intro">Demos con interés que llevan una semana o más sin decisión. Llama, y luego marca el resultado o pospón el recordatorio.</div>`;
+    html+=visible.map(d=>pendCardHtml(d,'follow')).join('');
+  }else{
+    html+=`<div class="pd-intro">Demos canceladas o no-show. Recupéralas con una nueva fecha o descártalas si no hay nada que hacer.</div>`;
+    html+=visible.map(d=>pendCardHtml(d,'reag')).join('');
+  }
+  if(items.length>PEND_LIMIT)html+=`<button class="pd-more" onclick="togglePendShowAll('${pendQueue}')">${pendShowAll[pendQueue]?'▴ Ver menos':'▾ Ver las '+items.length}</button>`;
+  listEl.innerHTML=html;
+}
+function pendCardHtml(d,q){
+  const n=diasDesde(d.fecha);
+  const hace=n<=0?'hoy':n===1?'ayer':`hace ${n} días`;
+  let when,actions,extra='';
+  if(q==='cierre'){
+    when=`<div class="pd-when${n>=2?' old':''}">${n<=0?'Hoy':fmtDate(d.fecha)}${d.hora?' · '+d.hora.slice(0,5):''}<small>${hace}</small></div>`;
+    actions=cierreActionsHtml(d);
+    extra=outcomeRowHtml(d);
+  }else if(q==='follow'){
+    const aplazado=d.seguimiento_aplazado_hasta?`<small>recordatorio ${fmtDate(d.seguimiento_aplazado_hasta)}</small>`:'';
+    when=`<div class="pd-when${n>=21?' old':''}">Demo ${fmtDate(d.fecha)}<small>${hace}</small>${aplazado}</div>`;
+    actions=`<div class="pd-actions">
+        <button class="pd-btn win" onclick="openFirmaModal(${d.id})">🏆 Firmada</button>
+        <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'perdida',outcome:'cerrado_perdido'})">💔 Perdida</button>
+        <button class="pd-btn" onclick="snoozeFollow(${d.id},3)" title="Recordármelo en 3 días">⏰ +3 días</button>
+        <button class="pd-btn" onclick="snoozeFollow(${d.id},7)" title="Recordármelo en una semana">⏰ +1 sem</button>
+        <button class="pd-btn ghost" onclick="openAplazarModal(${d.id})" title="Elegir fecha">📅</button>
+      </div>`;
+  }else{
+    when=`<div class="pd-when">${fmtDate(d.fecha)}<small>${d.motivo?escHtml(motivoLabel(d.motivo)):'Cancelada'}</small></div>`;
+    actions=`<div class="pd-actions">
+        <button class="pd-btn ok" onclick="openReagendarModal(${d.id})">🔄 Reagendar</button>
+        <button class="pd-btn ghost" onclick="descartarDemo(${d.id})">🗑️ Descartar</button>
+      </div>`;
+  }
+  const outcome=q==='follow'&&d.outcome?` · <b>${escHtml(outcomeLabel(d.outcome))}</b>`:'';
+  return`<div class="pd-card">
+    <div class="pd-row">
+      ${when}
+      <div class="pd-info"><div class="pd-name">${demoNameHtml(d)}</div><div class="pd-meta">${demoMetaHtml(d)}${outcome}</div></div>
+      ${actions}
+    </div>
+    ${extra}
+  </div>`;
+}
+
 // ── RENDER ──
 function render(){
   updateMonthNavLabel();
@@ -4696,10 +5237,10 @@ function render(){
   renderCancelPanel();
   renderComerciales();
   renderCounts();
-  renderLiveBanner();
-  renderXMonthPanel();
-  if(viewMode==='calendario')renderCalendar();
-  else renderList();
+  renderHome();
+  renderPendientes();
+  renderCalendar();
+  renderList();
 }
 
 function renderCancelPanel(){
@@ -4746,109 +5287,8 @@ function renderCancelPanel(){
 }
 
 // Estado del panel de pendientes: colapsado y "ver todo" por grupo
-let xmonthCollapsed=true;
-let xmonthShowAll={follow:false,reagendar:false};
-const XMONTH_LIMIT=5;
 
-function toggleXMonthCollapse(){
-  xmonthCollapsed=!xmonthCollapsed;
-  const body=document.getElementById('xmonth-body');
-  const btn=document.getElementById('xmonth-collapse-btn');
-  if(body)body.style.display=xmonthCollapsed?'none':'block';
-  if(btn)btn.classList.toggle('collapsed',xmonthCollapsed);
-}
-function toggleXMonthShowAll(group){
-  xmonthShowAll[group]=!xmonthShowAll[group];
-  renderXMonthPanel();
-}
 
-function renderXMonthPanel(){
-  // Only show on current month view
-  const panel=document.getElementById('xmonth-panel');
-  const groups=document.getElementById('xmonth-groups');
-  if(!isCurrentMonth()){panel.style.display='none';return;}
-
-  const {start}=monthRange();
-  // Demos from BEFORE this month that are still unresolved
-  const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);
-  const cutStr7=localDateStr(cutoff7);
-
-  const today=todayStr();
-  const pendingFollow=demos.filter(d=>{
-    const agendado=demoAgendadoDate(d);
-    return agendado<start&&
-      d.estado==='ejecutada'&&
-      ['interesado','necesita_seguimiento'].includes(d.outcome)&&
-      (d.fecha||'')<=cutStr7&&
-      (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today);
-  });
-
-  const pendingReagendar=demos.filter(d=>{
-    const agendado=demoAgendadoDate(d);
-    return agendado<start&&d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido';
-  });
-
-  if(!pendingFollow.length&&!pendingReagendar.length){panel.style.display='none';return;}
-  panel.style.display='block';
-
-  // Total badge + collapse state
-  const total=pendingFollow.length+pendingReagendar.length;
-  const badge=document.getElementById('xmonth-total-badge');
-  if(badge)badge.textContent=total;
-  const body=document.getElementById('xmonth-body');
-  const cbtn=document.getElementById('xmonth-collapse-btn');
-  if(body)body.style.display=xmonthCollapsed?'none':'block';
-  if(cbtn)cbtn.classList.toggle('collapsed',xmonthCollapsed);
-
-  // Item renderers
-  const followItem=d=>`
-        <div class="xmonth-item">
-          <div class="xmonth-item-info">
-            <div class="xmonth-item-name">${sfHref(d)?`<a href="${sfHref(d)}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
-            <div class="xmonth-item-meta">📅 ${fmtDate(d.fecha)} · 👤 ${comercialName(d.comercial_id)} · 📍 ${ciudadName(d.ciudad_id)}</div>
-          </div>
-          <div class="xmonth-item-actions">
-            <span class="xmonth-badge ${d.outcome}">${outcomeLabel(d.outcome)}</span>
-            <select class="select-mini" onchange="changeEstadoOutcome(${d.id},this.value)" style="font-size:11px;padding:4px 8px;">
-              <option value="">Resolver...</option>
-              <option value="cerrado_ganado">✅ Ganado</option>
-              <option value="cerrado_perdido">❌ Perdido</option>
-            </select>
-            <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})" style="padding:4px 10px;font-size:11px;">⏰ Aplazar</button>
-          </div>
-        </div>`;
-
-  const reagItem=d=>`
-        <div class="xmonth-item">
-          <div class="xmonth-item-info">
-            <div class="xmonth-item-name">${sfHref(d)?`<a href="${sfHref(d)}" target="_blank" style="color:var(--teal);text-decoration:none;">${d.sf_nombre||'Sin nombre'}</a>`:(d.sf_nombre||'Sin nombre')}</div>
-            <div class="xmonth-item-meta">📅 ${fmtDate(d.fecha)} · 👤 ${comercialName(d.comercial_id)}</div>
-          </div>
-          <div class="xmonth-item-actions">
-            <span class="xmonth-badge cancelada">Cancelada</span>
-            <button class="btn-primary" style="padding:5px 12px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
-            <button class="btn-ghost-red" onclick="descartarDemo(${d.id})" style="padding:5px 10px;font-size:11px;">🗑️ Descartar</button>
-          </div>
-        </div>`;
-
-  const groupHtml=(label,items,groupKey,itemFn)=>{
-    const showAll=xmonthShowAll[groupKey];
-    const visible=showAll?items:items.slice(0,XMONTH_LIMIT);
-    let h=`<div class="xmonth-group"><div class="xmonth-group-label">${label} (${items.length})</div>`;
-    h+=visible.map(itemFn).join('');
-    if(items.length>XMONTH_LIMIT){
-      h+=`<button class="xmonth-vertodo" onclick="toggleXMonthShowAll('${groupKey}')">${showAll?'▴ Ver menos':'▾ Ver todo ('+items.length+')'}</button>`;
-    }
-    h+=`</div>`;
-    return h;
-  };
-
-  let html='';
-  if(pendingFollow.length)html+=groupHtml('📞 Seguimiento pendiente',pendingFollow,'follow',followItem);
-  if(pendingReagendar.length)html+=groupHtml('🔄 Canceladas sin reagendar',pendingReagendar,'reagendar',reagItem);
-
-  groups.innerHTML=html;
-}
 
 async function changeEstadoOutcome(id,value){
   if(!value)return;
@@ -5267,11 +5707,8 @@ function renderCounts(){
   document.getElementById('c-todas').textContent=demos.filter(d=>d.estado!=='cancelada'&&(d.fecha||'')>=mStartCount&&(d.fecha||'')<=mEndCount).length;
   document.getElementById('c-ganadas').textContent=demos.filter(d=>d.outcome==='cerrado_ganado').length;
   document.getElementById('c-perdidas').textContent=demos.filter(d=>d.outcome==='cerrado_perdido'&&d.estado==='ejecutada').length;
-  document.getElementById('c-reagendar').textContent=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
   const papeleraEl=document.getElementById('c-papelera');
   if(papeleraEl)papeleraEl.textContent=demos.filter(d=>d.estado==='cancelada'&&(d.descartada||d.outcome==='cerrado_perdido')).length;
-  const cutoff7=new Date();cutoff7.setDate(cutoff7.getDate()-7);const cutStr7=localDateStr(cutoff7);
-  document.getElementById('c-viejas').textContent=demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&(d.fecha||'')<=cutStr7&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today)).length;
 }
 
 // ── LIVE / HORA LOGIC ──
@@ -5304,70 +5741,7 @@ function sortByHora(list){
 }
 
 // Estado del panel "Demos pendientes de confirmar": colapsado y "ver todo"
-let liveBannerCollapsed=true;
-let liveBannerShowAll=false;
-function toggleLiveBannerCollapse(){
-  liveBannerCollapsed=!liveBannerCollapsed;
-  const body=document.getElementById('live-banner-body');
-  const btn=document.getElementById('live-banner-collapse-btn');
-  if(body)body.style.display=liveBannerCollapsed?'none':'block';
-  if(btn)btn.classList.toggle('collapsed',liveBannerCollapsed);
-}
-function toggleLiveBannerShowAll(){liveBannerShowAll=!liveBannerShowAll;renderLiveBanner();}
 
-function renderLiveBanner(){
-  const today=todayStr();
-  const now=madridNow();
-
-  // All demos past their expected time with no outcome set
-  const pending=demos.filter(d=>{
-    if(d.estado==='cancelada'||d.estado==='reagendada')return false;
-    if(d.outcome)return false;
-    // Demos from previous days always pending
-    if(d.fecha&&d.fecha<today)return true;
-    // Today's demos: past their hora by 30+ min, or no hora and it's past noon
-    if(d.fecha===today){
-      if(!d.hora){
-        // No hora defined — show reminder if it's past 17:00
-        return now.getHours()>=17;
-      }
-      const[h,m]=d.hora.split(':').map(Number);
-      const demoTime=new Date(now);
-      demoTime.setHours(h,m,0,0);
-      return(now-demoTime)/60000>30;
-    }
-    return false;
-  });
-
-  const panel=document.getElementById('live-banner');
-  if(!panel)return;
-  if(!pending.length){panel.style.display='none';return;}
-  panel.style.display='block';
-
-  // Badge, colapsado y "ver todo" — mismo patrón que "Pendientes de meses anteriores"
-  const badge=document.getElementById('live-banner-total-badge');
-  if(badge)badge.textContent=pending.length;
-  const body=document.getElementById('live-banner-body');
-  const cbtn=document.getElementById('live-banner-collapse-btn');
-  if(body)body.style.display=liveBannerCollapsed?'none':'block';
-  if(cbtn)cbtn.classList.toggle('collapsed',liveBannerCollapsed);
-
-  const LIMIT=5;
-  const visible=liveBannerShowAll?pending:pending.slice(0,LIMIT);
-  let html=visible.map(d=>`
-    <div class="live-banner-item">
-      <span class="live-banner-item-name">${d.fecha<today?`📅 ${fmtDate(d.fecha)} · `:'🕐 '+(d.hora||'Hoy')+' · '}${d.sf_nombre||'Sin nombre'}</span>
-      <div class="live-banner-btns">
-        <button class="live-quick-btn ej" onclick="openOutcomeModal(${d.id})">✓ Ejecutada</button>
-        <button class="live-quick-btn re" onclick="reagendarConHora(${d.id})">🔄 Reagendar</button>
-        <button class="live-quick-btn ca" onclick="quickOutcome(${d.id},'cancelada',null)">✕ Cancelada</button>
-      </div>
-    </div>`).join('');
-  if(pending.length>LIMIT){
-    html+=`<button class="xmonth-vertodo" onclick="toggleLiveBannerShowAll()">${liveBannerShowAll?'▴ Ver menos':'▾ Ver todo ('+pending.length+')'}</button>`;
-  }
-  document.getElementById('live-banner-items').innerHTML=html;
-}
 
 // ── OUTCOME AL MARCAR EJECUTADA ──
 // Al pulsar "Ejecutada" se pide siempre el resultado. Según lo que elijan,
@@ -5509,7 +5883,8 @@ async function confirmReagendar(){
       hora:horaVal,
       estado:'agendada',
       outcome:null,
-      descartada:false
+      descartada:false,
+      confirmada_at:null
     })});
     showToast('✓ Demo reagendada para '+fmtDate(fechaTrim)+(horaVal?' a las '+horaVal:''));
     closeReagendarModal();
@@ -5517,42 +5892,6 @@ async function confirmReagendar(){
   }catch(e){showToast('❌ Error al reagendar');console.error(e);}
 }
 
-function renderLiveView(){
-  const today=todayStr();
-  const todayDemos=demos.filter(d=>d.fecha===today&&d.estado!=='cancelada');
-  const sorted=sortByHora(todayDemos);
-  const list=document.getElementById('demo-list');
-
-  if(!sorted.length){
-    list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Sin demos hoy</div><div class="empty-text">No tienes demos agendadas para hoy.</div></div>`;
-    return;
-  }
-
-  // Group by status
-  const groups={ahora:[],proxima:[],despues:[],pasada:[],nohora:[]};
-  sorted.forEach(d=>groups[demoStatus(d)].push(d));
-
-  const now=madridNow();
-  const horaStr=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-
-  const sections=[
-    {key:'ahora',label:'🟢 En curso ahora',cls:'ahora'},
-    {key:'proxima',label:'🟡 Próximas — en los próximos 30 min',cls:'proxima'},
-    {key:'despues',label:'🔵 Más tarde',cls:'despues'},
-    {key:'nohora',label:'⚪ Sin hora definida',cls:'despues'},
-    {key:'pasada',label:'⚫ Pasadas',cls:'pasada'}
-  ];
-
-  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:13px;font-weight:600;color:var(--teal-dark);">Demos de hoy</span><span class="live-clock" id="live-clock">🕐 ${horaStr}</span></div>`;
-
-  sections.forEach(({key,label,cls})=>{
-    if(!groups[key].length)return;
-    html+=`<div class="live-section-label ${cls}">${label}</div>`;
-    html+=groups[key].map(d=>renderDemoCard(d,cls)).join('');
-  });
-
-  list.innerHTML=html;
-}
 
 function renderDemoCard(d,liveClass='',searchMode=false){
   const sfLink=sfHref(d)?`<a href="${sfHref(d)}" target="_blank" rel="noopener">${d.sf_nombre||'Ver oportunidad'}</a>`:`<span>${d.sf_nombre||'Sin nombre'}</span>`;
@@ -5575,6 +5914,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
         <span class="badge ${d.tipo}">${d.tipo==='presencial'?'📍 Presencial':'💻 Online'}</span>
         <span class="badge ${d.canal||'outbound'}">${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>
         ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
+        ${d.confirmada_at&&d.estado==='agendada'&&!d.outcome?'<span class="conf-pill">✓ Confirmada</span>':''}
       </div>
       <div class="demo-meta">
         <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
@@ -5916,6 +6256,8 @@ function goToView(view){
     expandedStat=null;
   }
   document.getElementById('stat-expansion-panel').style.display='none';
+  if(view==='reagendar'||view==='viejas'){showPanel('pendientes');setPendQueue(view==='reagendar'?'reag':'follow');return;}
+  showPanel('demos');
   const btn=Array.from(document.querySelectorAll('.view-tab')).find(b=>b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${view}'`));
   if(btn)btn.click();
   else setView(view);
@@ -5924,10 +6266,6 @@ function goToView(view){
 function renderList(){
   const list=document.getElementById('demo-list');
   const searching=!!normalizeSearch(getSearchQuery());
-
-  // Hoy usa la vista en vivo con semáforo — PERO si hay una búsqueda activa,
-  // mostramos la lista normal con resultados de todo el histórico en su lugar.
-  if((currentView==='hoy'||currentView==='enlive')&&!searching){renderLiveView();return;}
 
   const filtered=getFilteredDemos();
 
@@ -5971,30 +6309,9 @@ function renderList(){
 }
 
 // ── CALENDAR VIEW ──
-let viewMode='lista';        // 'lista' | 'calendario'
 let calWeekOffset=0;          // 0 = current week
 let calComercialFilter='';    // '' = all comerciales
 
-function setViewMode(mode){
-  viewMode=mode;
-  document.getElementById('vm-lista').classList.toggle('active',mode==='lista');
-  document.getElementById('vm-calendario').classList.toggle('active',mode==='calendario');
-  const listWrap=document.getElementById('list-view-wrap');
-  const calWrap=document.getElementById('calendar-view-wrap');
-  const controls=document.getElementById('list-controls-wrap');
-  if(mode==='calendario'){
-    listWrap.style.display='none';
-    calWrap.style.display='block';
-    controls.style.display='none';
-    if(liveInterval){clearInterval(liveInterval);liveInterval=null;}
-    renderCalendar();
-  }else{
-    listWrap.style.display='block';
-    calWrap.style.display='none';
-    controls.style.display='';
-    renderList();
-  }
-}
 
 // Get the Mon-Sun dates for a given week offset
 function calWeekDates(offset){
@@ -6150,7 +6467,7 @@ function calEventHtml(d){
   const cls=calEventClass(d);
   const hora=d.hora?d.hora.slice(0,5):'';
   const name=d.sf_nombre||'Sin nombre';
-  return`<div class="cal-event ${cls}" onclick="openDemoPopup(${d.id})" title="${name}">
+  return`<div class="cal-event ${cls}${d.confirmada_at&&cls==='agendada'?' confirmada':''}" onclick="openDemoPopup(${d.id})" title="${name}">
     ${hora?`<div class="cal-event-time">${hora}</div>`:''}
     <div class="cal-event-name">${name}</div>
   </div>`;
@@ -6167,7 +6484,7 @@ function openDemoPopup(id){
   const tipoLabel=d.tipo==='presencial'?'📍 Presencial':'💻 Online';
   let rows='';
   rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📅 Fecha</span><span class="popup-detail-val">${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora.slice(0,5):''}</span></div>`;
-  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📊 Estado</span><span class="popup-detail-val">${estadoLabel}${d.outcome?' · '+outcomeLabel(d.outcome):''}</span></div>`;
+  rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📊 Estado</span><span class="popup-detail-val">${estadoLabel}${d.outcome?' · '+outcomeLabel(d.outcome):''}${d.confirmada_at&&d.estado==='agendada'?' · ✓ Confirmada':''}</span></div>`;
   rows+=`<div class="popup-detail-row"><span class="popup-detail-label">🔀 Canal</span><span class="popup-detail-val">${canalLabel} · ${tipoLabel}${d.tipo==='online'&&d.plataforma?' · '+(plataformaMap[d.plataforma]||d.plataforma):''}</span></div>`;
   rows+=`<div class="popup-detail-row"><span class="popup-detail-label">👤 Comercial</span><span class="popup-detail-val">${comercialName(d.comercial_id)}</span></div>`;
   rows+=`<div class="popup-detail-row"><span class="popup-detail-label">📍 Ciudad</span><span class="popup-detail-val">${ciudadName(d.ciudad_id)}</span></div>`;
@@ -6196,12 +6513,6 @@ function setView(view,btn){
   // Cambiar de pestaña sale del modo búsqueda (si había una activa)
   const searchEl=document.getElementById('demo-search');
   if(searchEl&&searchEl.value){searchEl.value='';document.getElementById('search-clear').style.display='none';}
-  // Auto-refresh for hoy (live view)
-  if(view==='hoy'||view==='enlive'){
-    if(!liveInterval)liveInterval=setInterval(()=>{if(!normalizeSearch(getSearchQuery()))renderLiveView();renderLiveBanner();updateLiveClock();},60000);
-  }else{
-    if(liveInterval){clearInterval(liveInterval);liveInterval=null;}
-  }
   renderList();
 }
 
