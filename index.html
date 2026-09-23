@@ -904,8 +904,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .ag-conf:hover{background:var(--lime-soft);}
 .ag-conf.on{background:var(--lime);border-color:var(--lime);}
 .ag-conf.on:hover{background:var(--lime-dark);border-color:var(--lime-dark);}
-.ag-wa{padding:8px 12px;border-radius:10px;border:1.5px dashed var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:not-allowed;font-family:'Inter',sans-serif;white-space:nowrap;}
-.ag-wa small{font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;background:var(--surface-2);border-radius:5px;padding:1px 5px;margin-left:3px;}
+.ag-wa{display:inline-block;padding:8px 12px;border-radius:10px;border:1.5px dashed var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;text-decoration:none;transition:all 0.15s;}
+.ag-wa:hover{border-color:#25D366;color:#128C7E;}
+.ag-wa.on{border:1.5px solid #25D366;background:#e9fbf0;color:#128C7E;}
+.ag-wa.on:hover{background:#25D366;color:white;}
 .ag-icon{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;}
 .ag-icon:hover{background:var(--surface-2);}
 .ag-done{font-size:12.5px;font-weight:700;color:var(--green);}
@@ -1757,6 +1759,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <label class="form-label">Ciudad</label>
           <select class="form-select" id="f-ciudad"></select>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono del cliente (WhatsApp)</label>
+        <input class="form-input" type="tel" id="f-telefono" placeholder="Ej: 612 345 678" autocomplete="off"/>
+        <div class="form-hint">Opcional. Con él puedes confirmar la demo por WhatsApp en un clic.</div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -4598,6 +4605,7 @@ function openDemoModal(demo=null){
     document.getElementById('f-fecha-agendamiento').value=demo.fecha_agendamiento||demo.created_at?.split('T')[0]||'';
     document.getElementById('f-comercial').value=demo.comercial_id||'';
     document.getElementById('f-ciudad').value=demo.ciudad_id||'';
+    document.getElementById('f-telefono').value=demo.telefono||'';
     document.getElementById('f-fecha').value=demo.fecha||'';
     document.getElementById('f-hora').value=demo.hora?demo.hora.slice(0,5):'';
     document.getElementById('f-tipo').value=demo.tipo||'presencial';
@@ -4619,6 +4627,7 @@ function openDemoModal(demo=null){
     document.getElementById('f-sf-url').value='';
     document.getElementById('f-sf-nombre').value='';
     document.getElementById('f-fecha-agendamiento').value='';
+    document.getElementById('f-telefono').value='';
     document.getElementById('f-fecha').value=todayStr();
     document.getElementById('f-hora').value='';
     document.getElementById('f-tipo').value='presencial';
@@ -4725,6 +4734,7 @@ async function saveDemo(){
     sf_nombre:sfName,
     comercial_id:comercialVal?parseInt(comercialVal):null,
     ciudad_id:ciudadVal?parseInt(ciudadVal):null,
+    telefono:document.getElementById('f-telefono').value.trim()||null,
     fecha_agendamiento:fechaAgendamiento,
     fecha:document.getElementById('f-fecha').value||null,
     hora:horaVal,
@@ -5029,7 +5039,41 @@ async function toggleConfirmada(id){
 function confirmActionsHtml(d){
   const on=!!d.confirmada_at;
   return`<button class="ag-conf${on?' on':''}" onclick="toggleConfirmada(${d.id})" title="${on?'Quitar confirmación':'Marcar que el cliente ha confirmado'}">${on?'✓ Confirmada':'Confirmar'}</button>
-    <button class="ag-wa" disabled title="Próximamente: enviar la confirmación por WhatsApp">💬 WhatsApp<small>pronto</small></button>`;
+    ${waButtonHtml(d)}`;
+}
+
+// ══════════ WHATSAPP ══════════
+// Abre WhatsApp (web o app) con el mensaje de confirmación ya escrito — sin API ni coste.
+function waNumber(tel){
+  let n=String(tel||'').replace(/[^\d+]/g,'');
+  if(n.startsWith('+'))n=n.slice(1);
+  else if(n.startsWith('00'))n=n.slice(2);
+  else if(n.length===9)n='34'+n; // número español sin prefijo
+  return /^\d{8,15}$/.test(n)?n:null;
+}
+function waMessage(d){
+  const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  let cuando;
+  if(d.fecha===todayStr())cuando='hoy';
+  else if(d.fecha===tomorrowStr())cuando='mañana';
+  else{const[y,m,dd]=d.fecha.split('-').map(Number);cuando=`el ${dias[new Date(y,m-1,dd).getDay()]} ${fmtDate(d.fecha)}`;}
+  const plataformaMap={teams:'Teams',whatsapp:'videollamada de WhatsApp',meet:'Google Meet',zoom:'Zoom'};
+  const donde=d.tipo==='presencial'?'en tu local':'por '+(plataformaMap[d.plataforma]||'videollamada');
+  const hora=d.hora?' a las '+d.hora.slice(0,5):'';
+  const nombre=(currentUser?.nombre||'').split(' ')[0];
+  return`¡Hola! Soy ${nombre}, de ePackPro 👋 Te escribo para confirmar la demo de ${cuando}${hora} ${donde}. ¿Nos confirmas que te sigue viniendo bien? ¡Gracias!`;
+}
+function waButtonHtml(d){
+  const num=waNumber(d.telefono);
+  if(!num)return`<button class="ag-wa" onclick="waSinTelefono(${d.id})" title="Añade el teléfono del cliente para confirmar por WhatsApp">💬 Añadir tel.</button>`;
+  return`<a class="ag-wa on" href="https://wa.me/${num}?text=${encodeURIComponent(waMessage(d))}" target="_blank" rel="noopener" onclick="showToast('💬 Cuando te responda, pulsa Confirmar')" title="Abrir WhatsApp con el mensaje de confirmación">💬 WhatsApp</a>`;
+}
+function waSinTelefono(id){
+  const d=demos.find(x=>x.id===id);
+  if(!d)return;
+  openDemoModal(d);
+  setTimeout(()=>document.getElementById('f-telefono').focus(),50);
+  showToast('📱 Añade el teléfono del cliente y guarda');
 }
 
 // ══════════ INICIO ══════════
