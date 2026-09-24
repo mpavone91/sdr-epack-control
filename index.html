@@ -1500,7 +1500,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="mgr-tab" id="mgrtab-objetivos">
       <div class="mgr-card">
         <div class="mgr-card-title">🎯 Objetivos mensuales — <span id="obj-month-label-mgr"></span></div>
-        <p class="mgr-card-sub">Los objetivos son iguales para todos. Define las metas del mes y aplícalas a todo el equipo.</p>
+        <p class="mgr-card-sub">Define unas metas comunes y aplícalas a todo el equipo, o ajusta abajo el objetivo de cada SDR.</p>
         <div class="obj-form-grid">
           <div class="obj-form-item"><label>📅 Demos Outbound</label><input type="number" min="0" id="obj-in-demos-out" class="form-input"/></div>
           <div class="obj-form-item"><label>📥 Demos Inbound</label><input type="number" min="0" id="obj-in-demos-in" class="form-input"/></div>
@@ -1508,6 +1508,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <div class="obj-form-item"><label>💰 CWD Inbound</label><input type="number" min="0" id="obj-in-cwd-in" class="form-input"/></div>
         </div>
         <button class="btn-primary" style="margin-top:18px;" onclick="saveObjetivosGlobal()">Aplicar a todo el equipo</button>
+      </div>
+      <div class="mgr-card">
+        <div class="mgr-card-title">👤 Objetivos por SDR</div>
+        <p class="mgr-card-sub">Para quien tenga metas distintas (p. ej. alguien que acaba de entrar). El objetivo del equipo es la suma de estos.</p>
+        <div class="mgr-table-wrap"><table class="mgr-table" id="obj-sdr-table"></table></div>
+        <button class="btn-primary" style="margin-top:18px;" onclick="saveObjetivosIndividuales()">Guardar objetivos por SDR</button>
       </div>
     </div>
 
@@ -2380,7 +2386,8 @@ async function enterApp(){
 
 // ── MANAGER STATE ──
 let allDemos=[];      // all SDRs' demos
-let allSdrs=[];
+let allSdrs=[];       // SDRs incorporados en el mes que se está viendo (ver aplicarSdrsDelMes)
+let todosSdrs=[];     // todos los SDRs activos, para pantallas de gestión
 let allLlamadas=[];
 let mgrMonthOffset=0;
 let mgrIndividualSdr=null;
@@ -2407,7 +2414,7 @@ async function loadManagerData(){
       sbAll('llamadas?select=*'),
       sb('noticias?select=*&order=created_at.desc')
     ]);
-    allSdrs=sdrs||[];comerciales=coms||[];ciudades=cits||[];
+    todosSdrs=sdrs||[];aplicarSdrsDelMes();comerciales=coms||[];ciudades=cits||[];
     allDemos=allD||[];objetivos=objs||[];allLlamadas=llam||[];noticias=nots||[];
     await loadMensajesHoy();
     await loadVacaciones();
@@ -2501,7 +2508,16 @@ function teamObjForMonth(){
 }
 
 // ── MANAGER RENDER ──
+// Un SDR cuenta en un mes solo si ya se había incorporado (fecha_alta <= fin de mes)
+function sdrActivoEnMes(s,finMes){return !s.fecha_alta||s.fecha_alta<=finMes;}
+function aplicarSdrsDelMes(){
+  const{end}=mgrMonthRange();
+  allSdrs=todosSdrs.filter(s=>sdrActivoEnMes(s,end));
+  if(mgrIndividualSdr&&!allSdrs.some(s=>s.id===mgrIndividualSdr))mgrIndividualSdr=null;
+}
+
 function renderManager(){
+  aplicarSdrsDelMes();
   updateMgrMonthNavLabel();
   renderMgrTeamStats();
   renderMgrTeamObj();
@@ -3065,6 +3081,41 @@ function renderObjetivosForm(){
   document.getElementById('obj-in-demos-in').value=obj?.demos_objetivo_inbound||0;
   document.getElementById('obj-in-cwd-out').value=obj?.cwd_objetivo_outbound||0;
   document.getElementById('obj-in-cwd-in').value=obj?.cwd_objetivo_inbound||0;
+  const campos=[['demos_objetivo_outbound','Demos Out'],['demos_objetivo_inbound','Demos In'],['cwd_objetivo_outbound','CWD Out'],['cwd_objetivo_inbound','CWD In']];
+  document.getElementById('obj-sdr-table').innerHTML=`
+    <thead><tr><th>SDR</th>${campos.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead>
+    <tbody>${allSdrs.map(s=>{
+      const o=getObjForMonth(s.id);
+      return`<tr><td>${s.nombre}${o?'':' <span style="font-size:11px;color:var(--muted);">(sin objetivo)</span>'}</td>${campos.map(c=>
+        `<td><input type="number" min="0" class="form-input" style="width:80px;" id="objsdr-${s.id}-${c[0]}" value="${o?.[c[0]]||0}"/></td>`).join('')}</tr>`;
+    }).join('')}</tbody>`;
+}
+
+async function guardarObjetivoSdr(sdrId,mes,anio,vals){
+  // Puede haber duplicados de versiones antiguas: se actualizan todos
+  const existentes=objetivos.filter(o=>o.sdr_id===sdrId&&o.mes===mes&&o.anio===anio);
+  if(existentes.length){
+    for(const ex of existentes)await sb(`objetivos?id=eq.${ex.id}`,{method:'PATCH',body:JSON.stringify(vals)});
+  }else{
+    await sb('objetivos',{method:'POST',body:JSON.stringify({sdr_id:sdrId,mes,anio,...vals})});
+  }
+}
+
+async function saveObjetivosIndividuales(){
+  const m=mgrTargetMonth();
+  const mes=m.getMonth()+1, anio=m.getFullYear();
+  const campos=['demos_objetivo_outbound','demos_objetivo_inbound','cwd_objetivo_outbound','cwd_objetivo_inbound'];
+  try{
+    for(const s of allSdrs){
+      const vals={};
+      campos.forEach(c=>vals[c]=parseInt(document.getElementById(`objsdr-${s.id}-${c}`)?.value)||0);
+      const o=getObjForMonth(s.id);
+      if(o&&campos.every(c=>(o[c]||0)===vals[c]))continue;
+      await guardarObjetivoSdr(s.id,mes,anio,vals);
+    }
+    showToast('✓ Objetivos por SDR guardados');
+    await loadManagerData();renderManager();
+  }catch(e){showToast('❌ Error guardando objetivos');console.error(e);}
 }
 
 async function saveObjetivosGlobal(){
@@ -3077,24 +3128,14 @@ async function saveObjetivosGlobal(){
     cwd_objetivo_inbound:parseInt(document.getElementById('obj-in-cwd-in').value)||0
   };
   try{
-    for(const s of allSdrs){
-      // Buscar si ya existe objetivo para este SDR/mes/año (puede haber duplicados de versiones antiguas)
-      const existentes=objetivos.filter(o=>o.sdr_id===s.id&&o.mes===mes&&o.anio===anio);
-      if(existentes.length){
-        for(const ex of existentes){
-          await sb(`objetivos?id=eq.${ex.id}`,{method:'PATCH',body:JSON.stringify(vals)});
-        }
-      }else{
-        await sb('objetivos',{method:'POST',body:JSON.stringify({sdr_id:s.id,mes,anio,...vals})});
-      }
-    }
+    for(const s of allSdrs)await guardarObjetivoSdr(s.id,mes,anio,vals);
     showToast('✓ Objetivos aplicados a todo el equipo');
     await loadManagerData();renderManager();
   }catch(e){showToast('❌ Error guardando objetivos');console.error(e);}
 }
 
 function renderMensajesList(){
-  document.getElementById('mensajes-list').innerHTML=allSdrs.map(s=>{
+  document.getElementById('mensajes-list').innerHTML=todosSdrs.map(s=>{
     return`<div class="msg-row">
       <div class="msg-row-name">${s.nombre}</div>
       <input id="msg-${s.id}" placeholder="Mensaje personalizado para hoy..." value="${(mensajesHoy[s.id]||'').replace(/"/g,'&quot;')}"/>
@@ -6190,7 +6231,7 @@ async function renderSdrMetricsInline(){
   const m=getTargetMonth();
   let allSdrUsers=[],allLlamadasData=[],allDemosData=[];
   try{
-    allSdrUsers=await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre&order=nombre.asc`)||[];
+    allSdrUsers=(await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre,fecha_alta&order=nombre.asc`)||[]).filter(s=>sdrActivoEnMes(s,end));
     allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
     allDemosData=await sbAll(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma&order=id.asc`);
   }catch(e){panel.innerHTML='<div style="padding:20px;color:var(--red);text-align:center;">Error cargando métricas</div>';return;}
@@ -6912,7 +6953,7 @@ let vacCalOffset=0;
 // Personas de la agenda de vacaciones: los SDR + el propio manager (para que
 // pueda registrarse y compartir la agenda completa con su jefe).
 function vacPeople(){
-  const people=[...allSdrs];
+  const people=[...todosSdrs];
   if(currentUser&&currentUser.rol==='manager'&&!people.some(p=>p.id===currentUser.id)){
     people.push(currentUser);
   }
