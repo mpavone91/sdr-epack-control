@@ -2137,6 +2137,15 @@ async function sb(path,opts={}){
   }
   return t?JSON.parse(t):null;
 }
+// PostgREST devuelve como máximo 1000 filas por petición: pedir por bloques hasta tenerlas todas
+async function sbAll(path,pageSize=1000){
+  const out=[];
+  for(let from=0;;from+=pageSize){
+    const rows=await sb(path,{headers:{'Range-Unit':'items','Range':`${from}-${from+pageSize-1}`}})||[];
+    out.push(...rows);
+    if(rows.length<pageSize)return out;
+  }
+}
 function rpc(fn,args={}){return sb(`rpc/${fn}`,{method:'POST',body:JSON.stringify(args)});}
 
 let checkingSession=false;
@@ -2393,9 +2402,9 @@ async function loadManagerData(){
       sb('sdr_users?rol=eq.sdr&activo=eq.true&select=*&order=nombre.asc'),
       sb('comerciales?select=*&order=nombre.asc'),
       sb('ciudades?select=*&order=nombre.asc'),
-      sb('demos?select=*&order=fecha.asc'),
-      sb('objetivos?select=*'),
-      sb('llamadas?select=*'),
+      sbAll('demos?select=*&order=fecha.asc,id.asc'),
+      sbAll('objetivos?select=*'),
+      sbAll('llamadas?select=*'),
       sb('noticias?select=*&order=created_at.desc')
     ]);
     allSdrs=sdrs||[];comerciales=coms||[];ciudades=cits||[];
@@ -2475,9 +2484,20 @@ function sdrStats(sdrId){
     demoToCwd:totalDemos>0?(totalCwd/totalDemos*100):0};
 }
 
-function getObjForMonth(){
+// Objetivo del mes de un SDR. Sin sdrId: el primero que exista entre los SDRs activos
+// (sirve de referencia para el formulario, que guarda el mismo objetivo para todos).
+function getObjForMonth(sdrId){
   const m=mgrTargetMonth();
-  return objetivos.find(o=>o.mes===m.getMonth()+1&&o.anio===m.getFullYear()&&o.sdr_id===allSdrs[0]?.id)||null;
+  const delMes=o=>o.mes===m.getMonth()+1&&o.anio===m.getFullYear();
+  if(sdrId!=null)return objetivos.find(o=>delMes(o)&&o.sdr_id===sdrId)||null;
+  for(const s of allSdrs){const o=objetivos.find(x=>delMes(x)&&x.sdr_id===s.id);if(o)return o;}
+  return null;
+}
+// Objetivo conjunto: suma de los objetivos de cada SDR activo en el mes
+function teamObjForMonth(){
+  const t={demos_objetivo_outbound:0,demos_objetivo_inbound:0,cwd_objetivo_outbound:0,cwd_objetivo_inbound:0};
+  allSdrs.forEach(s=>{const o=getObjForMonth(s.id);if(o)Object.keys(t).forEach(k=>t[k]+=o[k]||0);});
+  return t;
 }
 
 // ── MANAGER RENDER ──
@@ -2564,17 +2584,16 @@ function deltaBadgeInverted(curr,prev){
 }
 
 function renderMgrTeamObj(){
-  const obj=getObjForMonth();
+  const obj=teamObjForMonth();
   const stats=allSdrs.map(s=>sdrStats(s.id));
   const aOut=stats.reduce((a,b)=>a+b.demosOut,0);
   const aIn=stats.reduce((a,b)=>a+b.demosIn,0);
   const aCwdOut=stats.reduce((a,b)=>a+b.cwdOut,0);
   const aCwdIn=stats.reduce((a,b)=>a+b.cwdIn,0);
-  const n=allSdrs.length;
-  const oOut=(obj?.demos_objetivo_outbound||0)*n;
-  const oIn=(obj?.demos_objetivo_inbound||0)*n;
-  const oCwdOut=(obj?.cwd_objetivo_outbound||0)*n;
-  const oCwdIn=(obj?.cwd_objetivo_inbound||0)*n;
+  const oOut=obj.demos_objetivo_outbound;
+  const oIn=obj.demos_objetivo_inbound;
+  const oCwdOut=obj.cwd_objetivo_outbound;
+  const oCwdIn=obj.cwd_objetivo_inbound;
   const bar=(label,a,o)=>{
     const pct=o>0?Math.min(100,Math.round(a/o*100)):0;
     const color=o===0?'rojo':a>=o*0.85?(a>=o?'verde':'amarillo'):'rojo';
@@ -2880,7 +2899,7 @@ function renderMgrIndividual(){
   if(!mgrIndividualSdr)return;
   const s=sdrStats(mgrIndividualSdr);
   const sdr=allSdrs.find(x=>x.id===mgrIndividualSdr);
-  const obj=getObjForMonth();
+  const obj=getObjForMonth(mgrIndividualSdr);
   const bar=(label,a,o)=>{
     const pct=o>0?Math.min(100,Math.round(a/o*100)):0;
     const color=o===0?'rojo':a>=o*0.85?(a>=o?'verde':'amarillo'):'rojo';
@@ -3152,7 +3171,6 @@ function detectAlertas(){
   const alertas=[];
   const today=todayStr();
   const{start:mStart,end:mEnd}=mgrMonthRange();
-  const obj=getObjForMonth();
   const m=mgrTargetMonth();
   const firstDay=new Date(m.getFullYear(),m.getMonth(),1);
   const lastDay=new Date(m.getFullYear(),m.getMonth()+1,0);
@@ -3243,10 +3261,11 @@ function detectAlertas(){
   });
 
   // 7. SDR cerca de cumplir objetivo (90-99%)
-  if(obj){
+  {
     allSdrs.forEach(s=>{
       const st=sdrStats(s.id);
-      const objTotalDemos=(obj.demos_objetivo_outbound||0)+(obj.demos_objetivo_inbound||0);
+      const o=getObjForMonth(s.id);
+      const objTotalDemos=(o?.demos_objetivo_outbound||0)+(o?.demos_objetivo_inbound||0);
       if(objTotalDemos>0){
         const pct=(st.totalDemos/objTotalDemos)*100;
         if(pct>=90&&pct<100&&remainingDays>=1){
@@ -3258,10 +3277,11 @@ function detectAlertas(){
   }
 
   // 8. SDR superó el objetivo
-  if(obj){
+  {
     allSdrs.forEach(s=>{
       const st=sdrStats(s.id);
-      const objTotalDemos=(obj.demos_objetivo_outbound||0)+(obj.demos_objetivo_inbound||0);
+      const o=getObjForMonth(s.id);
+      const objTotalDemos=(o?.demos_objetivo_outbound||0)+(o?.demos_objetivo_inbound||0);
       if(objTotalDemos>0&&st.totalDemos>=objTotalDemos){
         const extra=st.totalDemos-objTotalDemos;
         alertas.push({tipo:'success',icon:'🏆',titulo:`${s.nombre} ya superó el objetivo (+${extra})`,desc:`Lleva <b>${st.totalDemos}/${objTotalDemos}</b> demos. Reconocer este logro motiva al resto del equipo.`,action:{label:'🎉 Enviar kudos',fn:`openKudosModal(${s.id},'${s.nombre.replace(/'/g,"\\'")}')`},priority:4});
@@ -3278,10 +3298,11 @@ function detectAlertas(){
   }
 
   // 10. Equipo cumplió objetivo conjunto
-  if(obj){
+  {
     const stats=allSdrs.map(s=>sdrStats(s.id));
     const totalDemos=stats.reduce((a,b)=>a+b.totalDemos,0);
-    const objTeam=((obj.demos_objetivo_outbound||0)+(obj.demos_objetivo_inbound||0))*allSdrs.length;
+    const team=teamObjForMonth();
+    const objTeam=team.demos_objetivo_outbound+team.demos_objetivo_inbound;
     if(objTeam>0&&totalDemos>=objTeam){
       alertas.push({tipo:'success',icon:'🎊',titulo:`¡El equipo cumplió el objetivo del mes!`,desc:`<b>${totalDemos}/${objTeam}</b> demos. Un kudos grupal cierra el círculo perfecto.`,action:{label:'🎉 Kudos al equipo',fn:`openKudosModal(null,'todo el equipo')`},priority:4});
     }
@@ -4490,7 +4511,7 @@ async function loadNoticias(){
   if(nb){nb.textContent=noticias.length||'';nb.classList.toggle('show',noticias.length>0);}
 }
 async function loadDemos(){
-  demos=await sb(`demos?sdr_id=eq.${currentUser.id}&select=*&order=fecha.asc`)||[];
+  demos=await sbAll(`demos?sdr_id=eq.${currentUser.id}&select=*&order=fecha.asc,id.asc`);
   render();
 }
 async function loadObjetivos(){
@@ -6171,7 +6192,7 @@ async function renderSdrMetricsInline(){
   try{
     allSdrUsers=await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre&order=nombre.asc`)||[];
     allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
-    allDemosData=await sb(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma`)||[];
+    allDemosData=await sbAll(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma&order=id.asc`);
   }catch(e){panel.innerHTML='<div style="padding:20px;color:var(--red);text-align:center;">Error cargando métricas</div>';return;}
 
   const pill=(val,green,yellow)=>{
