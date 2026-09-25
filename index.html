@@ -875,6 +875,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .home-card-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--teal-dark);}
 .home-card-sub{font-size:13px;color:var(--muted);margin:2px 0 14px;}
 .home-card-count{font-size:12.5px;font-weight:600;color:var(--muted);}
+.home-day-nav{display:flex;align-items:center;gap:6px;}
+.home-day-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--teal-dark);font-size:18px;font-weight:700;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.home-day-btn:hover:not(:disabled){border-color:var(--teal-dark);}
+.home-day-btn:disabled{opacity:.35;cursor:default;}
 .home-news-chip{display:flex;align-items:center;gap:8px;background:var(--amber-soft);border:1px solid #f0d58a;color:#7a4e00;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:18px;cursor:pointer;}
 .home-news-chip:hover{border-color:var(--amber);}
 .home-empty{text-align:center;padding:22px 10px;color:var(--muted);font-size:14px;}
@@ -1097,9 +1101,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <div class="home-card">
           <div class="home-card-head">
             <div class="home-card-title" id="home-manana-title">⏭️ Próximo día</div>
-            <span class="home-card-count" id="home-manana-count"></span>
+            <div class="home-day-nav">
+              <span class="home-card-count" id="home-manana-count"></span>
+              <button class="home-day-btn" id="home-day-prev" onclick="shiftHomeDay(-1)" title="Día anterior">‹</button>
+              <button class="home-day-btn" onclick="shiftHomeDay(1)" title="Día siguiente">›</button>
+            </div>
           </div>
-          <div class="home-card-sub">Adelántate: confirma hoy las demos del próximo día laborable.</div>
+          <div class="home-card-sub">Adelántate: confirma y escribe por WhatsApp a las demos de los próximos días. Usa las flechas para cambiar de día.</div>
           <div id="home-manana"></div>
         </div>
 
@@ -5044,9 +5052,9 @@ function diasDesde(fecha){
   const f=new Date(y,m-1,d);const t=new Date();t.setHours(0,0,0,0);
   return Math.round((t-f)/86400000);
 }
-function nextWorkdayStr(){
+function nextWorkdayStr(n=0){
   const d=new Date();
-  do{d.setDate(d.getDate()+1);}while(!isWorkday(d));
+  for(let i=0;i<=n;i++){do{d.setDate(d.getDate()+1);}while(!isWorkday(d));}
   return localDateStr(d);
 }
 function escHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -5143,7 +5151,7 @@ function waMessage(d){
   const donde=d.tipo==='presencial'?'en tu local':'por '+(plataformaMap[d.plataforma]||'videollamada');
   const hora=d.hora?' a las '+d.hora.slice(0,5):'';
   const nombre=(currentUser?.nombre||'').split(' ')[0];
-  return`¡Hola! Soy ${nombre}, de ePackPro 👋 Te escribo para confirmar la demo de ${cuando}${hora} ${donde}. ¿Nos confirmas que te sigue viniendo bien? ¡Gracias!`;
+  return`¡Hola! Soy ${nombre}, de ePackPro. Te escribo para confirmar la demo de ${cuando}${hora} ${donde}. ¿Nos confirmas que te sigue viniendo bien? ¡Gracias!`;
 }
 function waButtonHtml(d){
   const num=waNumber(d.telefono);
@@ -5238,8 +5246,16 @@ function renderHomeAgenda(){
   el.innerHTML=list.map(d=>agendaItemHtml(d,true)).join('');
   updateLiveClock();
 }
+// 0 = próximo día laborable; cada paso avanza un día laborable más
+let homeDayOffset=0;
+function shiftHomeDay(delta){
+  homeDayOffset=Math.max(0,Math.min(20,homeDayOffset+delta));
+  renderHomeManana();
+}
 function renderHomeManana(){
-  const next=nextWorkdayStr();
+  const next=nextWorkdayStr(homeDayOffset);
+  const prev=document.getElementById('home-day-prev');
+  if(prev)prev.disabled=homeDayOffset===0;
   const list=sortByHora(demos.filter(d=>d.fecha===next&&d.estado!=='cancelada'));
   const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
   const[y,m,dd]=next.split('-').map(Number);
