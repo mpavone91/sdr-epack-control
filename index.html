@@ -1810,7 +1810,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         </div>
         <div class="form-group">
           <label class="form-label">Fecha de la demo <span style="font-weight:400;color:var(--muted);">(cuándo es la visita)</span></label>
-          <input class="form-input" type="date" id="f-fecha"/>
+          <input class="form-input" type="date" id="f-fecha" onchange="syncOutcomeLock();toggleFechaFirma();toggleMotivo();"/>
         </div>
       </div>
       <div class="form-row">
@@ -1851,7 +1851,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Estado</label>
-          <select class="form-select" id="f-estado" onchange="toggleMotivo()">
+          <select class="form-select" id="f-estado" onchange="syncOutcomeLock();toggleMotivo()">
             <option value="agendada">Agendada</option>
             <option value="ejecutada">Ejecutada</option>
             <option value="cancelada">Cancelada</option>
@@ -4707,6 +4707,7 @@ function openDemoModal(demo=null){
     document.getElementById('f-estado').value=demo.estado||'agendada';
     document.getElementById('f-outcome').value=demo.outcome||'';
     document.getElementById('f-fecha-firma').value=demo.fecha_firma||'';
+    syncOutcomeLock();
     toggleFechaFirma();
     toggleMotivo();
     document.getElementById('f-motivo').value=demo.motivo||'';
@@ -4729,6 +4730,7 @@ function openDemoModal(demo=null){
     document.getElementById('f-estado').value='agendada';
     document.getElementById('f-outcome').value='';
     document.getElementById('f-fecha-firma').value='';
+    syncOutcomeLock();
     toggleFechaFirma();
     toggleMotivo();
     document.getElementById('f-notas').value='';
@@ -4772,6 +4774,16 @@ function selectHora(val){
 function togglePlataforma(){
   const tipo=document.getElementById('f-tipo').value;
   document.getElementById('plataforma-group').style.display=tipo==='online'?'block':'none';
+}
+// Una demo agendada que aún no ha llegado no puede tener resultado: si lo tuviera,
+// la agenda la trataría como cerrada y el SDR no podría confirmarla ni enviar WhatsApp.
+function syncOutcomeLock(){
+  const sel=document.getElementById('f-outcome');
+  const fecha=document.getElementById('f-fecha').value;
+  const locked=document.getElementById('f-estado').value==='agendada'&&!!fecha&&fecha>todayStr();
+  if(locked)sel.value='';
+  sel.disabled=locked;
+  sel.title=locked?'El resultado se marca cuando la demo ya se ha hecho':'';
 }
 function toggleFechaFirma(){
   const outcome=document.getElementById('f-outcome').value;
@@ -5206,7 +5218,7 @@ function renderHomeKpis(){
 function agendaItemHtml(d,forToday){
   const st=forToday?demoStatus(d):'despues';
   const cierre=forToday&&isPendingCierre(d);
-  const cerrada=!!d.outcome||d.estado==='ejecutada';
+  const cerrada=d.estado==='ejecutada'||(!!d.outcome&&d.fecha<=todayStr());
   let cls=cerrada?'cerrada':cierre?'cierre':st;
   if(d.confirmada_at)cls+=' confirmada';
   const hora=d.hora?d.hora.slice(0,5):'—';
