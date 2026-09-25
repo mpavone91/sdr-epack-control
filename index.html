@@ -4775,15 +4775,14 @@ function togglePlataforma(){
   const tipo=document.getElementById('f-tipo').value;
   document.getElementById('plataforma-group').style.display=tipo==='online'?'block':'none';
 }
-// Una demo agendada que aún no ha llegado no puede tener resultado: si lo tuviera,
-// la agenda la trataría como cerrada y el SDR no podría confirmarla ni enviar WhatsApp.
+// El resultado (Interesado, Ganado...) solo existe cuando la demo ya se hizo:
+// con estado Agendada el campo queda bloqueado en "Sin definir".
 function syncOutcomeLock(){
   const sel=document.getElementById('f-outcome');
-  const fecha=document.getElementById('f-fecha').value;
-  const locked=document.getElementById('f-estado').value==='agendada'&&!!fecha&&fecha>todayStr();
+  const locked=document.getElementById('f-estado').value==='agendada';
   if(locked)sel.value='';
   sel.disabled=locked;
-  sel.title=locked?'El resultado se marca cuando la demo ya se ha hecho':'';
+  sel.title=locked?'El resultado se marca cuando la demo ya se ha hecho (estado Ejecutada)':'';
 }
 function toggleFechaFirma(){
   const outcome=document.getElementById('f-outcome').value;
@@ -4853,6 +4852,8 @@ async function saveDemo(){
     notas:document.getElementById('f-notas').value||null
   };
   if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
+  if(payload.estado==='agendada'){payload.outcome=null;payload.fecha_firma=null;}
+  if(payload.estado==='ejecutada'&&payload.fecha>todayStr()){showToast('⚠️ Una demo de un día futuro no puede estar ejecutada');return;}
   try{
     if(id){
       await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(payload)});
@@ -5218,7 +5219,7 @@ function renderHomeKpis(){
 function agendaItemHtml(d,forToday){
   const st=forToday?demoStatus(d):'despues';
   const cierre=forToday&&isPendingCierre(d);
-  const cerrada=d.estado==='ejecutada'||(!!d.outcome&&d.fecha<=todayStr());
+  const cerrada=d.estado==='ejecutada';
   let cls=cerrada?'cerrada':cierre?'cierre':st;
   if(d.confirmada_at)cls+=' confirmada';
   const hora=d.hora?d.hora.slice(0,5):'—';
