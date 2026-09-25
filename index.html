@@ -929,6 +929,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pd-group{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
 .pd-group::after{content:'';flex:1;height:1px;background:var(--border);}
 .pd-group.old{color:var(--red);}
+.pd-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.pd-filter-chip{padding:6px 12px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;}
+.pd-filter-chip:hover{border-color:var(--teal);color:var(--teal-dark);}
+.pd-filter-chip.active{border-color:var(--teal-dark);background:var(--teal-dark);color:#fff;}
+.pd-filter-select{padding:6px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--text,#222);cursor:pointer;max-width:100%;}
+.pd-filter-select.active{border-color:var(--teal-dark);}
+.pd-filter-clear{background:none;border:none;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--teal);cursor:pointer;text-decoration:underline;}
 .pd-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px 16px;margin-bottom:9px;}
 .pd-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 .pd-when{width:92px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--teal-dark);line-height:1.35;}
@@ -5053,7 +5060,7 @@ function colaFollow(){
   const cutStr=localDateStr(cut);
   return demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&
     (d.fecha||'')<=cutStr&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today))
-    .sort((a,b)=>(a.seguimiento_aplazado_hasta||a.fecha||'').localeCompare(b.seguimiento_aplazado_hasta||b.fecha||''));
+    .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 }
 function colaReagendar(){
   return demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido')
@@ -5292,7 +5299,46 @@ function setPendQueue(q){if(q!==pendQueue){pendSel.clear();bulkStep=null;}pendQu
 const pendSel=new Set();
 let pendGroupIds={};   // grupo → ids (cola "Por cerrar")
 let bulkStep=null;     // null | 'resultado'
-function currentPendItems(){return({cierre:colaCierre,follow:colaFollow,reag:colaReagendar}[pendQueue]||colaCierre)();}
+// Filtros de Pendientes: comercial en todas las colas; resultado solo en Follow-up
+const pendFilter={comercial:'',outcome:''};
+function pendRawItems(){return({cierre:colaCierre,follow:colaFollow,reag:colaReagendar}[pendQueue]||colaCierre)();}
+function applyPendFilter(items){
+  return items.filter(d=>(!pendFilter.comercial||String(d.comercial_id||'')===pendFilter.comercial)&&
+    (pendQueue!=='follow'||!pendFilter.outcome||d.outcome===pendFilter.outcome));
+}
+function currentPendItems(){return applyPendFilter(pendRawItems());}
+function setPendFilter(k,v){pendFilter[k]=v;pendSel.clear();bulkStep=null;renderPendientes();}
+function clearPendFilter(){pendFilter.comercial='';pendFilter.outcome='';pendSel.clear();bulkStep=null;renderPendientes();}
+// Grupos por fecha: "Este mes", "Mes pasado" y después el nombre del mes
+function pendMonthGroup(fecha){
+  if(!fecha)return'Sin fecha';
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const[y,m]=fecha.split('-').map(Number);
+  const now=new Date();
+  const diff=(now.getFullYear()-y)*12+(now.getMonth()+1-m);
+  if(diff===0)return'Este mes';
+  if(diff===1)return'Mes pasado';
+  if(diff<0)return meses[m-1]+(y!==now.getFullYear()?' '+y:'');
+  return meses[m-1]+' '+y;
+}
+function pendFiltersHtml(raw){
+  const cnt={};
+  raw.forEach(d=>{const k=String(d.comercial_id||'');cnt[k]=(cnt[k]||0)+1;});
+  const opts=Object.keys(cnt).map(k=>[k,k?comercialName(Number(k)):'Sin comercial',cnt[k]]).sort((a,b)=>a[1].localeCompare(b[1]));
+  if(pendFilter.comercial&&!cnt[pendFilter.comercial])opts.unshift([pendFilter.comercial,comercialName(Number(pendFilter.comercial)),0]);
+  let html=`<div class="pd-filters">`;
+  if(pendQueue==='follow'){
+    const n=o=>raw.filter(d=>d.outcome===o).length;
+    const chip=(v,label)=>`<button class="pd-filter-chip${pendFilter.outcome===v?' active':''}" onclick="setPendFilter('outcome','${v}')">${label}</button>`;
+    html+=chip('','Todos · '+raw.length)+chip('interesado','👍 Interesado · '+n('interesado'))+chip('necesita_seguimiento','📞 Necesita seguimiento · '+n('necesita_seguimiento'));
+  }
+  html+=`<select class="pd-filter-select${pendFilter.comercial?' active':''}" onchange="setPendFilter('comercial',this.value)">
+      <option value="">👤 Todos los comerciales</option>
+      ${opts.map(o=>`<option value="${o[0]}"${pendFilter.comercial===o[0]?' selected':''}>${escHtml(o[1])} · ${o[2]}</option>`).join('')}
+    </select>`;
+  if(pendFilter.comercial||(pendQueue==='follow'&&pendFilter.outcome))html+=`<button class="pd-filter-clear" onclick="clearPendFilter()">Quitar filtros</button>`;
+  return html+`</div>`;
+}
 function togglePendSel(id,on){
   if(on)pendSel.add(id);else pendSel.delete(id);
   const card=document.getElementById('pdc-'+id);
@@ -5406,12 +5452,18 @@ function renderPendientes(){
   updatePendBadge();
 
   const listEl=document.getElementById('pd-list');
-  const items={cierre,follow,reag}[pendQueue];
+  const raw={cierre,follow,reag}[pendQueue];
+  const items=applyPendFilter(raw);
   const empties={
     cierre:['🎉','Ninguna demo sin cerrar','Todas tus demos pasadas tienen resultado. Así da gusto.'],
     follow:['✅','Follow-ups al día','Cuando una demo con interés cumpla una semana sin respuesta, aparecerá aquí.'],
     reag:['🙌','Nada por reagendar','Las demos canceladas aparecerán aquí para recuperarlas.']
   };
+  if(raw.length&&!items.length){
+    listEl.innerHTML=pendFiltersHtml(raw)+`<div class="pd-empty"><div class="pd-empty-icon">🔍</div><div class="pd-empty-title">Nada con estos filtros</div><div class="pd-empty-text"><button class="pd-filter-clear" onclick="clearPendFilter()">Quitar filtros</button></div></div>`;
+    pendSel.clear();renderBulkBar();
+    return;
+  }
   if(!items.length){
     const e=empties[pendQueue];
     listEl.innerHTML=`<div class="pd-empty"><div class="pd-empty-icon">${e[0]}</div><div class="pd-empty-title">${e[1]}</div><div class="pd-empty-text">${e[2]}</div></div>`;
@@ -5419,26 +5471,33 @@ function renderPendientes(){
     return;
   }
   const visible=pendShowAll[pendQueue]?items:items.slice(0,PEND_LIMIT);
-  let html=`<label class="pd-selectall"><input type="checkbox" id="pd-select-all" onchange="selectAllPend()"/> Seleccionar todas (${items.length})</label>`;
+  let html=pendFiltersHtml(raw);
   if(pendQueue==='cierre'){
     html+=`<div class="pd-intro">Demos que ya pasaron y no tienen resultado. Pulsa <b>✅ Sí</b> y elige cómo fue: se cierra en dos clics.</div>`;
     if(oldCierre)html+=`<div class="pd-alert">⚠️ ${oldCierre===1?'Tienes 1 demo':'Tienes '+oldCierre+' demos'} de hace 2 días o más sin cerrar. Empieza por ahí: cuanto más esperas, menos te acuerdas.</div>`;
-    const grupo=d=>{const n=diasDesde(d.fecha);return n<=0?'Hoy':n===1?'Ayer':n<7?'Esta semana':'Hace más de una semana';};
-    pendGroupIds={};
-    items.forEach(d=>{(pendGroupIds[grupo(d)]=pendGroupIds[grupo(d)]||[]).push(d.id);});
-    let last='';
-    visible.forEach(d=>{
-      const g=grupo(d);
-      if(g!==last){html+=`<div class="pd-group${g==='Hace más de una semana'?' old':''}">${g} · ${pendGroupIds[g].length}<button class="pd-group-sel" data-pd-group="${g}" onclick="selectPendGroup('${g}')">Seleccionar grupo</button></div>`;last=g;}
-      html+=pendCardHtml(d,'cierre');
-    });
   }else if(pendQueue==='follow'){
     html+=`<div class="pd-intro">Demos con interés que llevan una semana o más sin decisión. Llama, y luego marca el resultado o pospón el recordatorio.</div>`;
-    html+=visible.map(d=>pendCardHtml(d,'follow')).join('');
   }else{
     html+=`<div class="pd-intro">Demos canceladas (también las que no se presentaron). Recupéralas con una nueva fecha o descártalas si no hay nada que hacer.</div>`;
-    html+=visible.map(d=>pendCardHtml(d,'reag')).join('');
   }
+  html+=`<label class="pd-selectall"><input type="checkbox" id="pd-select-all" onchange="selectAllPend()"/> Seleccionar todas (${items.length})</label>`;
+  // Agrupado por fecha de la demo: en "Por cerrar" los días recientes van aparte; lo demás, por meses
+  const grupo=pendQueue==='cierre'
+    ?d=>{const n=diasDesde(d.fecha);return n<=0?'Hoy':n===1?'Ayer':n<7?'Esta semana':pendMonthGroup(d.fecha);}
+    :d=>pendMonthGroup(d.fecha);
+  const recientes=['Hoy','Ayer','Esta semana'];
+  pendGroupIds={};
+  items.forEach(d=>{(pendGroupIds[grupo(d)]=pendGroupIds[grupo(d)]||[]).push(d.id);});
+  let last='';
+  visible.forEach(d=>{
+    const g=grupo(d);
+    if(g!==last){
+      const old=pendQueue==='cierre'&&!recientes.includes(g);
+      html+=`<div class="pd-group${old?' old':''}">${escHtml(g)} · ${pendGroupIds[g].length}<button class="pd-group-sel" data-pd-group="${escHtml(g)}" onclick="selectPendGroup(this.dataset.pdGroup)">Seleccionar grupo</button></div>`;
+      last=g;
+    }
+    html+=pendCardHtml(d,pendQueue);
+  });
   if(items.length>PEND_LIMIT)html+=`<button class="pd-more" onclick="togglePendShowAll('${pendQueue}')">${pendShowAll[pendQueue]?'▴ Ver menos':'▾ Ver las '+items.length}</button>`;
   listEl.innerHTML=html;
   syncPendSelUI();
