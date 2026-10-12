@@ -59,7 +59,54 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .sel{border:1px solid var(--amber);background:var(--panel);color:var(--amber);padding:6px 8px;border-radius:9px;font-size:12px;font-weight:600;font-family:inherit;}
 
 /* ── MUNDO ── */
-.world-scroll{overflow-x:auto;overflow-y:hidden;border-radius:16px;margin-top:6px;}
+/* Escenario: cocina centrada + panel de resumen a la derecha (debajo en pantallas estrechas) */
+.stage{display:flex;gap:16px;align-items:flex-start;justify-content:center;margin-top:6px;}
+.world-scroll{overflow-x:auto;overflow-y:hidden;border-radius:16px;flex:none;max-width:100%;}
+.side{width:340px;flex:none;position:sticky;top:calc(64px + env(safe-area-inset-top,0px));max-height:calc(100vh - 76px);overflow-y:auto;display:grid;gap:10px;align-content:start;padding-bottom:8px;}
+@media(max-width:1099px){.stage{flex-direction:column;align-items:stretch;}.world-scroll{width:100%!important;}.side{width:100%;position:static;max-height:none;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}}
+.sbox{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:grid;gap:8px;min-width:0;}
+.sbox h4{font-family:var(--f-sign);font-size:10px;letter-spacing:.07em;color:var(--ink-2);font-weight:400;display:flex;align-items:center;gap:6px;}
+.sbox h4 .aux{margin-left:auto;font-family:var(--f-body);font-size:11.5px;color:var(--ink-3);letter-spacing:0;}
+.new-btn{width:100%;padding:13px;font-size:14.5px;font-weight:800;border-radius:12px;border:none;background:var(--lime);color:var(--teal-dk);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 0 var(--lime-dk);}
+.new-btn:hover{filter:brightness(1.05);}
+.new-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--lime-dk);}
+.new-btn kbd{font-family:var(--f-sign);font-size:10px;background:rgba(0,0,0,.12);padding:1px 5px;border-radius:4px;}
+.srank{display:flex;align-items:center;gap:10px;}
+.srank .lv{width:40px;height:40px;border-radius:50%;background:var(--lime);color:var(--teal-dk);display:grid;place-items:center;font-weight:800;font-size:16px;flex:none;}
+.srank b{display:block;font-size:15px;}
+.srank span{font-size:12px;color:var(--ink-3);}
+.srow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;font-size:12.5px;}
+.srow .k{color:var(--ink-2);}
+.srow .v{font-weight:800;font-variant-numeric:tabular-nums;}
+.srow .v small{color:var(--ink-3);font-weight:600;}
+.srow .bar{grid-column:1/-1;margin:0 0 4px;}
+.spend{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.spend button{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--border);background:var(--panel-2);color:var(--ink);font-size:12px;text-align:left;}
+.spend button:hover{border-color:var(--lime);}
+.spend button b{margin-left:auto;font-size:14px;}
+.spend button.bad b{color:var(--red);}
+.snext{font-size:12.5px;color:var(--ink-2);line-height:1.45;}
+.snext b{color:var(--ink);}
+.smis{display:grid;gap:5px;font-size:12px;}
+.smis div{display:flex;gap:7px;align-items:center;}
+.smis i{width:14px;height:14px;border-radius:4px;border:2px solid var(--ink-3);flex:none;font-style:normal;font-size:9px;font-weight:900;display:grid;place-items:center;}
+.smis .ok i{background:var(--lime);border-color:var(--lime);color:var(--teal-dk);}
+.smis .ok span{color:var(--ink-3);text-decoration:line-through;}
+.zone-add{position:absolute;top:8px;right:10px;z-index:7;border:none;background:var(--lime);color:var(--teal-dk);font-weight:900;font-size:16px;width:26px;height:26px;border-radius:8px;box-shadow:0 3px 0 var(--lime-dk);line-height:1;}
+.zone-add:hover{filter:brightness(1.08);}
+/* Formulario de comanda */
+.form{display:grid;gap:12px;}
+.fld{display:grid;gap:5px;min-width:0;}
+.fld label{font-size:11.5px;font-weight:700;color:var(--ink-2);}
+.fld .hint{font-size:11px;color:var(--ink-3);}
+.fld .ok-hint{font-size:11.5px;color:var(--lime);}
+.fld .warn-hint{font-size:11.5px;color:var(--amber);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.seg button{padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--teal-xdk);color:var(--ink-2);font-weight:700;font-size:13px;}
+.seg button.on{border-color:var(--lime);background:rgba(127,216,31,.12);color:var(--lime);}
+.inp.full{width:100%;}
+textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .world-holder{position:relative;}
 .world{position:absolute;top:0;left:0;width:1200px;height:900px;transform-origin:0 0;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 0 6px var(--wall);
   --tile-a:#26363b;--tile-b:#2b3c41;
@@ -464,7 +511,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
   </div>
 </header>
 
-<!-- MUNDO -->
+<!-- MUNDO + PANEL -->
+<div class="stage" id="stage">
 <div class="world-scroll" id="world-scroll">
   <div class="world-holder" id="world-holder">
     <div class="world" id="world" aria-label="Plano de la cocina">
@@ -482,6 +530,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <!-- fila 1 -->
       <section class="zone" id="z-nuevas" style="left:24px;top:138px;width:230px;height:178px;">
         <button class="zone-sign" data-zone="nuevas">COMANDAS NUEVAS <span class="cnt num">0</span></button>
+        <button class="zone-add" id="zone-add" title="Nueva comanda (agendar demo)" aria-label="Nueva comanda">+</button>
         <div class="printer" id="printer"></div>
         <div class="zone-hint">Ábrelas para colgarlas en el rail</div>
       </section>
@@ -542,6 +591,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <div class="avatar r1" id="avatar"><span class="avatar-name" id="avatar-name">TÚ</span><div class="hat"></div><div class="head"></div><div class="body"></div><div class="scarf"></div><div class="legs"></div></div>
     </div>
   </div>
+</div>
+<aside class="side" id="side" aria-label="Resumen"></aside>
 </div>
 
 <!-- CUADRO DE MANDO -->
@@ -980,7 +1031,7 @@ function renderWorld(){
   if(curTier>=5)add('ventas',divEl('star-sign',96,262,0,0,'★ ESTRELLA'));
   document.getElementById('bin-n').textContent=Z.papelera.length;
 
-  renderDecor();renderBoard();renderCalls();renderAmbient();renderHUD();renderDash();checkPromotion();
+  renderDecor();renderBoard();renderCalls();renderAmbient();renderHUD();renderDash();renderSide();checkPromotion();
   arrivals.clear();
 }
 
@@ -1339,6 +1390,7 @@ function demoSheet(d,view='main'){
        act('cancelar','Cancelada','A platos devueltos, con motivo',xpLbl('cancelar',d),'warn','var(--amber)')+`</div></div>`;
   }else if(zone==='nuevas'||zone==='agenda'||zone==='hoy'){
     h+=`<div class="acts">`;
+    if(canEdit())h+=act('editar','Editar datos de la demo','Salesforce, comercial, hora, notas…','','','var(--steel)');
     if(needsConfirm(d))h+=act('confirmar','Confirmar asistencia','Ya has hablado con el cliente y viene',xpLbl('confirmar',d),'good','var(--lime)');
     else if(d.confirmada_at)h+=act('desconfirmar','Quitar confirmación','','','','var(--teal-lt)');
     h+=act('reagendar','Cambiar fecha u hora','Sigue en el rail','','','var(--teal-lt)')+
@@ -1460,6 +1512,7 @@ drBody.addEventListener('click',async e=>{
   const show=v=>{drBody.innerHTML=demoSheet(d,v);};
   if(a==='back')return show('main');
   if(['perdido','cancelar','ganado','reagendar'].includes(a))return show(a);
+  if(a==='editar'){openDemoForm(d);return;}
   const wasZone=d._zone,wasPlace=placeOf(d);
   const at=drawerCtx.el&&world.contains(drawerCtx.el)?worldPos(drawerCtx.el):null;
   let patch=null,key='',text='';
@@ -1521,6 +1574,7 @@ drBody.addEventListener('click',async e=>{
 // Clicks en el mundo
 world.addEventListener('click',e=>{
   const p=e.target.closest('.it');if(p&&!p.classList.contains('fly')){openDemo(p.dataset.id,p);return;}
+  if(e.target.closest('#zone-add')){openDemoForm();return;}
   if(e.target.closest('#inspector')){openInspector();return;}
   if(e.target.closest('#grade')){openInspector();return;}
   if(e.target.closest('#calls')){walkTo({x:330,y:530});openCalls();return;}
@@ -1550,9 +1604,19 @@ world.addEventListener('pointerover',e=>{
 });
 world.addEventListener('pointerout',e=>{if(e.target.closest('.it'))hideTip();});
 
+// La cocina se ve entera en pantalla: se ajusta al alto disponible y al hueco que deja el panel
 function fit(){
-  const holder=document.getElementById('world-holder'),sc=document.getElementById('world-scroll');
-  const s=Math.max(.6,Math.min(1.15,sc.clientWidth/1200));
+  const holder=document.getElementById('world-holder'),sc=document.getElementById('world-scroll'),stage=document.getElementById('stage');
+  const narrow=innerWidth<1100;
+  let s;
+  if(narrow){s=Math.max(.6,Math.min(1.15,stage.clientWidth/1200));sc.style.width='';}
+  else{
+    const availW=stage.clientWidth-356;
+    const hud=document.querySelector('.hud').offsetHeight;
+    const availH=innerHeight-hud-24;
+    s=Math.max(.6,Math.min(availW/1200,Math.max(availH/900,.85),1.3));
+    sc.style.width=(1200*s)+'px';
+  }
   world.style.transform=`scale(${s})`;
   holder.style.width=(1200*s)+'px';holder.style.height=(900*s)+'px';
 }
@@ -1570,6 +1634,198 @@ setInterval(()=>{
   if(salen.length)toast(`¡Servicio! La demo de las ${salen[0].hora.slice(0,5)} está en el pase: ¿se hizo?`,'warn');
 },60000);
 
+// ═══════════════════════════════════════════════════════════════
+// Panel lateral de resumen
+// ═══════════════════════════════════════════════════════════════
+function renderSide(){
+  if(!Z||!S)return;
+  const s=S,v=ordenIndex(Z),g=gradeOf(v),t=tierOfLvl(LEVEL)-1;
+  const lo=LVL[LEVEL-1],hi=LEVEL<10?LVL[LEVEL]:LVL[9];
+  const pct=(a,b)=>b?Math.min(100,Math.round(a/b*100)):0;
+  const pace=(val,obj)=>{if(!obj)return'';const d=val-Math.round(obj*s.ritmo);return val>=obj?'<span style="color:var(--gold)">¡objetivo!</span>':`<span style="color:${d>=0?'var(--lime)':'var(--red)'}">${d>=0?'+':''}${d} vs ritmo</span>`;};
+  const hm=nowHM();
+  const next=Z.hoy.find(d=>(d.hora||'')>hm);
+  const manana=demos.filter(d=>ACTIVA(d)&&d.fecha===ds(addDays(1)));
+  const sinConf=manana.filter(d=>!d.confirmada_at).length+Z.hoy.filter(d=>!d.confirmada_at).length;
+  const paseN=Z.marcar.length;
+  const td=today(),todayLog=game.log.filter(l=>l.d===td);
+  const cnt=k=>todayLog.filter(l=>Array.isArray(l.k)&&l.k.includes(k)).length;
+  const nuevasHoy=demos.filter(d=>agendadoDate(d)===td&&d.estado!=='cancelada').length;
+  const mis=[[nuevasHoy>0,'Saca una comanda nueva hoy'],[paseN===0&&!Z.vertedero.some(d=>d._zone==='marcar'),'Vacía el pase'],[cnt('vertedero')>=3,'Friega 3 cosas'],[cnt('rescate')>=2,'Rescata 2 platos devueltos'],[g.g==='A','Consigue la A de sanidad']];
+  document.getElementById('side').innerHTML=`
+    ${canEdit()?`<button class="new-btn" id="side-new">＋ Nueva comanda <kbd>N</kbd></button>`:''}
+    <div class="sbox">
+      <div class="srank"><span class="lv num">${LEVEL}</span><div style="min-width:0"><b>${esc(RANKS[t])}</b><span>${esc(KITCHENS[t])}</span></div></div>
+      <div class="srow"><span class="k">${LEVEL<10?`${hi-XP} XP para nivel ${LEVEL+1}`:'Nivel máximo del mes'}</span><span class="v num">${XP} <small>XP</small></span>
+      <div class="bar"><i style="width:${LEVEL<10?(XP-lo)/(hi-lo)*100:100}%;background:var(--lime)"></i></div></div>
+    </div>
+    <div class="sbox">
+      <h4>SANIDAD <span class="aux" style="color:${g.c};font-weight:800">${g.g} · ${v}/100</span></h4>
+      <div class="spend">
+        <button data-zone="marcar" class="${paseN?'bad':''}">Pase <b class="num">${paseN}</b></button>
+        <button data-zone="vertedero" class="${Z.vertedero.length?'bad':''}">Friegue <b class="num">${Z.vertedero.length}</b></button>
+        <button data-zone="seguimiento">Cámara <b class="num">${Z.seguimiento.length}</b></button>
+        <button data-zone="canceladas">Devueltos <b class="num">${Z.canceladas.length}</b></button>
+      </div>
+    </div>
+    <div class="sbox">
+      <h4>OBJETIVO DEL MES <span class="aux">${s.wd.left} días hábiles</span></h4>
+      <div class="srow"><span class="k">Agendadas · ${pace(s.agendadas,s.objDemos)}</span><span class="v num">${s.agendadas}${s.objDemos?` <small>/ ${s.objDemos}</small>`:''}</span>
+        ${s.objDemos?`<div class="bar"><i style="width:${pct(s.agendadas,s.objDemos)}%;background:var(--lime)"></i></div>`:''}</div>
+      <div class="srow"><span class="k">Ejecutadas · show ${s.show===null?'—':s.show+'%'}</span><span class="v num">${s.ejec}</span></div>
+      <div class="srow"><span class="k">Ventas · ${pace(s.ventas,s.objCwd)}</span><span class="v num" style="color:var(--gold)">${s.ventas}${s.objCwd?` <small>/ ${s.objCwd}</small>`:''}</span>
+        ${s.objCwd?`<div class="bar"><i style="width:${pct(s.ventas,s.objCwd)}%;background:var(--gold)"></i></div>`:''}</div>
+    </div>
+    <div class="sbox">
+      <h4>HOY</h4>
+      <div class="snext">${next?`Siguiente demo a las <b>${esc(next.hora.slice(0,5))}</b>: ${esc(shortName(next))}.`:Z.hoy.length?'No quedan más demos hoy.':'Hoy no tienes demos en los fogones.'}
+      ${sinConf?` <b>${sinConf}</b> sin confirmar entre hoy y mañana.`:''}${paseN?` <b>${paseN}</b> en el pase esperando resultado.`:''}</div>
+    </div>
+    <div class="sbox">
+      <h4>LLAMADAS <span class="aux">meta ${META_CONECTADAS_DIA}/día</span></h4>
+      ${s.conectadas?`<div class="srow"><span class="k">Conectadas al día</span><span class="v num" style="color:${s.mediaConectadas>=META_CONECTADAS_DIA?'var(--lime)':s.mediaConectadas>=META_CONECTADAS_DIA*.8?'var(--amber)':'var(--red)'}">${s.mediaConectadas.toFixed(1)}</span></div>
+      <div class="srow"><span class="k">Conectadas → demo</span><span class="v num">${s.conversion===null?'—':s.conversion.toFixed(1)+'%'}</span></div>`
+      :'<div class="snext">Tu manager aún no ha cargado las llamadas de este mes.</div>'}
+    </div>
+    <div class="sbox">
+      <h4>MISIONES DE HOY <span class="aux">${mis.filter(m=>m[0]).length}/${mis.length}</span></h4>
+      <div class="smis">${mis.map(m=>`<div class="${m[0]?'ok':''}"><i>${m[0]?'✓':''}</i><span>${m[1]}</span></div>`).join('')}</div>
+    </div>`;
+}
+document.getElementById('side').addEventListener('click',e=>{
+  if(e.target.closest('#side-new')){openDemoForm();return;}
+  const z=e.target.closest('[data-zone]');if(z)openZoneList(z.dataset.zone);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Nueva comanda / editar demo (mismos campos y mismo guardado que el SDR Hub)
+// ═══════════════════════════════════════════════════════════════
+let ciudades=[],comercialesActivos=[];
+const canEdit=()=>MODE==='demo'||(MODE==='real'&&!viewId);
+const HORAS=(()=>{const o=[];for(let h=9;h<=18;h++)for(const m of[0,15,30,45]){if(h===18&&m>0)break;o.push(pad(h)+':'+pad(m));}return o;})();
+function parseSfName(url){
+  let txt=url;try{txt=decodeURIComponent(url);}catch(e){}
+  const m=txt.match(/(O\d{6,})\s*-\s*([^|\]\n]+)/i);
+  return m?`${m[1]} - ${m[2].trim().replace(/-\s*$/,'').trim()}`:null;
+}
+const extractCleanUrl=raw=>{const m=raw.match(/https?:\/\/[^\s\)\]]+/);return m?m[0]:raw;};
+const extractOppId=url=>{const m=(url||'').match(/\/(006[A-Za-z0-9]{12,15})/);return m?m[1]:null;};
+const extractOppCode=name=>{const m=(name||'').match(/O\d{6,}/i);return m?m[0].toUpperCase():null;};
+function nextWorkday(){let d=addDays(1);while(!isWorkday(d))d=addDays(1,d);return ds(d);}
+
+function openDemoForm(d=null){
+  if(!canEdit())return;
+  hideTip();
+  const b=zoneBox('nuevas');walkTo({x:b.x+130,y:b.y+150});
+  const opts=(list,sel)=>'<option value="">Selecciona…</option>'+list.map(c=>`<option value="${c.id}"${c.id==sel?' selected':''}>${esc(c.nombre)}</option>`).join('');
+  const coms=comercialesActivos.length?comercialesActivos:comerciales;
+  const hora=d&&d.hora?d.hora.slice(0,5):'';
+  const tipo=d?.tipo||'presencial',canal=d?.canal||'outbound';
+  drawerCtx={form:true,editId:d?d.id:null};
+  openDrawer(d?'Editar comanda':'Nueva comanda',d?(d.sf_nombre||'Demo'):'Agendar una demo',`
+  <form class="form" id="demo-form" autocomplete="off">
+    <div class="fld"><label for="f-url">Enlace de Salesforce</label>
+      <input class="inp full" id="f-url" placeholder="Pega el enlace de la oportunidad" value="${esc(d?.sf_url||'')}">
+      <div id="f-url-hint" class="hint">Si el enlace trae el código y el nombre, se rellena solo.</div></div>
+    <div class="fld"><label for="f-nombre">Nombre de la oportunidad</label>
+      <input class="inp full" id="f-nombre" placeholder="O00123456 - NOMBRE DEL LOCAL" value="${esc(d?.sf_nombre||'')}">
+      <div id="f-dup" class="warn-hint" hidden></div></div>
+    <div class="fld"><label>Canal</label>
+      <div class="seg" id="f-canal"><button type="button" data-v="outbound" class="${canal==='outbound'?'on':''}">Outbound</button><button type="button" data-v="inbound" class="${canal==='inbound'?'on':''}">Inbound</button></div></div>
+    <div class="frow">
+      <div class="fld"><label for="f-fecha">Fecha de la demo</label><input type="date" class="inp" id="f-fecha" value="${d?.fecha||nextWorkday()}"></div>
+      <div class="fld"><label for="f-hora">Hora</label><select class="inp" id="f-hora"><option value="">Sin hora</option>${HORAS.map(h=>`<option${h===hora?' selected':''}>${h}</option>`).join('')}${hora&&!HORAS.includes(hora)?`<option selected>${hora}</option>`:''}</select></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label for="f-tipo">Tipo</label><select class="inp" id="f-tipo"><option value="presencial"${tipo==='presencial'?' selected':''}>Presencial</option><option value="online"${tipo==='online'?' selected':''}>Online</option></select></div>
+      <div class="fld" id="f-plat-wrap"${tipo==='online'?'':' hidden'}><label for="f-plat">Plataforma</label><select class="inp" id="f-plat">${[['teams','Microsoft Teams'],['whatsapp','WhatsApp'],['meet','Google Meet'],['zoom','Zoom']].map(p=>`<option value="${p[0]}"${(d?.plataforma||'teams')===p[0]?' selected':''}>${p[1]}</option>`).join('')}</select></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label for="f-com">Comercial</label><select class="inp" id="f-com">${opts(coms,d?.comercial_id)}</select></div>
+      <div class="fld"><label for="f-ciu">Ciudad</label><select class="inp" id="f-ciu">${opts(ciudades,d?.ciudad_id)}</select></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label for="f-tel">Teléfono</label><input class="inp" id="f-tel" inputmode="tel" value="${esc(d?.telefono||'')}"></div>
+      <div class="fld"><label for="f-ag">Agendada el</label><input type="date" class="inp" id="f-ag" value="${d?.fecha_agendamiento||today()}" max="${today()}"></div>
+    </div>
+    <div class="fld"><label for="f-notas">Notas</label><textarea class="inp full" id="f-notas">${esc(d?.notas||'')}</textarea></div>
+    <button class="btn primary" type="submit" style="padding:12px;font-size:14px;">${d?'Guardar cambios':'¡Marchando! Crear comanda'}</button>
+    ${MODE==='demo'?'<div class="note-demo">Modo de prueba: la comanda solo existe en esta pestaña.</div>':'<div style="font-size:11.5px;color:var(--ink-3)">Se guarda en el SDR Hub igual que si la crearas allí.</div>'}
+  </form>`);
+  const f=document.getElementById('demo-form');
+  const urlEl=document.getElementById('f-url'),nomEl=document.getElementById('f-nombre');
+  const check=()=>{
+    const raw=urlEl.value.trim(),hint=document.getElementById('f-url-hint');
+    const nm=parseSfName(raw);
+    if(nm&&!nomEl.dataset.touched){nomEl.value=nm;hint.className='ok-hint';hint.textContent='✓ Nombre sacado del enlace';}
+    else if(/salesforce\.com|force\.com/.test(raw)&&!nm){hint.className='warn-hint';hint.textContent='Enlace detectado, pero no trae el nombre. Escríbelo abajo.';}
+    const id=extractOppId(raw),code=extractOppCode(nomEl.value)||extractOppCode(raw);
+    const dup=(id||code)?demos.find(x=>x.id!==(d?.id)&&((id&&extractOppId(x.sf_url)===id)||(code&&(extractOppCode(x.sf_nombre)||extractOppCode(x.sf_url))===code))):null;
+    const w=document.getElementById('f-dup');
+    w.hidden=!dup;if(dup)w.textContent=`Ojo: ya tienes esta oportunidad agendada el ${fmt(dup.fecha)} (${dup.estado}).`;
+  };
+  urlEl.addEventListener('input',check);
+  nomEl.addEventListener('input',()=>{nomEl.dataset.touched='1';check();});
+  document.getElementById('f-canal').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#f-canal button').forEach(x=>x.classList.toggle('on',x===b));});
+  document.getElementById('f-tipo').addEventListener('change',e=>{document.getElementById('f-plat-wrap').hidden=e.target.value!=='online';});
+  if(d)check();
+  f.addEventListener('submit',e=>{e.preventDefault();saveDemoForm(d);});
+  setTimeout(()=>urlEl.focus(),80);
+}
+
+async function saveDemoForm(d){
+  const raw=document.getElementById('f-url').value.trim();
+  const tipo=document.getElementById('f-tipo').value;
+  const fecha=document.getElementById('f-fecha').value;
+  if(!fecha){toast('Pon una fecha para la demo','warn');return;}
+  if(!d&&fecha<today()){toast('Para una demo nueva elige hoy o una fecha futura','warn');return;}
+  const comV=document.getElementById('f-com').value,ciuV=document.getElementById('f-ciu').value;
+  const payload={
+    sf_url:raw?extractCleanUrl(raw):null,
+    sf_nombre:document.getElementById('f-nombre').value.trim()||parseSfName(raw)||'Sin nombre',
+    comercial_id:comV?parseInt(comV):null,
+    ciudad_id:ciuV?parseInt(ciuV):null,
+    telefono:document.getElementById('f-tel').value.trim()||null,
+    fecha_agendamiento:document.getElementById('f-ag').value||today(),
+    fecha,
+    hora:document.getElementById('f-hora').value||null,
+    tipo,
+    plataforma:tipo==='online'?(document.getElementById('f-plat').value||null):null,
+    canal:document.querySelector('#f-canal .on')?.dataset.v||'outbound',
+    notas:document.getElementById('f-notas').value||null
+  };
+  const btn=document.querySelector('#demo-form [type=submit]');btn.disabled=true;
+  try{
+    if(d){
+      if(MODE==='real')await sb(`demos?id=eq.${d.id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      Object.assign(d,payload);
+      closeDrawer();renderWorld();toast('Comanda actualizada');
+      logLine('Datos editados: '+shortName(d),0,['editar']);saveGame();renderDash();
+      return;
+    }
+    const nueva={sdr_id:currentUser.id,estado:'agendada',outcome:null,fecha_firma:null,motivo:null,...payload};
+    let creada;
+    if(MODE==='real'){const r=await sb('demos',{method:'POST',body:JSON.stringify(nueva)});creada=Array.isArray(r)?r[0]:r;}
+    else creada={...nueva,id:Math.max(0,...demos.map(x=>+x.id||0))+1,created_at:new Date().toISOString(),descartada:false,confirmada_at:null,seguimiento_aplazado_hasta:null};
+    demos.push(creada);
+    closeDrawer();renderWorld();
+    const pr=document.getElementById('printer');pr.classList.remove('ring');void pr.offsetWidth;pr.classList.add('ring');
+    const el=world.querySelector(`.it[data-id="${creada.id}"]`);
+    if(el){el.classList.add('arrive');confettiAt(worldPos(el),24);}
+    logLine('Nueva comanda: '+shortName(creada),0,['creada']);saveGame();renderDash();
+    toast(placeOf(creada)==='nuevas'?'¡Marchando! Comanda impresa. Ábrela para colgarla en el rail (+25 XP)':'¡Marchando! Comanda creada');
+  }catch(err){
+    console.error(err);btn.disabled=false;
+    toast('No se pudo guardar la comanda. '+String(err.message||err).slice(0,80),'warn');
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='n'&&e.key!=='N')return;
+  if(e.target.closest('input,textarea,select')||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(!MODE||drawer.classList.contains('open'))return;
+  e.preventDefault();openDemoForm();
+});
+
 // Vista espejo (solo usuarios de prueba): ver la cocina de otro SDR con sus demos reales, sin guardar nada
 async function loadMirrorOptions(){
   try{
@@ -1584,6 +1840,7 @@ document.getElementById('mirror').addEventListener('change',async e=>{
   closeDrawer();
   loadGame();
   try{await loadReal();}catch(err){console.error(err);toast('No se pudieron cargar esas demos','warn');return;}
+  document.getElementById('zone-add').hidden=!canEdit();
   renderWorld();
   toast(viewId?`Viendo la cocina de ${viewName}. Lo que hagas aquí no se guarda.`:'De vuelta a tu cocina');
 });
@@ -1597,6 +1854,7 @@ function demoData(){
   const pick=a=>a[Math.floor(rnd()*a.length)];
   const negocios=['Gastrobar A Fer La Mà','Taberna El Cruce','Pizzería Napoli Centro','Restaurante Los Arcos','Café Central Lavapiés','Asador Peña Grande','Bar La Esquina','Sushi Kenzo','Hamburguesería Ruta 66','Cervecería La Espiga','Tasca Lola','Marisquería O Porto','Brasería Doña Julia','Bodega San Roque','Trattoria Sol','Pastelería Dulce Momento','Tapería La Paloma','Kebab Antalya','Mesón del Puerto','Churrería San Ginés 2','Poke House Chamberí','Vinoteca Ribera','Arrocería La Barraca','Crepería Bretaña','Bar Manolo','Horno de Leña Toscana','Freiduría El Puerto','Cafetería Plaza Mayor','Burger Lab Malasaña','Tortillería La Abuela','Pulpería Melide','Taquería Guadalajara','Heladería Polo Norte','Restaurante Casa Pepe','Wok Garden','Sidrería Asturiana','Bar El Rincón de Ana','Panadería Trigo Limpio','Ramen Kintsugi','Asador Txuleta','Gastro La Huerta','Café Bohemia','Pollería El Corral','Bar Sol y Sombra','Kiosko Retiro','La Parrilla de Tomás','Vermutería Rosales','Comedor Nueva Era','Cocina de Mercado','Freidora Andaluza'];
   comerciales=[{id:1,nombre:'Lucía Ortega'},{id:2,nombre:'Javier Román'},{id:3,nombre:'Marta Vidal'},{id:4,nombre:'Diego Sanz'}];
+  comercialesActivos=comerciales;ciudades=[{id:1,nombre:'Madrid'},{id:2,nombre:'Barcelona'},{id:3,nombre:'Valencia'},{id:4,nombre:'Sevilla'}];
   const out=[];let id=2000;
   const now=new Date(),dom=now.getDate();
   const inMonth=()=>-Math.floor(rnd()*Math.max(1,dom-1));
@@ -1633,13 +1891,15 @@ function demoData(){
 // ═══════════════════════════════════════════════════════════════
 async function loadReal(){
   const n=new Date(),sid=viewId||currentUser.id;
-  const [d,c,o,l,cfg]=await Promise.all([
+  const [d,c,o,l,cfg,ciu]=await Promise.all([
     sbAll(`demos?sdr_id=eq.${sid}&select=*&order=fecha.asc,id.asc`),
-    sb('comerciales?select=id,nombre').catch(()=>[]),
+    sb('comerciales?select=id,nombre,activo').catch(()=>[]),
     sb(`objetivos?sdr_id=eq.${sid}&select=*`).catch(()=>[]),
     sb(`llamadas?sdr_id=eq.${sid}&mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
-    sb('config?clave=eq.meta_conectadas_dia&select=valor').catch(()=>[])
+    sb('config?clave=eq.meta_conectadas_dia&select=valor').catch(()=>[]),
+    sb('ciudades?activa=eq.true&select=id,nombre&order=nombre.asc').catch(()=>[])
   ]);
+  ciudades=ciu||[];comercialesActivos=(c||[]).filter(x=>x.activo!==false).sort((a,b)=>a.nombre.localeCompare(b.nombre));
   demos=d||[];comerciales=c||[];objetivos=o||[];llamadas=(l&&l[0])||null;
   const meta=cfg&&cfg[0]&&parseInt(cfg[0].valor,10);if(meta>0)META_CONECTADAS_DIA=meta;
 }
@@ -1660,12 +1920,13 @@ async function enter(mode){
   document.getElementById('preview-wrap').hidden=mode!=='demo';
   document.getElementById('btn-hub').hidden=mode!=='real';
   document.getElementById('mirror-wrap').hidden=!(mode==='real'&&currentUser.es_prueba);
+  document.getElementById('zone-add').hidden=!canEdit();
   if(mode==='real'&&currentUser.es_prueba)loadMirrorOptions();
   document.getElementById('avatar-name').textContent=(currentUser.nombre||'TÚ').split(' ')[0].toUpperCase();
   const mc=document.getElementById('mode-chip');
   mc.className='chip '+(mode==='demo'?'mode-demo':'mode-real');
   mc.textContent=mode==='demo'?'Datos de ejemplo':'Conectado al SDR Hub';
-  fit();placeAvatar(HOME,0);renderWorld();
+  renderWorld();fit();placeAvatar(HOME,0);
   const pase=Z.marcar.length+Z.vertedero.filter(d=>d._zone==='marcar').length;
   if(pase)setTimeout(()=>toast(`Tienes ${pase} platos esperando en el pase: ¿se hicieron?`,'warn'),900);
 }
