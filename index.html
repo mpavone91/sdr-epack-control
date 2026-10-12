@@ -2251,6 +2251,20 @@ function workdaysElapsedOf(m){
   }
   return elapsed;
 }
+// Días hábiles ya cerrados (hasta ayer). Las llamadas se cargan al día siguiente,
+// así que el ritmo de llamadas se mide sobre días terminados, no sobre el de hoy.
+function workdaysClosedOf(m){
+  const year=m.getFullYear(),month=m.getMonth();
+  const today=new Date();today.setHours(0,0,0,0);
+  const last=new Date(year,month+1,0).getDate();
+  let closed=0;
+  for(let d=1;d<=last;d++){
+    const dt=new Date(year,month,d);
+    if(dt>=today)break;
+    if(isWorkday(dt))closed++;
+  }
+  return closed;
+}
 function workdaysInMonth(){return workdaysInMonthOf(getTargetMonth());}
 function workdaysElapsed(){return workdaysElapsedOf(getTargetMonth());}
 
@@ -2289,9 +2303,10 @@ async function saveMetaConectadas(){
 // Calcula el ritmo de llamadas de un SDR para un mes dado
 function ritmoLlamadas(conectadas,demos,m){
   const habiles=workdaysInMonthOf(m);
-  const transcurridos=Math.max(0,workdaysElapsedOf(m));
+  // Hasta ayer: el día de hoy aún no está cerrado ni cargado
+  const transcurridos=Math.max(0,workdaysClosedOf(m));
   const restantes=Math.max(0,habiles-transcurridos);
-  const media=transcurridos>0?conectadas/transcurridos:0;
+  const media=conectadas/Math.max(1,transcurridos);
   const esperadas=META_CONECTADAS_DIA*transcurridos;
   const objetivoMes=META_CONECTADAS_DIA*habiles;
   const faltan=Math.max(0,objetivoMes-conectadas);
@@ -3020,8 +3035,8 @@ function renderLlamadasTable(){
     const esMesActual=mgrMonthOffset===0;
     const objetivoAcum=META_CONECTADAS_DIA*rInfo.transcurridos;
     infoEl.innerHTML=esMesActual
-      ? `📅 Hoy es <b>${fmtDateLong()}</b> · Llevamos <b>${rInfo.transcurridos} de ${rInfo.habiles} días hábiles</b> del mes (quedan ${rInfo.restantes}).<br>
-         🎯 Meta: <b>${META_CONECTADAS_DIA} conectadas por día hábil</b> → a día de hoy cada SDR debería llevar <b>${objetivoAcum} conectadas</b> acumuladas. Sábados y domingos no cuentan.`
+      ? `📅 Hoy es <b>${fmtDateLong()}</b> · Hay <b>${rInfo.transcurridos} de ${rInfo.habiles} días hábiles</b> cerrados (hasta ayer; quedan ${rInfo.restantes} contando hoy).<br>
+         🎯 Meta: <b>${META_CONECTADAS_DIA} conectadas por día hábil</b> → con los datos hasta ayer cada SDR debería llevar <b>${objetivoAcum} conectadas</b> acumuladas. Sábados y domingos no cuentan; el día de hoy no se cuenta hasta que se cargan sus llamadas.`
       : `📅 ${mgrMonthLabel()} tuvo <b>${rInfo.habiles} días hábiles</b>. Meta de referencia: <b>${META_CONECTADAS_DIA}/día</b> → <b>${META_CONECTADAS_DIA*rInfo.habiles} conectadas</b> en el mes completo.`;
   }
   const pctPill=(val,green,yellow)=>{
@@ -5802,7 +5817,7 @@ function renderRitmoLlamadas(){
   if(!reg||conectadas===0){
     cont.innerHTML=`<div class="ritmo-box">
       <div class="ritmo-head"><div class="ritmo-title">📞 Tu ritmo de llamadas</div>
-      <div class="ritmo-dias">${r.transcurridos} de ${r.habiles} días hábiles</div></div>
+      <div class="ritmo-dias">${r.transcurridos} de ${r.habiles} días hábiles (hasta ayer)</div></div>
       <div class="ritmo-msg" style="color:var(--muted);">Aún no hay llamadas registradas para ${monthLabel()}. Tu manager las actualiza periódicamente — en cuanto las cargue, aquí verás tu media diaria frente a la meta de <b>${META_CONECTADAS_DIA} conectadas/día</b>.</div>
     </div>`;
     return;
@@ -5849,7 +5864,7 @@ function renderRitmoLlamadas(){
     <div class="ritmo-box">
       <div class="ritmo-head">
         <div class="ritmo-title">📞 Tu ritmo de llamadas <span style="font-weight:500;color:var(--muted);">· meta ${META_CONECTADAS_DIA} conectadas/día</span></div>
-        <div class="ritmo-dias">📅 ${r.transcurridos} de ${r.habiles} días hábiles${r.restantes>0?' · quedan '+r.restantes:''}</div>
+        <div class="ritmo-dias">📅 ${r.transcurridos} de ${r.habiles} días hábiles cerrados (hasta ayer)${r.restantes>0?' · quedan '+r.restantes+' contando hoy':''}</div>
       </div>
       <div class="ritmo-main">
         <div class="ritmo-num">
