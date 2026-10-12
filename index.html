@@ -2523,11 +2523,16 @@ function sdrStats(sdrId){
   const ejecutadas=created.filter(d=>d.estado==='ejecutada').length;
   const totalDemos=demosOut+demosIn;
   const totalCwd=cwdOut+cwdIn;
+  // Conversión demo→ganada: demos celebradas en el periodo (por fecha de la demo) y cuántas
+  // de ESAS están ganadas. Mismo grupo arriba y abajo, así nunca pasa del 100%.
+  const celebradasArr=allDemos.filter(d=>d.sdr_id===sdrId&&d.estado==='ejecutada'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+  const celebradas=celebradasArr.length;
+  const ganadasCelebradas=celebradasArr.filter(d=>d.outcome==='cerrado_ganado').length;
   const m=mgrTargetMonth();
   const llam=allLlamadas.find(l=>l.sdr_id===sdrId&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
   const hechas=llam?(llam.llamadas_hechas||0):0;
   const conectadas=llam?(llam.llamadas_conectadas||0):0;
-  return{demosOut,demosIn,cwdOut,cwdIn,cld,canceladas,ejecutadas,totalDemos,totalCwd,hechas,conectadas,
+  return{demosOut,demosIn,cwdOut,cwdIn,cld,canceladas,ejecutadas,celebradas,ganadasCelebradas,totalDemos,totalCwd,hechas,conectadas,
     ratioConexion:hechas>0?(conectadas/hechas*100):0,
     callsPerDemo:totalDemos>0?(hechas/totalDemos):0,
     connectedPerDemo:totalDemos>0?(conectadas/totalDemos):0,
@@ -3068,8 +3073,8 @@ function renderLlamadasTable(){
       const llam=allLlamadas.find(l=>l.sdr_id===s.id&&l.mes===m.getMonth()+1&&l.anio===m.getFullYear());
       // % conectada a demo: demos / conectadas
       const pctConectaDemo=st.conectadas>0?(st.totalDemos/st.conectadas*100):0;
-      // % demo a ganada: ganadas / demos ejecutadas
-      const pctDemoGanada=st.ejecutadas>0?(st.totalCwd/st.ejecutadas*100):0;
+      // % demo a ganada: de las demos celebradas en el periodo, cuántas están ganadas
+      const pctDemoGanada=st.celebradas>0?(st.ganadasCelebradas/st.celebradas*100):0;
       const r=ritmoLlamadas(st.conectadas,st.totalDemos,m);
       return`<tr>
         <td>${s.nombre}</td>
@@ -3081,7 +3086,7 @@ function renderLlamadasTable(){
         <td class="mini-ratio">${st.callsPerDemo.toFixed(1)}</td>
         <td>${pctPill(pctConectaDemo,10,5)}</td>
         <td><b style="color:var(--green)">${st.totalCwd}</b></td>
-        <td>${pctPill(pctDemoGanada,20,10)}</td>
+        <td>${st.celebradas>0?pctPill(pctDemoGanada,20,10):'—'}</td>
         <td><button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="saveLlamadas(${s.id})">Guardar</button></td>
       </tr>`;
     }).join('')}
@@ -3095,7 +3100,7 @@ function renderLlamadasTable(){
       <td>—</td>
       <td>${(()=>{const demos=allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalDemos,0);const conect=allSdrs.reduce((a,s)=>a+sdrStats(s.id).conectadas,0);return conect>0?(demos/conect*100).toFixed(1)+'%':'—';})()}</td>
       <td><b style="color:var(--green)">${allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalCwd,0)}</b></td>
-      <td>${(()=>{const ejec=allSdrs.reduce((a,s)=>a+sdrStats(s.id).ejecutadas,0);const cwd=allSdrs.reduce((a,s)=>a+sdrStats(s.id).totalCwd,0);return ejec>0?(cwd/ejec*100).toFixed(1)+'%':'—';})()}</td>
+      <td>${(()=>{const ejec=allSdrs.reduce((a,s)=>a+sdrStats(s.id).celebradas,0);const gan=allSdrs.reduce((a,s)=>a+sdrStats(s.id).ganadasCelebradas,0);return ejec>0?(gan/ejec*100).toFixed(1)+'%':'—';})()}</td>
       <td></td>
     </tr>
     </tbody>`;
@@ -6366,11 +6371,14 @@ async function renderSdrMetricsInline(){
       return d.sdr_id===s.id&&ag>=start&&ag<=end&&d.estado!=='cancelada';
     });
     const totalDemos=sDemos.length;
-    const ejecutadas=sDemos.filter(d=>d.estado==='ejecutada').length;
+    // Demos celebradas en el periodo (por fecha de la demo) y cuántas de ellas están ganadas
+    const celebradasArr=allDemosData.filter(d=>d.sdr_id===s.id&&d.estado==='ejecutada'&&(d.fecha||'')>=start&&(d.fecha||'')<=end);
+    const ejecutadas=celebradasArr.length;
+    const ganadasCelebradas=celebradasArr.filter(d=>d.outcome==='cerrado_ganado').length;
     const cwd=allDemosData.filter(d=>d.sdr_id===s.id&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
     const pctConexion=hechas>0?conectadas/hechas*100:0;
     const pctConectaDemo=conectadas>0?totalDemos/conectadas*100:0;
-    const pctDemoGanada=ejecutadas>0?cwd/ejecutadas*100:0;
+    const pctDemoGanada=ejecutadas>0?ganadasCelebradas/ejecutadas*100:0;
     return{nombre:s.nombre,hechas,conectadas,pctConexion,totalDemos,ejecutadas,pctConectaDemo,cwd,pctDemoGanada,isMe:s.id===currentUser.id};
   });
 
