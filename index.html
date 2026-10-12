@@ -2590,18 +2590,35 @@ function renderManager(){
 function prevMgrMonthRange(){
   const m=mgrTargetMonth();
   const prev=new Date(m.getFullYear(),m.getMonth()-1,1);
-  return{start:localDateStr(new Date(prev.getFullYear(),prev.getMonth(),1)),end:localDateStr(new Date(prev.getFullYear(),prev.getMonth()+1,0))};
+  const start=localDateStr(prev);
+  const fin=new Date(prev.getFullYear(),prev.getMonth()+1,0);
+  // Mismo tramo de días hábiles: si el mes actual lleva N días hábiles, se compara con
+  // los N primeros días hábiles del mes anterior (con el mes completo si ya terminó).
+  const n=workdaysElapsedOf(m);
+  let end=localDateStr(fin);
+  if(n<workdaysInMonthOf(m)){
+    let c=0,last=new Date(prev.getFullYear(),prev.getMonth(),1);
+    for(let d=1;d<=fin.getDate();d++){
+      const dt=new Date(prev.getFullYear(),prev.getMonth(),d);
+      if(isWorkday(dt)){c++;last=dt;}
+      if(c>=n)break;
+    }
+    end=localDateStr(last);
+  }
+  return{start,end};
 }
 function prevMonthStatsForSdr(sdrId){
   const{start,end}=prevMgrMonthRange();
+  // Mismos criterios que sdrStats: cohorte por fecha de agendamiento
   const sDemos=allDemos.filter(d=>{
     const ag=d.fecha_agendamiento||(d.created_at||'').split('T')[0];
     return d.sdr_id===sdrId&&ag>=start&&ag<=end;
   });
-  const totalDemos=sDemos.filter(d=>d.estado!=='cancelada').length;
+  const conCanal=d=>d.canal==='outbound'||d.canal==='inbound';
+  const totalDemos=sDemos.filter(d=>d.estado!=='cancelada'&&conCanal(d)).length;
   const ejecutadas=sDemos.filter(d=>d.estado==='ejecutada').length;
   const canceladas=sDemos.filter(d=>d.estado==='cancelada').length;
-  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
+  const cwd=allDemos.filter(d=>d.sdr_id===sdrId&&d.outcome==='cerrado_ganado'&&conCanal(d)&&cwdDate(d)>=start&&cwdDate(d)<=end).length;
   return{totalDemos,ejecutadas,canceladas,cwd};
 }
 function deltaBadge(curr,prev){
@@ -2629,10 +2646,10 @@ function renderMgrTeamStats(){
   const pTotalCanc=prevStats.reduce((a,b)=>a+b.canceladas,0);
   const el=document.getElementById('mgr-team-stats');
   el.innerHTML=`
-    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Agendadas</div><div class="stat-delta">${deltaBadge(totalDemos,pTotalDemos)} vs mes anterior</div></div>
-    <div class="stat-card"><div class="stat-num">${totalEjec}</div><div class="stat-label">Ejecutadas</div><div class="stat-delta">${deltaBadge(totalEjec,pTotalEjec)} vs mes anterior</div></div>
-    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ganadas (CWD)</div><div class="stat-delta">${deltaBadge(totalCwd,pTotalCwd)} vs mes anterior</div></div>
-    <div class="stat-card"><div class="stat-num">${totalCanc}</div><div class="stat-label">Canceladas</div><div class="stat-delta">${deltaBadgeInverted(totalCanc,pTotalCanc)} vs mes anterior</div></div>
+    <div class="stat-card accent"><div class="stat-num">${totalDemos}</div><div class="stat-label">Agendadas</div><div class="stat-delta">${deltaBadge(totalDemos,pTotalDemos)} vs mismos días del mes anterior</div></div>
+    <div class="stat-card"><div class="stat-num">${totalEjec}</div><div class="stat-label">Ejecutadas</div><div class="stat-delta">${deltaBadge(totalEjec,pTotalEjec)} vs mismos días del mes anterior</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCwd}</div><div class="stat-label">Ganadas (CWD)</div><div class="stat-delta">${deltaBadge(totalCwd,pTotalCwd)} vs mismos días del mes anterior</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCanc}</div><div class="stat-label">Canceladas</div><div class="stat-delta">${deltaBadgeInverted(totalCanc,pTotalCanc)} vs mismos días del mes anterior</div></div>
     <div class="stat-card"><div class="stat-num">${pctCanc}%</div><div class="stat-label">% Cancelación</div></div>
     <div class="stat-card"><div class="stat-num">${pctCierre}%</div><div class="stat-label">% Cierre</div></div>`;
 }
@@ -2688,7 +2705,7 @@ function renderMgrRanking(){
   const t=document.getElementById('mgr-ranking');
   t.innerHTML=`
     <thead><tr>
-      <th>SDR</th><th>Agend.</th><th>vs mes ant.</th><th>Out</th><th>In</th>
+      <th>SDR</th><th>Agend.</th><th title="Comparado con los mismos días hábiles del mes anterior">vs mes ant.</th><th>Out</th><th>In</th>
       <th>Ejec.</th><th>Pend.</th><th>% Ejec</th>
       <th>Ganadas</th><th>% Cierre</th>
       <th>Canc.</th><th>% Canc</th>
