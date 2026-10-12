@@ -72,6 +72,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .new-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--lime-dk);}
 .new-btn kbd{font-family:var(--f-sign);font-size:10px;background:rgba(0,0,0,.12);padding:1px 5px;border-radius:4px;}
 .srank{display:flex;align-items:center;gap:10px;}
+.tl{display:grid;gap:4px;}
+.tl-row{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:4px 6px;border-radius:8px;}
+.tl-row.yo{background:rgba(127,216,31,.1);box-shadow:inset 0 0 0 1px rgba(127,216,31,.4);}
+.tl-row .lv{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:11px;color:var(--teal-dk);flex:none;}
+.tl-row .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tl-row .rk{margin-left:auto;font-size:11px;color:var(--ink-3);white-space:nowrap;}
 .srank .lv{width:40px;height:40px;border-radius:50%;background:var(--lime);color:var(--teal-dk);display:grid;place-items:center;font-weight:800;font-size:16px;flex:none;}
 .srank b{display:block;font-size:15px;}
 .srank span{font-size:12px;color:var(--ink-3);}
@@ -1838,6 +1844,7 @@ function renderSide(){
       <div class="srow"><span class="k">${LEVEL<10?`${hi-XP} XP para nivel ${LEVEL+1}`:'Nivel máximo del mes'}</span><span class="v num">${XP} <small>XP</small></span>
       <div class="bar"><i style="width:${LEVEL<10?(XP-lo)/(hi-lo)*100:100}%;background:var(--lime)"></i></div></div>
     </div>
+    ${teamLevelsHTML()}
     <div class="sbox">
       <h4>SANIDAD <span class="aux" style="color:${g.c};font-weight:800">${g.g} · ${v}/100</span></h4>
       <div class="spend">
@@ -2374,6 +2381,49 @@ drBody.addEventListener('click',async e=>{
   }catch(err){console.error(err);toast('No se pudo actualizar la nota','warn');}
 });
 
+// ═══════════════════════════════════════════════════════════════
+// Niveles del equipo en el panel del SDR: solo nombre, puesto y nivel
+// (sin XP, cifras ni posiciones, para que motive sin presionar)
+// ═══════════════════════════════════════════════════════════════
+let teamLevels=[];
+const TIER_COLOR=['#b9c4c6','#9fd0e8','var(--lime)','#e3a06b','var(--gold)'];
+async function loadTeamLevels(){
+  if(managerMode)return;
+  try{
+    if(MODE==='real'){
+      const n=new Date();
+      const [sdrs,d,o,l]=await Promise.all([
+        sb('sdr_users?rol=eq.sdr&activo=eq.true&es_prueba=is.false&select=id,nombre&order=nombre.asc'),
+        sbAll('demos?select=id,sdr_id,estado,outcome,fecha,hora,fecha_agendamiento,created_at,descartada,fecha_firma,confirmada_at,seguimiento_aplazado_hasta&order=id.asc'),
+        sb(`objetivos?mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
+        sb(`llamadas?mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[])
+      ]);
+      teamLevels=(sdrs||[]).filter(u=>u.id!==currentUser.id).map(u=>{
+        const r=summarize({demos:(d||[]).filter(x=>x.sdr_id===u.id),obj:(o||[]).filter(x=>x.sdr_id===u.id),ll:(l||[]).find(x=>x.sdr_id===u.id)||null});
+        return{id:u.id,nombre:u.nombre,lvl:r.lvl,tier:r.tier};
+      });
+    }else{
+      // Compañeros de ejemplo, sin tocar los datos de la cocina que se está viendo
+      const save={objetivos,llamadas,comerciales,comercialesActivos,ciudades,meta:META_CONECTADAS_DIA};
+      teamLevels=[['Lucía',23,1.5],['Javier',37,.6],['Marta',51,1.25],['Diego',67,.8,true],['Sara',83,1.1]].map(([nombre,seed,k,limpio],i)=>{
+        const dd=demoData(seed,k,200+i,20000+i*1000,!!limpio);
+        const r=summarize({demos:dd,obj:objetivos,ll:llamadas});
+        return{id:200+i,nombre,lvl:r.lvl,tier:r.tier};
+      });
+      ({objetivos,llamadas,comerciales,comercialesActivos,ciudades}=save);META_CONECTADAS_DIA=save.meta;
+    }
+  }catch(e){console.error(e);teamLevels=[];}
+  renderSide();
+}
+function teamLevelsHTML(){
+  if(managerMode||!teamLevels.length||!currentUser)return'';
+  const filas=[...teamLevels,{id:currentUser.id,nombre:currentUser.nombre,lvl:LEVEL,tier:tierOfLvl(LEVEL),yo:true}]
+    .sort((a,b)=>b.lvl-a.lvl||a.nombre.localeCompare(b.nombre));
+  return`<div class="sbox"><h4>NIVELES DEL EQUIPO <span class="aux">este mes</span></h4><div class="tl">
+    ${filas.map(f=>`<div class="tl-row ${f.yo?'yo':''}"><span class="lv num" style="background:${TIER_COLOR[f.tier-1]}">${f.lvl}</span><span class="nm">${f.yo?'<b>Tú</b>':esc(f.nombre.split(' ')[0])}</span><span class="rk">${esc(RANKS[f.tier-1])}</span></div>`).join('')}
+  </div></div>`;
+}
+
 // Vista espejo (solo usuarios de prueba): ver la cocina de otro SDR con sus demos reales, sin guardar nada
 async function loadMirrorOptions(){
   try{
@@ -2479,11 +2529,11 @@ async function enter(mode){
   mc.textContent=mode==='demo'?'Datos de ejemplo':'Conectado al SDR Hub';
   renderWorld();fit();placeAvatar(HOME,0);
   if(mode==='real'){
-    joinKitchen(currentUser.id);joinLobby();
+    joinKitchen(currentUser.id);joinLobby();loadTeamLevels();
     loadNotas(currentUser.id).then(()=>{const n=notas.filter(x=>!x.leida_at).length;if(n)setTimeout(()=>toast(`📌 Tienes ${n} ${n===1?'nota':'notas'} de tu manager en la pizarra`),1800);});
   }else{
     notas=[{id:1,sdr_id:0,autor_id:-9,texto:'¡Buen ritmo esta semana! Ojo con el pase, que se te acumulan los platos. Sácalos hoy y te invito a un café.',created_at:new Date(Date.now()-3*3600e3).toISOString(),leida_at:null}];
-    managerNames[-9]='Massimo';renderNotas();renderChat();
+    managerNames[-9]='Massimo';renderNotas();renderChat();loadTeamLevels();
   }
   const pase=Z.marcar.length+Z.vertedero.filter(d=>d._zone==='marcar').length;
   if(pase)setTimeout(()=>toast(`Tienes ${pase} platos esperando en el pase: ¿se hicieron?`,'warn'),900);
@@ -2503,7 +2553,7 @@ document.getElementById('btn-refresh').onclick=async()=>{
     if(viewId)visitKitchen(viewId);else renderCentral();
     return;
   }
-  if(MODE==='real'){try{await loadReal();toast('Demos actualizadas');}catch(e){toast('No se pudo recargar','warn');}}
+  if(MODE==='real'){try{await loadReal();loadTeamLevels();toast('Demos actualizadas');}catch(e){toast('No se pudo recargar','warn');}}
   else{loadGame();game={unboxed:{},extras:[],log:[],missions:{},seen:{}};saveGame();demos=demoData();toast('Datos de ejemplo reiniciados');}
   renderWorld();
 };
