@@ -455,6 +455,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <span class="lvl-badge num" id="lvl">1</span>
       <span style="display:grid;gap:3px;"><span class="lbl" id="xp-txt">0 XP</span><span class="xpbar"><i id="xp-bar" style="width:0%"></i></span></span>
     </span>
+    <a class="btn" id="btn-hub" href="index.html" style="text-decoration:none;" hidden>← Volver al Hub</a>
     <button class="btn" id="btn-refresh">Recargar</button>
     <button class="btn" id="btn-exit">Salir</button>
   </div>
@@ -1624,11 +1625,18 @@ async function enter(mode){
   MODE=mode;
   if(mode==='demo'){currentUser={id:0,nombre:'SDR de prueba'};loadGame();demos=demoData();}
   else{
+    // En pruebas: de momento solo entran los usuarios marcados como de prueba
+    if(!currentUser.es_prueba){
+      MODE=null;
+      document.getElementById('login-err').innerHTML='La cocina está en pruebas y todavía no está abierta para tu usuario. <a href="index.html" style="color:var(--lime)">Volver al SDR Hub</a>';
+      return;
+    }
     try{await loadReal();}catch(e){console.error(e);document.getElementById('login-err').textContent='No se pudieron cargar tus demos. Vuelve a entrar.';return;}
     loadGame();
   }
   document.getElementById('login').hidden=true;
   document.getElementById('preview-wrap').hidden=mode!=='demo';
+  document.getElementById('btn-hub').hidden=mode!=='real';
   document.getElementById('avatar-name').textContent=(currentUser.nombre||'TÚ').split(' ')[0].toUpperCase();
   const mc=document.getElementById('mode-chip');
   mc.className='chip '+(mode==='demo'?'mode-demo':'mode-real');
@@ -1673,8 +1681,9 @@ async function init(){
   fit();
   if(!SUPABASE_KEY){document.getElementById('real-login').hidden=true;return enter('demo');}
   if(sessionToken){
-    try{const me=await rpc('sdr_me');if(me){currentUser=me;return enter('real');}}catch(e){}
-    sessionToken=null;try{sessionStorage.removeItem('sdr_token');}catch(e){}
+    let me=null;try{me=await rpc('sdr_me');}catch(e){}
+    if(me){currentUser=me;await enter('real');if(MODE)return;}
+    else{sessionToken=null;try{sessionStorage.removeItem('sdr_token');}catch(e){}}
   }
   try{
     const names=await rpc('sdr_login_names')||[];
