@@ -46,6 +46,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .topbar-right{display:flex;align-items:center;gap:16px;}
 .user-chip{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,0.85);font-size:14px;font-weight:500;}
 .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--lime);color:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.cocina-btn{background:var(--lime);color:var(--teal-dark);font-weight:700;}
+.cocina-btn:hover{background:var(--lime-dark)!important;}
 .logout-btn{background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:background 0.15s;}
 .logout-btn:hover{background:rgba(255,255,255,0.18);}
 
@@ -1050,6 +1052,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="topbar-title">SDR Hub</div>
     </div>
     <div class="topbar-right">
+      <a class="logout-btn cocina-btn" id="btn-cocina" href="cocina.html" title="Cocina SDR (en pruebas)" style="display:none;text-decoration:none;">🍳<span class="pin-btn-txt"> Mi cocina</span></a>
       <button class="task-bell" id="task-bell" onclick="openTareasModal()" title="Tareas pendientes">🔔<span class="task-bell-badge" id="task-bell-badge">0</span></button>
       <div class="user-chip">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -2391,6 +2394,8 @@ async function enterApp(){
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('hello-name').textContent=currentUser.nombre.split(' ')[0];
   document.getElementById('today-date').textContent=fmtDateLong();
+  // La cocina (gamificación) está en pruebas: solo la ven los usuarios de prueba
+  document.getElementById('btn-cocina').style.display=currentUser.es_prueba?'':'none';
   await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas(),loadConfig(),loadComercialAusencias()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view
@@ -2408,6 +2413,13 @@ let mgrMonthOffset=0;
 let mgrIndividualSdr=null;
 let mgrPeriod='mes';
 
+// Los usuarios de prueba (sdr_users.es_prueba) no cuentan en nada del equipo: se quitan sus demos
+async function sinUsuariosDePrueba(lista){
+  let ids=[];
+  try{ids=((await sb('sdr_users?es_prueba=is.true&select=id'))||[]).map(u=>u.id);}catch(e){console.error(e);}
+  return ids.length?lista.filter(d=>!ids.includes(d.sdr_id)):lista;
+}
+
 async function enterManagerApp(){
   document.getElementById('manager-app').classList.add('active');
   document.getElementById('mgr-name').textContent=currentUser.nombre;
@@ -2421,7 +2433,7 @@ async function loadManagerData(){
   showLoadingMgr(true);
   try{
     const[sdrs,coms,cits,allD,objs,llam,nots]=await Promise.all([
-      sb('sdr_users?rol=eq.sdr&activo=eq.true&select=*&order=nombre.asc'),
+      sb('sdr_users?rol=eq.sdr&activo=eq.true&es_prueba=is.false&select=*&order=nombre.asc'),
       sb('comerciales?select=*&order=nombre.asc'),
       sb('ciudades?select=*&order=nombre.asc'),
       sbAll('demos?select=*&order=fecha.asc,id.asc'),
@@ -2430,7 +2442,7 @@ async function loadManagerData(){
       sb('noticias?select=*&order=created_at.desc')
     ]);
     todosSdrs=sdrs||[];aplicarSdrsDelMes();comerciales=coms||[];ciudades=cits||[];
-    allDemos=allD||[];objetivos=objs||[];allLlamadas=llam||[];noticias=nots||[];
+    allDemos=await sinUsuariosDePrueba(allD||[]);objetivos=objs||[];allLlamadas=llam||[];noticias=nots||[];
     await loadMensajesHoy();
     await loadVacaciones();
     await loadReglas();
@@ -6319,9 +6331,9 @@ async function renderSdrMetricsInline(){
   const m=getTargetMonth();
   let allSdrUsers=[],allLlamadasData=[],allDemosData=[];
   try{
-    allSdrUsers=(await sb(`sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre,fecha_alta&order=nombre.asc`)||[]).filter(s=>sdrActivoEnMes(s,end));
+    allSdrUsers=(await sb(`sdr_users?rol=eq.sdr&activo=eq.true&es_prueba=is.false&select=id,nombre,fecha_alta&order=nombre.asc`)||[]).filter(s=>sdrActivoEnMes(s,end));
     allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
-    allDemosData=await sbAll(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma&order=id.asc`);
+    allDemosData=await sinUsuariosDePrueba(await sbAll(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma&order=id.asc`));
   }catch(e){panel.innerHTML='<div style="padding:20px;color:var(--red);text-align:center;">Error cargando métricas</div>';return;}
 
   const pill=(val,green,yellow)=>{
