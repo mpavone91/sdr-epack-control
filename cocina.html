@@ -992,7 +992,51 @@ function demoXP(d){
 function objectiveXP(s){return (s.objDemos&&s.agendadas>=s.objDemos?300:0)+(s.objCwd&&s.ventas>=s.objCwd?300:0);}
 const extrasXP=()=>game.extras.filter(e=>e.ym===ymKey()).reduce((s,e)=>s+e.xp,0);
 function totalXP(){return demos.reduce((s,d)=>s+demoXP(d),0)+objectiveXP(monthStats())+extrasXP();}
-function addExtra(xp,text){if(xp)game.extras.push({ym:ymKey(),t:Date.now(),xp,text});}
+// Los extras se guardan en Supabase (xp_extras) para que el nivel sea el mismo en todas partes
+const canSaveXp=()=>MODE==='real'&&!viewId&&!managerMode;
+function postXpRow(row){
+  if(!canSaveXp())return Promise.resolve();
+  return sb('xp_extras?on_conflict=sdr_id,clave',{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},
+    body:JSON.stringify({sdr_id:currentUser.id,ym:ymKey(),...row})}).catch(e=>console.error('xp_extras',e));
+}
+function addExtra(xp,text,clave,tipo='extra'){
+  if(!xp)return;
+  const t=Date.now();
+  game.extras.push({ym:ymKey(),t,xp,text});
+  postXpRow({tipo,xp:Math.min(100,xp),motivo:String(text||'').slice(0,200),clave:clave||`extra:${t}-${Math.random().toString(36).slice(2,7)}`});
+}
+// Reconstruye el estado del juego de un SDR a partir de sus filas de xp_extras
+function gameFromRows(rows){
+  const g=EMPTY_GAME();
+  (rows||[]).forEach(r=>{
+    if(r.tipo==='abrir'&&r.demo_id)g.unboxed[r.demo_id]=1;
+    if(r.tipo==='mision'&&r.clave)g.missions[r.clave.replace(/^mision:/,'')]=1;
+    if(r.xp>0)g.extras.push({ym:r.ym,t:Date.parse(r.created_at)||0,xp:r.xp,text:r.motivo||''});
+  });
+  return g;
+}
+// Al entrar en su cocina: trae los extras del mes y sube los que solo estaban en este navegador
+async function syncExtras(){
+  if(!canSaveXp())return;
+  const ym=ymKey();
+  let rows;
+  try{rows=await sb(`xp_extras?sdr_id=eq.${currentUser.id}&ym=eq.${ym}&select=*`)||[];}catch(e){console.error(e);return;}
+  game.synced=game.synced||{};
+  if(!game.synced[ym]){
+    const subir=[];
+    game.extras.filter(x=>x.ym===ym&&x.xp>0).forEach(x=>subir.push({tipo:'extra',xp:Math.min(100,x.xp),motivo:String(x.text||'').slice(0,200),clave:'local:'+x.t}));
+    Object.keys(game.unboxed||{}).forEach(id=>subir.push({tipo:'abrir',xp:0,demo_id:+id,clave:'abrir:'+id}));
+    Object.keys(game.missions||{}).filter(k=>k.startsWith(ym)).forEach(k=>subir.push({tipo:'mision',xp:0,clave:'mision:'+k}));
+    for(const r of subir)await postXpRow(r);
+    game.synced[ym]=true;
+    if(subir.length){try{rows=await sb(`xp_extras?sdr_id=eq.${currentUser.id}&ym=eq.${ym}&select=*`)||[];}catch(e){}}
+  }
+  const db=gameFromRows(rows);
+  game.extras=[...game.extras.filter(x=>x.ym!==ym),...db.extras];
+  game.unboxed={...game.unboxed,...db.unboxed};
+  game.missions={...game.missions,...db.missions};
+  saveGame();
+}
 function logLine(text,xp,k){game.log.unshift({t:Date.now(),d:today(),text,xp,k});game.log=game.log.slice(0,150);}
 
 // ═══════════════════════════════════════════════════════════════
@@ -1371,7 +1415,7 @@ function renderDash(){
   document.getElementById('mis-aux').textContent=`${missions.filter(m=>m.done).length}/${missions.length}`;
   missions.forEach((m,i)=>{
     const key=td+'_'+i;
-    if(m.done&&!game.missions[key]){game.missions[key]=1;addExtra(m.rw,'Misión: '+m.t);logLine('Misión: '+m.t,m.rw,['mision']);saveGame();setTimeout(()=>{toast('Misión cumplida: '+m.t+' · +'+m.rw+' XP');renderWorld();},500);}
+    if(m.done&&!game.missions[key]&&!managerMode&&!viewId){game.missions[key]=1;addExtra(m.rw,'Misión: '+m.t,'mision:'+key,'mision');logLine('Misión: '+m.t,m.rw,['mision']);saveGame();setTimeout(()=>{toast('Misión cumplida: '+m.t+' · +'+m.rw+' XP');renderWorld();},500);}
   });
 
   const mb=messBreakdown(Z),maxPen=Math.max(30,...mb.map(x=>x.pen));
@@ -1611,6 +1655,7 @@ async function openDemo(id,fromEl){
   if(d._zone==='nuevas'&&!managerMode){
     const before=XP;
     game.unboxed[d.id]=1;saveGame();
+    postXpRow({tipo:'abrir',xp:0,demo_id:d.id,clave:'abrir:'+d.id});
     const at=fromEl&&world.contains(fromEl)?worldPos(fromEl):null;
     if(at)confettiAt(at,20);
     await flyBox(fromEl,zoneOf(d),d);
@@ -2020,14 +2065,14 @@ const EMPTY_GAME=()=>({unboxed:{},extras:[],log:[],missions:{},seen:{}});
 // Calcula zonas, métricas, XP y nivel de un SDR sin tocar la cocina que se está viendo
 function summarize(e){
   const save={demos,objetivos,llamadas,game};
-  demos=e.demos;objetivos=e.obj;llamadas=e.ll;game=EMPTY_GAME();
+  demos=e.demos;objetivos=e.obj;llamadas=e.ll;game=e.extras?gameFromRows(e.extras):EMPTY_GAME();
   const z=classify(),st=monthStats(),xp=totalXP(),lvl=lvlOf(xp),v=ordenIndex(z);
   demos=save.demos;objetivos=save.objetivos;llamadas=save.llamadas;game=save.game;
   return{z,st,xp,lvl,tier:tierOfLvl(lvl),v,g:gradeOf(v)};
 }
 async function loadTeam(){
   const n=new Date();
-  const [sdrs,allD,objs,lls,c,cfg,ciu,nts]=await Promise.all([
+  const [sdrs,allD,objs,lls,c,cfg,ciu,nts,xps]=await Promise.all([
     sb('sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre,es_prueba,fecha_alta&order=nombre.asc'),
     sbAll('demos?select=*&order=fecha.asc,id.asc'),
     sb(`objetivos?mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
@@ -2035,11 +2080,12 @@ async function loadTeam(){
     sb('comerciales?select=id,nombre,activo').catch(()=>[]),
     sb('config?clave=eq.meta_conectadas_dia&select=valor').catch(()=>[]),
     sb('ciudades?activa=eq.true&select=id,nombre&order=nombre.asc').catch(()=>[]),
-    sb('notas_cocina?select=id,sdr_id,leida_at').catch(()=>[])
+    sb('notas_cocina?select=id,sdr_id,leida_at').catch(()=>[]),
+    sb(`xp_extras?ym=eq.${ymKey()}&select=*`).catch(()=>[])
   ]);
   comerciales=c||[];ciudades=ciu||[];
   const meta=cfg&&cfg[0]&&parseInt(cfg[0].valor,10);if(meta>0)META_CONECTADAS_DIA=meta;
-  team=(sdrs||[]).map(u=>({user:u,demos:(allD||[]).filter(d=>d.sdr_id===u.id),obj:(objs||[]).filter(o=>o.sdr_id===u.id),ll:(lls||[]).find(l=>l.sdr_id===u.id)||null,notas:(nts||[]).filter(x=>x.sdr_id===u.id)}));
+  team=(sdrs||[]).map(u=>({user:u,demos:(allD||[]).filter(d=>d.sdr_id===u.id),obj:(objs||[]).filter(o=>o.sdr_id===u.id),ll:(lls||[]).find(l=>l.sdr_id===u.id)||null,notas:(nts||[]).filter(x=>x.sdr_id===u.id),extras:(xps||[]).filter(x=>x.sdr_id===u.id)}));
 }
 function demoTeam(){
   const nombres=[['Lucía',11,1],['Javier',23,1.5],['Marta',37,.6],['Diego',51,1.25],['Sara',67,.8,true],['Pablo',83,1.1]];
@@ -2134,7 +2180,7 @@ function visitKitchen(id){
   const e=team.find(t=>t.user.id===id);if(!e)return;
   viewId=id;viewName=e.user.nombre;
   demos=e.demos;objetivos=e.obj;llamadas=e.ll;
-  loadGame();
+  game=gameFromRows(e.extras||[]);
   document.getElementById('central').hidden=true;
   document.getElementById('stage').hidden=false;
   document.querySelector('main.dash').hidden=false;
@@ -2392,14 +2438,15 @@ async function loadTeamLevels(){
   try{
     if(MODE==='real'){
       const n=new Date();
-      const [sdrs,d,o,l]=await Promise.all([
+      const [sdrs,d,o,l,xps]=await Promise.all([
         sb('sdr_users?rol=eq.sdr&activo=eq.true&es_prueba=is.false&select=id,nombre&order=nombre.asc'),
         sbAll('demos?select=id,sdr_id,estado,outcome,fecha,hora,fecha_agendamiento,created_at,descartada,fecha_firma,confirmada_at,seguimiento_aplazado_hasta&order=id.asc'),
         sb(`objetivos?mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
-        sb(`llamadas?mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[])
+        sb(`llamadas?mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
+        sb(`xp_extras?ym=eq.${ymKey()}&select=*`).catch(()=>[])
       ]);
       teamLevels=(sdrs||[]).filter(u=>u.id!==currentUser.id).map(u=>{
-        const r=summarize({demos:(d||[]).filter(x=>x.sdr_id===u.id),obj:(o||[]).filter(x=>x.sdr_id===u.id),ll:(l||[]).find(x=>x.sdr_id===u.id)||null});
+        const r=summarize({demos:(d||[]).filter(x=>x.sdr_id===u.id),obj:(o||[]).filter(x=>x.sdr_id===u.id),ll:(l||[]).find(x=>x.sdr_id===u.id)||null,extras:(xps||[]).filter(x=>x.sdr_id===u.id)});
         return{id:u.id,nombre:u.nombre,lvl:r.lvl,tier:r.tier};
       });
     }else{
@@ -2436,8 +2483,9 @@ document.getElementById('mirror').addEventListener('change',async e=>{
   viewId=sel.value?+sel.value:null;
   viewName=viewId?sel.options[sel.selectedIndex].textContent:'';
   closeDrawer();
-  loadGame();
   try{await loadReal();}catch(err){console.error(err);toast('No se pudieron cargar esas demos','warn');return;}
+  if(viewId){let rows=[];try{rows=await sb(`xp_extras?sdr_id=eq.${viewId}&ym=eq.${ymKey()}&select=*`)||[];}catch(e){}game=gameFromRows(rows);}
+  else{loadGame();await syncExtras();}
   document.getElementById('zone-add').hidden=!canEdit();
   renderWorld();
   if(viewId){leaveKitchen();notas=[];renderNotas();}else{joinKitchen(currentUser.id);loadNotas(currentUser.id);}
@@ -2516,6 +2564,7 @@ async function enter(mode){
     }
     try{await loadReal();}catch(e){console.error(e);document.getElementById('login-err').textContent='No se pudieron cargar tus demos. Vuelve a entrar.';return;}
     loadGame();
+    await syncExtras();
   }
   document.getElementById('login').hidden=true;
   document.getElementById('preview-wrap').hidden=mode!=='demo';
@@ -2553,7 +2602,7 @@ document.getElementById('btn-refresh').onclick=async()=>{
     if(viewId)visitKitchen(viewId);else renderCentral();
     return;
   }
-  if(MODE==='real'){try{await loadReal();loadTeamLevels();toast('Demos actualizadas');}catch(e){toast('No se pudo recargar','warn');}}
+  if(MODE==='real'){try{await loadReal();if(!viewId)await syncExtras();loadTeamLevels();toast('Demos actualizadas');}catch(e){toast('No se pudo recargar','warn');}}
   else{loadGame();game={unboxed:{},extras:[],log:[],missions:{},seen:{}};saveGame();demos=demoData();toast('Datos de ejemplo reiniciados');}
   renderWorld();
 };
