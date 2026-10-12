@@ -820,16 +820,16 @@ const dayLbl=s=>{if(!s)return'';const t=today();if(s===t)return'hoy';if(s===ds(a
 const agendadoDate=d=>d.fecha_agendamiento||(d.created_at?ds(new Date(d.created_at)):'');
 const cwdDate=d=>d.fecha_firma||d.fecha||'';
 const monthStart=()=>{const d=new Date();return ds(new Date(d.getFullYear(),d.getMonth(),1));};
+const monthEnd=()=>{const d=new Date();return ds(new Date(d.getFullYear(),d.getMonth()+1,0));};
 const ymKey=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1);};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const FESTIVOS=['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-05-01','2026-05-15','2026-08-15','2026-10-12','2026-11-02','2026-11-09','2026-12-07','2026-12-08','2026-12-25'];
 const isWorkday=d=>d.getDay()!==0&&d.getDay()!==6&&!FESTIVOS.includes(ds(d));
 function workdays(){
   const n=new Date(),y=n.getFullYear(),m=n.getMonth(),last=new Date(y,m+1,0).getDate();
-  // closed = días hábiles ya terminados (hasta ayer): las llamadas se cargan al día siguiente
-  let total=0,elapsed=0,closed=0;
-  for(let d=1;d<=last;d++){const dt=new Date(y,m,d);if(isWorkday(dt)){total++;if(d<=n.getDate())elapsed++;if(d<n.getDate())closed++;}}
-  return{total,elapsed,closed,left:total-elapsed,leftCalls:total-closed};
+  let total=0,elapsed=0;
+  for(let d=1;d<=last;d++){const dt=new Date(y,m,d);if(isWorkday(dt)){total++;if(d<=n.getDate())elapsed++;}}
+  return{total,elapsed,left:total-elapsed};
 }
 
 const MOTIVOS_CANCELADA=[['no_show','No se presentó a la reunión'],['no_recordaba','No se acordaba'],['perdio_interes','Perdió el interés / cambió de opinión']];
@@ -955,14 +955,16 @@ function gradeOf(v){
 }
 
 function monthStats(){
-  const ms=monthStart(),t=today();
-  const creadas=demos.filter(d=>{const a=agendadoDate(d);return a>=ms&&a<=t;});
-  const agendadas=creadas.filter(d=>d.estado!=='cancelada').length;
-  const delMes=demos.filter(d=>(d.fecha||'')>=ms&&(d.fecha||'')<=t);
-  const ejec=delMes.filter(d=>d.estado==='ejecutada').length;
-  const canc=delMes.filter(d=>d.estado==='cancelada').length;
+  // Mismos criterios que el panel del SDR Hub: agendadas, ejecutadas y canceladas son las demos
+  // AGENDADAS este mes (por fecha de agendamiento); las ventas, por fecha de firma dentro del mes.
+  const ms=monthStart(),me=monthEnd();
+  const conCanal=d=>d.canal==='outbound'||d.canal==='inbound';
+  const creadas=demos.filter(d=>{const a=agendadoDate(d);return a>=ms&&a<=me;});
+  const agendadas=creadas.filter(d=>d.estado!=='cancelada'&&conCanal(d)).length;
+  const ejec=creadas.filter(d=>d.estado==='ejecutada').length;
+  const canc=creadas.filter(d=>d.estado==='cancelada').length;
   const show=ejec+canc?Math.round(ejec/(ejec+canc)*100):null;
-  const ventas=demos.filter(d=>d.outcome==='cerrado_ganado'&&cwdDate(d)>=ms&&cwdDate(d)<=t).length;
+  const ventas=demos.filter(d=>d.outcome==='cerrado_ganado'&&conCanal(d)&&cwdDate(d)>=ms&&cwdDate(d)<=me).length;
   const now=new Date();
   const obj=objetivos.find(o=>o.mes===now.getMonth()+1&&o.anio===now.getFullYear());
   const objDemos=obj?(+obj.demos_objetivo_outbound||0)+(+obj.demos_objetivo_inbound||0):0;
@@ -971,7 +973,7 @@ function monthStats(){
   const ll=llamadas||{};
   const hechas=+ll.llamadas_hechas||0,conectadas=+ll.llamadas_conectadas||0;
   return{agendadas,ejec,canc,show,ventas,objDemos,objCwd,wd,ritmo:wd.total?wd.elapsed/wd.total:0,hechas,conectadas,
-    mediaConectadas:conectadas/Math.max(1,wd.closed),
+    mediaConectadas:wd.elapsed?conectadas/wd.elapsed:0,
     ratioConexion:hechas?conectadas/hechas*100:null,
     conversion:conectadas?agendadas/conectadas*100:null,
     updated:ll.updated_at||null};
@@ -1240,7 +1242,7 @@ function renderBoard(){
   document.getElementById('board-t').innerHTML=`Servicio de ${MESES_L[n.getMonth()]}<small>quedan ${S.wd.left} días hábiles</small>`;
   document.getElementById('m-agendadas').innerHTML=meterHTML('Agendadas',S.agendadas,S.objDemos,'var(--lime)',S.objDemos?(S.agendadas>=S.objDemos?'Todo lo que sumes es extra':`faltan ${S.objDemos-S.agendadas} · la raya es tu ritmo`):'sin objetivo este mes',S.ritmo);
   document.getElementById('m-ejecutadas').innerHTML=`<div class="meter-top">Ejecutadas<span class="v num">${S.ejec}</span><span class="pace" style="color:${S.show===null?'inherit':S.show>=75?'var(--lime)':S.show>=60?'var(--amber)':'#ff8a8a'}">show ${S.show===null?'—':S.show+'%'}</span></div>
-    <div class="meter-bar"><i style="width:calc(${S.show||0}% - 2px);background:var(--blue)"></i></div><div class="meter-sub">${S.canc} canceladas este mes</div>`;
+    <div class="meter-bar"><i style="width:calc(${S.show||0}% - 2px);background:var(--blue)"></i></div><div class="meter-sub">${S.canc} canceladas de las agendadas este mes</div>`;
   document.getElementById('m-ventas').innerHTML=meterHTML('Ventas',S.ventas,S.objCwd,'var(--gold)',S.objCwd?(S.ventas>=S.objCwd?'objetivo de ventas superado':`faltan ${S.objCwd-S.ventas} firmas`):'sin objetivo de ventas',S.ritmo);
   const v=ordenIndex(Z),g=gradeOf(v);
   document.getElementById('grade').innerHTML=`<div class="grade-l">Sanidad<br>${g.lbl}</div><div class="grade-c" style="color:${g.c}">${g.g}</div>`;
@@ -1697,14 +1699,14 @@ function openCalls(){
   else{
     const pctMeta=s.mediaConectadas/META_CONECTADAS_DIA*100,conv=s.conversion||0;
     if(pctMeta>=100)msg=`Vas <b>por encima de la meta</b> (${s.mediaConectadas.toFixed(1)} conectadas al día)`+(conv>=8?` y conviertes muy bien: <b>${conv.toFixed(1)}%</b> de las conectadas acaban en demo.`:conv<5?`, pero solo un <b>${conv.toFixed(1)}%</b> acaba en demo. Aquí la palanca es el discurso, no llamar más.`:` con una conversión correcta (${conv.toFixed(1)}%).`);
-    else{const extra=Math.round(Math.max(0,(META_CONECTADAS_DIA-s.mediaConectadas)*wd.leftCalls)*conv/100);
-      msg=`Llevas <b>${s.mediaConectadas.toFixed(1)} conectadas al día</b> frente a ${META_CONECTADAS_DIA} de meta.`+(extra>0&&wd.leftCalls?` Si llegas a la meta lo que queda de mes, con tu ratio saldrían <b>unas ${extra} demos más</b>.`:'');}
+    else{const extra=Math.round(Math.max(0,(META_CONECTADAS_DIA-s.mediaConectadas)*wd.left)*conv/100);
+      msg=`Llevas <b>${s.mediaConectadas.toFixed(1)} conectadas al día</b> frente a ${META_CONECTADAS_DIA} de meta.`+(extra>0&&wd.left?` Si llegas a la meta lo que queda de mes, con tu ratio saldrían <b>unas ${extra} demos más</b>.`:'');}
   }
   openDrawer('Office · reservas','Llamadas y ratios del mes',`
     <div class="stat-grid">
       <div class="stat"><div class="k">LLAMADAS</div><div class="v num">${s.hechas||'—'}</div></div>
       <div class="stat"><div class="k">CONECTADAS</div><div class="v num">${s.conectadas||'—'}</div></div>
-      <div class="stat"><div class="k">CONECT. / DÍA</div><div class="v num">${s.conectadas?s.mediaConectadas.toFixed(1):'—'}</div><div class="s">Meta ${META_CONECTADAS_DIA} · ${wd.closed} de ${wd.total} días hábiles (hasta ayer)</div></div>
+      <div class="stat"><div class="k">CONECT. / DÍA</div><div class="v num">${s.conectadas?s.mediaConectadas.toFixed(1):'—'}</div><div class="s">Meta ${META_CONECTADAS_DIA} · ${wd.elapsed} de ${wd.total} días hábiles</div></div>
       <div class="stat"><div class="k">RATIO CONEXIÓN</div><div class="v num">${s.ratioConexion===null?'—':s.ratioConexion.toFixed(1)+'%'}</div><div class="s">Conectadas / llamadas</div></div>
       <div class="stat"><div class="k">CONECTADA → DEMO</div><div class="v num">${s.conversion===null?'—':s.conversion.toFixed(1)+'%'}</div><div class="s">${s.agendadas} demos agendadas</div></div>
       <div class="stat"><div class="k">LLAMADAS POR DEMO</div><div class="v num">${s.hechas&&s.agendadas?(s.hechas/s.agendadas).toFixed(0):'—'}</div><div class="s">Cuántas marcas para sacar una</div></div>
@@ -2099,7 +2101,7 @@ function demoTeam(){
 function renderCentral(){
   const el=document.getElementById('central');
   const rows=team.map(e=>({e,...summarize(e)}));
-  const equipo=rows.filter(r=>!r.e.user.es_prueba);
+  const equipo=rows.filter(r=>!r.e.user.es_prueba&&(!r.e.user.fecha_alta||r.e.user.fecha_alta<=monthEnd()));
   const sum=k=>equipo.reduce((a,r)=>a+(r.st[k]||0),0);
   const T={agendadas:sum('agendadas'),objDemos:sum('objDemos'),ejec:sum('ejec'),canc:sum('canc'),ventas:sum('ventas'),objCwd:sum('objCwd')};
   const wd=workdays(),ritmo=wd.total?wd.elapsed/wd.total:0;
@@ -2137,7 +2139,7 @@ function renderCentral(){
       <div class="board-t">Servicio del equipo<small>${MESES_L[n.getMonth()]} · quedan ${wd.left} días hábiles</small></div>
       <div class="meter">${meterHTML('Agendadas',T.agendadas,T.objDemos,'var(--lime)',T.objDemos?`faltan ${Math.max(0,T.objDemos-T.agendadas)} · la raya es el ritmo`:'sin objetivos cargados',ritmo)}</div>
       <div class="meter"><div class="meter-top">Ejecutadas<span class="v num">${T.ejec}</span><span class="pace">show ${show===null?'—':show+'%'}</span></div>
-        <div class="meter-bar"><i style="width:calc(${show||0}% - 2px);background:var(--blue)"></i></div><div class="meter-sub">${T.canc} canceladas este mes</div></div>
+        <div class="meter-bar"><i style="width:calc(${show||0}% - 2px);background:var(--blue)"></i></div><div class="meter-sub">${T.canc} canceladas de las agendadas este mes</div></div>
       <div class="meter">${meterHTML('Ventas',T.ventas,T.objCwd,'var(--gold)',T.objCwd?`faltan ${Math.max(0,T.objCwd-T.ventas)} firmas`:'sin objetivo de ventas',ritmo)}</div>
       <div class="grade"><div class="grade-l">Cocinas<br>en D: ${equipo.filter(r=>r.g.g==='D').length}</div></div>
     </div>
@@ -2529,7 +2531,7 @@ function demoData(seedIni=11,k=1,sdrId=0,idBase=2000,limpio=false){
   mk(inMonth(),{estado:'cancelada',descartada:true,motivo:'perdio_interes'});
   mk(-2,{estado:'cancelada',motivo:'no_recordaba',agOff:-9});
   objetivos=[{mes:now.getMonth()+1,anio:now.getFullYear(),demos_objetivo_outbound:45,demos_objetivo_inbound:10,cwd_objetivo_outbound:8,cwd_objetivo_inbound:2}];
-  const wd=workdays(),con=Math.round((seedIni===11?24.2:18+rnd()*14)*Math.max(1,wd.closed));
+  const wd=workdays(),con=Math.round((seedIni===11?24.2:18+rnd()*14)*Math.max(1,wd.elapsed));
   llamadas={llamadas_hechas:Math.round(con*3.3),llamadas_conectadas:con,updated_at:ds(addDays(-2))+'T09:00:00'};
   META_CONECTADAS_DIA=30;
   return out;
