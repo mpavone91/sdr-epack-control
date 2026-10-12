@@ -448,6 +448,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
     <label class="chip" id="preview-wrap" hidden><span class="lbl">VER COCINA</span>
       <select class="sel" id="preview" aria-label="Vista previa de cocina"><option value="">La mía</option><option value="1">Nivel 1–2</option><option value="2">Nivel 3–4</option><option value="3">Nivel 5–6</option><option value="4">Nivel 7–8</option><option value="5">Nivel 9–10</option></select>
     </label>
+    <label class="chip" id="mirror-wrap" hidden><span class="lbl">VER COCINA DE</span>
+      <select class="sel" id="mirror" aria-label="Ver la cocina de otro SDR"><option value="">Mis demos</option></select>
+    </label>
     <span class="chip" title="Nota de sanidad">
       <span class="grade-dot" id="grade-dot">A</span><span class="lbl">SANIDAD</span><b class="num" id="orden-val">—</b>
     </span>
@@ -607,6 +610,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
 let sessionToken=null;try{sessionToken=sessionStorage.getItem('sdr_token');}catch(e){}
 let MODE=null,currentUser=null;
+let viewId=null,viewName='';   // vista espejo: cocina de otro SDR, solo lectura
 let demos=[],comerciales=[],objetivos=[],llamadas=null,META_CONECTADAS_DIA=30;
 
 async function sb(path,opts={}){
@@ -693,7 +697,7 @@ let curTier=1;
 
 // Estado local del juego (prototipo): demos abiertas, extras de XP del mes, misiones y ascensos vistos
 let game={unboxed:{},extras:[],log:[],missions:{},seen:{}};
-const gameKey=()=>`cocina_v1_${MODE}_${currentUser?.id||0}`;
+const gameKey=()=>`cocina_v1_${MODE}_${currentUser?.id||0}${viewId?'_espejo'+viewId:''}`;
 function loadGame(){
   game={unboxed:{},extras:[],log:[],missions:{},seen:{}};
   try{const g=JSON.parse(localStorage.getItem(gameKey())||'null');if(g)game={...game,...g};}catch(e){}
@@ -1096,7 +1100,7 @@ function renderHUD(){
   document.getElementById('xp-bar').style.width=(LEVEL<10?(XP-lo)/(hi-lo)*100:100)+'%';
   const t=tierOfLvl(LEVEL)-1;
   document.getElementById('hud-rank').textContent=RANKS[t];
-  document.getElementById('hud-who').textContent=`${currentUser?.nombre||''} · ${KITCHENS[previewTier?previewTier-1:t]}${previewTier?' (vista previa)':''}`;
+  document.getElementById('hud-who').textContent=`${viewId?'Viendo la cocina de '+viewName:(currentUser?.nombre||'')} · ${KITCHENS[previewTier?previewTier-1:t]}${previewTier?' (vista previa)':''}`;
   const av=document.getElementById('avatar');av.className='avatar r'+(previewTier||tierOfLvl(LEVEL))+(av.classList.contains('walk')?' walk':'');
 }
 function renderDash(){
@@ -1357,7 +1361,8 @@ function demoSheet(d,view='main'){
   }else{
     h+=`<div style="font-size:13px;color:var(--ink-2)">Esta demo no necesita nada ahora mismo.</div>`;
   }
-  if(MODE==='real')h+=`<div style="font-size:11.5px;color:var(--ink-3)">Los cambios se guardan en el SDR Hub, igual que si los hicieras allí.</div>`;
+  if(MODE==='real'&&viewId)h+=`<div class="note-demo">Vista espejo de la cocina de ${esc(viewName)}: los cambios solo se ven aquí y no se guardan.</div>`;
+  else if(MODE==='real')h+=`<div style="font-size:11.5px;color:var(--ink-3)">Los cambios se guardan en el SDR Hub, igual que si los hicieras allí.</div>`;
   else h+=`<div class="note-demo">Modo de prueba: los cambios solo existen en esta pestaña.</div>`;
   return h;
 }
@@ -1489,7 +1494,7 @@ drBody.addEventListener('click',async e=>{
   if(ex.why.length)text+=` (${ex.why.join(', ')})`;
   b.disabled=true;
   try{
-    if(MODE==='real')await sb(`demos?id=eq.${d.id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    if(MODE==='real'&&!viewId)await sb(`demos?id=eq.${d.id}`,{method:'PATCH',body:JSON.stringify(patch)});
     Object.assign(d,patch);
   }catch(err){console.error(err);toast('No se pudo guardar. Revisa tu conexión o vuelve a entrar.','warn');b.disabled=false;return;}
   const before=XP,beforeObj=objectiveXP(S);
@@ -1565,6 +1570,23 @@ setInterval(()=>{
   if(salen.length)toast(`¡Servicio! La demo de las ${salen[0].hora.slice(0,5)} está en el pase: ¿se hizo?`,'warn');
 },60000);
 
+// Vista espejo (solo usuarios de prueba): ver la cocina de otro SDR con sus demos reales, sin guardar nada
+async function loadMirrorOptions(){
+  try{
+    const sdrs=await sb('sdr_users?rol=eq.sdr&activo=eq.true&es_prueba=is.false&select=id,nombre&order=nombre.asc')||[];
+    document.getElementById('mirror').innerHTML='<option value="">Mis demos</option>'+sdrs.map(u=>`<option value="${u.id}">${esc(u.nombre)}</option>`).join('');
+  }catch(e){console.error(e);}
+}
+document.getElementById('mirror').addEventListener('change',async e=>{
+  const sel=e.target;
+  viewId=sel.value?+sel.value:null;
+  viewName=viewId?sel.options[sel.selectedIndex].textContent:'';
+  closeDrawer();
+  loadGame();
+  try{await loadReal();}catch(err){console.error(err);toast('No se pudieron cargar esas demos','warn');return;}
+  renderWorld();
+  toast(viewId?`Viendo la cocina de ${viewName}. Lo que hagas aquí no se guarda.`:'De vuelta a tu cocina');
+});
 document.getElementById('preview').addEventListener('change',e=>{previewTier=e.target.value?+e.target.value:null;renderWorld();});
 
 // ═══════════════════════════════════════════════════════════════
@@ -1610,12 +1632,12 @@ function demoData(){
 // Arranque y login
 // ═══════════════════════════════════════════════════════════════
 async function loadReal(){
-  const n=new Date();
+  const n=new Date(),sid=viewId||currentUser.id;
   const [d,c,o,l,cfg]=await Promise.all([
-    sbAll(`demos?sdr_id=eq.${currentUser.id}&select=*&order=fecha.asc,id.asc`),
+    sbAll(`demos?sdr_id=eq.${sid}&select=*&order=fecha.asc,id.asc`),
     sb('comerciales?select=id,nombre').catch(()=>[]),
-    sb(`objetivos?sdr_id=eq.${currentUser.id}&select=*`).catch(()=>[]),
-    sb(`llamadas?sdr_id=eq.${currentUser.id}&mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
+    sb(`objetivos?sdr_id=eq.${sid}&select=*`).catch(()=>[]),
+    sb(`llamadas?sdr_id=eq.${sid}&mes=eq.${n.getMonth()+1}&anio=eq.${n.getFullYear()}&select=*`).catch(()=>[]),
     sb('config?clave=eq.meta_conectadas_dia&select=valor').catch(()=>[])
   ]);
   demos=d||[];comerciales=c||[];objetivos=o||[];llamadas=(l&&l[0])||null;
@@ -1637,6 +1659,8 @@ async function enter(mode){
   document.getElementById('login').hidden=true;
   document.getElementById('preview-wrap').hidden=mode!=='demo';
   document.getElementById('btn-hub').hidden=mode!=='real';
+  document.getElementById('mirror-wrap').hidden=!(mode==='real'&&currentUser.es_prueba);
+  if(mode==='real'&&currentUser.es_prueba)loadMirrorOptions();
   document.getElementById('avatar-name').textContent=(currentUser.nombre||'TÚ').split(' ')[0].toUpperCase();
   const mc=document.getElementById('mode-chip');
   mc.className='chip '+(mode==='demo'?'mode-demo':'mode-real');
