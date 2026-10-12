@@ -118,7 +118,21 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .world.t5::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0,rgba(255,210,74,.10),transparent 55%);}
 .world.sucia{filter:saturate(.85) brightness(.95);}
 .world.caos{filter:saturate(.7) brightness(.88);box-shadow:inset 0 0 0 6px var(--wall),inset 0 0 160px rgba(255,90,90,.25);}
-.zone{position:absolute;border-radius:12px;background:linear-gradient(180deg,#46565b,#3a494e);box-shadow:inset 0 0 0 3px var(--wall),inset 0 2px 0 6px rgba(255,255,255,.04),0 6px 0 rgba(0,0,0,.2);}
+.zone{position:absolute;border-radius:12px;background:linear-gradient(180deg,var(--c1),var(--c2));box-shadow:inset 0 0 0 3px var(--trim),inset 0 2px 0 6px rgba(255,255,255,.04),0 6px 0 rgba(0,0,0,.2);}
+/* Cada cocina tiene su acabado: mostradores, remates, manteles y suelo del comedor */
+.world{--c1:#3f4b4f;--c2:#353f43;--trim:var(--wall);--cloth:radial-gradient(circle,#d7dcdc 0 18px,#b9c0c0 19px 21px);--dining:repeating-linear-gradient(0deg,#4a4f50 0 20px,#444a4b 20px 21px);}
+.world.t2{--c1:#4a5a5f;--c2:#3e4d52;--cloth:repeating-conic-gradient(#c94f3a 0 25%,#f4efe4 0 50%) 0 0/11px 11px;--dining:repeating-linear-gradient(45deg,#8a4b32 0 16px,#7d4229 16px 32px);}
+.world.t3{--c1:#4e6066;--c2:#415157;--cloth:radial-gradient(circle,#f4efe4 0 18px,#d9d0bd 19px 21px);--dining:repeating-linear-gradient(90deg,#5a3f2b 0 22px,#634631 22px 44px);}
+.world.t4{--c1:#4b5559;--c2:#3c4548;--trim:#a8643a;--cloth:radial-gradient(circle,#f7f2e7 0 18px,#ded5c2 19px 21px);--dining:repeating-linear-gradient(90deg,#3e2a1d 0 22px,#46301f 22px 44px);}
+.world.t5{--c1:#2b2b30;--c2:#222226;--trim:#b8932a;--cloth:radial-gradient(circle,#fbf8f1 0 17px,#d8b347 18px 19px,#fbf8f1 20px 21px);--dining:repeating-linear-gradient(90deg,#3b2c3a 0 22px,#433241 22px 44px);}
+.world.t5 .zone{background:linear-gradient(135deg,#2e2e33,#1f1f23 60%,#2a2a2f);}
+/* Marco de pared: azulejo según cocina */
+.walls{position:absolute;inset:0;border-radius:16px;pointer-events:none;z-index:1;border:8px solid transparent;}
+.world.t1 .walls{border-image:repeating-linear-gradient(90deg,#5d6a6c 0 22px,#4d585a 22px 24px) 8;}
+.world.t2 .walls{border-image:repeating-linear-gradient(90deg,#eef1ef 0 26px,#b9c2c0 26px 28px) 8;}
+.world.t3 .walls{border-image:repeating-linear-gradient(90deg,#e3e9e8 0 30px,#8d9ca1 30px 33px) 8;}
+.world.t4 .walls{border-image:repeating-linear-gradient(90deg,#2f5d4c 0 24px,#24493b 24px 26px,#a8643a 26px 28px) 8;}
+.world.t5 .walls{border-image:repeating-linear-gradient(90deg,#16161a 0 40px,#b8932a 40px 42px,#2a2a2f 42px 80px,#b8932a 80px 82px) 8;}
 .zone-sign{position:absolute;top:-1px;left:14px;transform:translateY(-50%);display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:7px;background:var(--wall);border:1px solid var(--border);font-family:var(--f-sign);font-size:11px;letter-spacing:.06em;color:var(--ink);white-space:nowrap;z-index:7;cursor:pointer;}
 .zone-sign:hover{border-color:var(--lime);}
 .zone-sign .cnt{background:var(--panel-2);border-radius:5px;padding:0 6px;color:var(--lime);font-family:var(--f-body);font-weight:700;font-size:12px;}
@@ -214,9 +228,9 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .rat::after{content:'';position:absolute;right:1px;top:1px;width:3px;height:3px;border-radius:50%;background:#000;}
 @keyframes rat{0%{left:10px;}45%{left:250px;transform:scaleX(1);}50%{left:250px;transform:scaleX(-1);}95%{left:10px;transform:scaleX(-1);}100%{left:10px;transform:scaleX(1);}}
 /* Comedor */
-.z-dining{background:repeating-linear-gradient(90deg,#5a3f2b 0 22px,#634631 22px 44px);}
-.world.t5 .z-dining{background:repeating-linear-gradient(90deg,#3b2c3a 0 22px,#433241 22px 44px);box-shadow:inset 0 0 0 3px #8a6d1d,0 6px 0 rgba(0,0,0,.2);}
-.tbl{position:absolute;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,#f4efe4 0 18px,#d9d0bd 19px 21px);box-shadow:0 3px 0 rgba(0,0,0,.25);}
+.z-dining,.world.t5 .z-dining{background:var(--dining);}
+.world.t5 .z-dining{box-shadow:inset 0 0 0 3px #b8932a,0 6px 0 rgba(0,0,0,.2);}
+.tbl{position:absolute;width:44px;height:44px;border-radius:50%;background:var(--cloth);box-shadow:0 3px 0 rgba(0,0,0,.25);}
 .tbl.locked-t{background:none;border:2px dashed rgba(255,255,255,.25);box-shadow:none;}
 .pend{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px 6px rgba(255,210,74,.35);}
 .star-sign{position:absolute;font-family:var(--f-sign);font-size:11px;color:var(--gold);text-shadow:0 0 8px rgba(255,210,74,.8);z-index:6;}
@@ -228,6 +242,20 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .plant{position:absolute;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#6cc23a,#3a7d1f);z-index:4;pointer-events:none;}
 .plant::after{content:'';position:absolute;left:7px;top:21px;width:12px;height:12px;border-radius:3px;background:#8a5a3a;}
 .world.caos .plant{filter:saturate(.2) brightness(.7) sepia(.6);}
+.tube{position:absolute;height:6px;border-radius:3px;background:#e8f6ff;box-shadow:0 0 18px 6px rgba(200,235,255,.35);z-index:4;pointer-events:none;animation:flicker 4.5s infinite;}
+.mop{position:absolute;width:22px;height:18px;border-radius:3px 3px 6px 6px;background:#c9a227;z-index:4;pointer-events:none;}
+.mop::after{content:'';position:absolute;left:14px;top:-26px;width:3px;height:30px;background:#8a6a3a;transform:rotate(14deg);}
+.herb{position:absolute;width:16px;height:12px;border-radius:2px 2px 5px 5px;background:#b5603a;z-index:4;pointer-events:none;}
+.herb::before{content:'';position:absolute;left:-3px;top:-11px;width:22px;height:14px;border-radius:50%;background:radial-gradient(circle at 30% 50%,#5fae3a 0 5px,transparent 6px),radial-gradient(circle at 70% 45%,#4f9a2e 0 5px,transparent 6px),radial-gradient(circle at 50% 20%,#6cc23a 0 5px,transparent 6px);}
+.hood{position:absolute;left:10px;right:10px;top:0;height:24px;border-radius:0 0 18px 18px;background:repeating-linear-gradient(90deg,#9aa9ad 0 8px,#7d8c91 8px 10px);box-shadow:0 4px 10px rgba(0,0,0,.35);pointer-events:none;}
+.copper{position:absolute;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e3a06b,#a8643a 60%,#7a4424);z-index:4;pointer-events:none;}
+.copper::after{content:'';position:absolute;left:8px;top:-12px;width:3px;height:13px;background:#7a4424;}
+.candle{position:absolute;width:5px;height:9px;border-radius:2px;background:#f4ead2;z-index:5;pointer-events:none;}
+.candle::after{content:'';position:absolute;left:0;top:-7px;width:5px;height:7px;border-radius:50% 50% 40% 40%;background:#ffcf5c;box-shadow:0 0 10px 4px rgba(255,190,80,.5);animation:flame 1.4s ease-in-out infinite;}
+.flower{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#ffd24a 0 2px,#e45d7a 3px);z-index:5;pointer-events:none;box-shadow:6px 3px 0 -1px #e45d7a,-5px 4px 0 -1px #c94f8a;}
+.chandelier{position:absolute;width:70px;height:18px;border-radius:0 0 35px 35px;background:linear-gradient(#e7c25a,#b8932a);box-shadow:0 0 30px 10px rgba(255,210,74,.3);z-index:6;pointer-events:none;}
+.chandelier::before{content:'';position:absolute;left:34px;top:-14px;width:2px;height:14px;background:#b8932a;}
+.plaque{position:absolute;padding:3px 8px;border-radius:5px;background:linear-gradient(#e7c25a,#b8932a);color:#2a1e05;font-family:var(--f-sign);font-size:9px;z-index:6;pointer-events:none;white-space:nowrap;}
 .wine{position:absolute;width:60px;height:26px;border-radius:4px;background:repeating-linear-gradient(90deg,#4a2a1e 0 4px,#7b1e2a 4px 10px,#4a2a1e 10px 14px);z-index:4;pointer-events:none;}
 
 /* Suciedad, inspector */
@@ -251,7 +279,9 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .inspector .clip{position:absolute;left:18px;top:26px;width:12px;height:15px;border-radius:2px;background:#fff;box-shadow:inset 0 3px 0 #8a6a3a;}
 .inspector .il{position:absolute;left:8px;top:43px;width:14px;height:5px;background:linear-gradient(90deg,#2a2a2a 0 5px,transparent 5px 9px,#2a2a2a 9px);}
 .inspector.patrol .ib,.inspector.patrol .ih{animation:walk .32s steps(2) infinite;}
-.bubble{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:#fff;color:#222;font-size:11px;font-weight:600;padding:4px 8px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.3);}
+.inspector.door .bubble{left:-4px;transform:none;}
+.inspector.door .bubble::after{left:14px;}
+.bubble{transition:opacity .25s;position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:#fff;color:#222;font-size:11px;font-weight:600;padding:4px 8px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.3);}
 .bubble::after{content:'';position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-top-color:#fff;border-bottom:0;}
 
 /* ── OBJETOS (cada demo) ── */
@@ -294,7 +324,7 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .dirty{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#5d5a3a 0 6px,transparent 7px),radial-gradient(circle at 65% 62%,#3f3a28 0 4px,transparent 5px),radial-gradient(circle,#8a8778 0 12px,#6d6a5f 13px);box-shadow:0 3px 0 rgba(0,0,0,.35);}
 .dirty.pan-d{background:radial-gradient(circle,#2a2622 0 10px,#1b1917 11px 17px,#121110 18px);}
 /* mesa del comedor con venta */
-.dish{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,var(--gold) 0 6px,var(--porcelain) 7px 10px,#f4efe4 11px 18px,#d9d0bd 19px 21px);box-shadow:0 3px 0 rgba(0,0,0,.25),0 0 0 2px rgba(255,210,74,.5);}
+.dish{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,var(--gold) 0 6px,var(--porcelain) 7px 10px,#c8c2b5 11px 12px,transparent 13px),var(--cloth);box-shadow:0 3px 0 rgba(0,0,0,.25),0 0 0 2px rgba(255,210,74,.5);}
 .dish::before,.dish::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:var(--diner,#e9c19c);box-shadow:inset 0 4px 0 var(--hair,#3b2a1f);}
 .dish::before{left:-9px;top:15px;}
 .dish::after{right:-9px;top:15px;--diner:#c9926b;}
@@ -516,6 +546,7 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 <div class="world-scroll" id="world-scroll">
   <div class="world-holder" id="world-holder">
     <div class="world" id="world" aria-label="Plano de la cocina">
+      <div class="walls"></div>
       <div class="alarm" id="alarm-l" style="left:8px;"></div>
       <div class="alarm" id="alarm-r" style="right:8px;"></div>
 
@@ -1027,7 +1058,12 @@ function renderWorld(){
   }
   if(Z.ventas.length>nT)add('ventas',moreEl('ventas',Z.ventas.length-nT,170,262,`+${Z.ventas.length-nT} en barra`));
   const capD=document.getElementById('cap-dining');capD.textContent=`${Math.min(Z.ventas.length,nT)}/${nT} MESAS`;
-  if(curTier>=4)for(let i=0;i<3;i++)add('ventas',divEl('pend',58+i*80,20));
+  if(curTier>=3&&curTier<5)for(let i=0;i<3;i++)add('ventas',divEl('pend',58+i*80,20));
+  for(let i=0;i<nT;i++){
+    const col=i%4,row=Math.floor(i/4),x=22+col*64,y=48+row*74;
+    if(curTier>=4&&!Z.ventas[i])add('ventas',divEl('candle',x+19,y+18));
+    if(curTier>=5&&!Z.ventas[i])add('ventas',divEl('flower',x+24,y+8));
+  }
   if(curTier>=5)add('ventas',divEl('star-sign',96,262,0,0,'★ ESTRELLA'));
   document.getElementById('bin-n').textContent=Z.papelera.length;
 
@@ -1035,10 +1071,26 @@ function renderWorld(){
   arrivals.clear();
 }
 
+// Decoración de cada cocina: se nota el ascenso de un vistazo
 function renderDecor(){
   const dec=document.getElementById('decor');dec.innerHTML='';
-  if(curTier>=3)[[262,312],[784,312],[430,560]].forEach(([x,y])=>dec.appendChild(divEl('plant',x,y)));
-  if(curTier>=4)dec.appendChild(divEl('wine',988,852));
+  const put=(cls,x,y,w,h,html)=>dec.appendChild(divEl(cls,x,y,w,h,html));
+  ZONES.hoy.querySelector('.hood')?.remove();
+  if(curTier===1){put('tube',330,334,140,0);put('tube',760,334,140,0);put('mop',758,566);}
+  if(curTier===2){put('mop',760,566);}
+  if(curTier>=2){put('herb',266,340);put('herb',790,340);put('herb',428,578);}
+  if(curTier>=3){
+    [[262,312],[784,312],[430,560]].forEach(([x,y])=>put('plant',x,y));
+    const h=document.createElement('div');h.className='hood';ZONES.hoy.insertBefore(h,ZONES.hoy.firstChild);
+  }
+  if(curTier>=4){
+    put('wine',988,852);
+    [0,1,2,3].forEach(i=>put('copper',612+i*30,322));
+  }
+  if(curTier>=5){
+    put('chandelier',883,598);
+    put('plaque',540,326,0,0,'★ GUÍA SDR · 1 ESTRELLA');
+  }
 }
 
 // Pizarra del servicio
@@ -1082,8 +1134,39 @@ function renderCalls(){
 }
 
 // Suciedad e inspector de sanidad
-const QUOTES_D=['Esto es un desastre…','¿Quién friega aquí?','Huele a seguimiento olvidado','Tomo nota. Mucha nota.','¿Y esos platos del pase?','Esto no pasa la inspección'];
-const QUOTES_C=['Vuelvo mañana…','Ese friegue no me gusta','Le estoy vigilando'];
+// Frases del inspector de sanidad: genéricas por nota + comentarios sobre la zona que peor está
+const QUOTES={
+  D:['¡Qué asco de cocina! Se viene una multa potente','Esto lo reportaré a Massimo','He visto vertederos más limpios','Ni con lejía se arregla esto','¿Aquí se cocina o solo se apilan platos?','Voy a necesitar otra libreta','Esto no pasa ni la inspección de mi abuela','Cierro la cocina si sigo viendo esto','Multa, multa y más multa'],
+  C:['Esto lo reportaré a Massimo','Vuelvo mañana… y quiero verlo limpio','Le estoy vigilando','Tomo nota. Mucha nota.','No está mal… pero tampoco bien','Un par de platos más y entro'],
+  B:['Meh, podría estar mejor','Casi, casi…','Aprobado raspado','Un repasito y queda de diez'],
+  A:['Impecable. Hoy no hay multa','Así da gusto, chef','Me comería aquí mismo','Esto sí es una cocina. Enhorabuena','Se lo contaré a Massimo… para bien']
+};
+const QUOTES_ZONA={
+  vertedero:['A ver si algún día limpias estos platos','¿Ese friegue tiene vida propia?','Esa rata tiene más actividad que tus seguimientos','Huele a demo olvidada'],
+  marcar:['¿Esos platos del pase son decoración?','Los platos del pase se están enfriando','¿Se hizo o no se hizo? Decídete'],
+  seguimiento:['Se acumula tu cámara…','En esa cámara hay tápers del mes pasado','Tanta escarcha… ¿cuándo llamaste a esos?'],
+  canceladas:['Esos platos devueltos no se rescatan solos','¿Nadie va a reagendar esas demos?']
+};
+let quoteIdx=0,lastGrade=null;
+setInterval(()=>{
+  const insp=document.getElementById('inspector');
+  if(!Z||insp.hidden)return;
+  quoteIdx++;
+  const b=document.getElementById('bubble');b.style.opacity='0';
+  setTimeout(()=>{b.textContent=inspectorQuote(gradeOf(ordenIndex(Z)).g);b.style.opacity='1';},250);
+},6000);
+function inspectorQuote(g){
+  const mb={vertedero:Z.vertedero.length*8,marcar:Z.marcar.length*5,seguimiento:Z.seguimiento.length*2,canceladas:Z.canceladas.length*3};
+  const peor=Object.entries(mb).sort((a,b)=>b[1]-a[1])[0];
+  const genericas=QUOTES[g];
+  // En C y D, una de cada dos frases va sobre la zona que peor está
+  let pool=genericas;
+  if((g==='C'||g==='D')&&peor[1]>0&&quoteIdx%2===1){
+    pool=QUOTES_ZONA[peor[0]].filter(q=>!q.includes('rata')||Z.vertedero.length>=10);
+  }
+  const q=pool[Math.floor(quoteIdx/2)%pool.length];
+  return q;
+}
 function renderAmbient(){
   const v=ordenIndex(Z),pen=penalty(Z),g=gradeOf(v).g;
   const amb=document.getElementById('ambient');amb.innerHTML='';
@@ -1092,9 +1175,15 @@ function renderAmbient(){
   document.getElementById('alarm-l').classList.toggle('on',g==='D');
   document.getElementById('alarm-r').classList.toggle('on',g==='D');
   const insp=document.getElementById('inspector'),bub=document.getElementById('bubble');
-  if(g==='D'){insp.hidden=false;insp.className='inspector patrol';bub.textContent=QUOTES_D[Math.floor(Date.now()/8000)%QUOTES_D.length];}
-  else if(g==='C'){insp.hidden=false;insp.className='inspector door';bub.textContent=QUOTES_C[Math.floor(Date.now()/8000)%QUOTES_C.length];}
-  else insp.hidden=true;
+  if(g==='D'){insp.hidden=false;insp.className='inspector patrol';}
+  else if(g==='C'||g==='B'){insp.hidden=false;insp.className='inspector door';}
+  else if(g==='A'&&lastGrade!=='A'){
+    // Con una A, el inspector se asoma un momento a felicitarte y se va
+    insp.hidden=false;insp.className='inspector door';
+    clearTimeout(insp._bye);insp._bye=setTimeout(()=>{if(gradeOf(ordenIndex(Z)).g==='A')insp.hidden=true;},9000);
+  }else if(g==='A'&&insp.className!=='inspector door')insp.hidden=true;
+  if(g!==lastGrade){quoteIdx=0;bub.textContent=inspectorQuote(g);}
+  lastGrade=g;
   if(g==='A'){
     for(let i=0;i<10;i++){const s=divEl('sparkle',80+hash(i+5)*1040,130+hash(i+9)*720);s.style.animationDelay=(hash(i+2)*2.4)+'s';amb.appendChild(s);}
     return;
@@ -1494,8 +1583,11 @@ function openInspector(){
   if(Z.marcar.length)todo.push(['marcar',`Saca ${Z.marcar.length} platos del pase`,'−5 cada uno']);
   if(Z.canceladas.length)todo.push(['canceladas',`Rescata o tira ${Z.canceladas.length} platos devueltos`,'−3 cada uno']);
   if(Z.seguimiento.length)todo.push(['seguimiento',`Gestiona ${Z.seguimiento.length} seguimientos de la cámara`,'−2 cada uno']);
+  const SANCION={D:'Invitar a café a todo el equipo y fregar hasta que brille.',C:'Aviso por escrito. A la próxima, café para todos.',B:'Sin multa… por esta vez.',A:'Ninguna. Diploma de cocina impecable.'};
   openDrawer('Inspección de sanidad',`Nota ${g.g} · ${v}/100`,`
-    <div class="alertbox ${g.g==='D'?'wait':'rot'}">${g.g==='D'?'<b>El inspector no se va</b> hasta que la cocina llegue al menos a una C (40 puntos).':'<b>El inspector está en la puerta.</b> Si bajas de 40 entra a pasear por tu cocina.'}</div>
+    <div class="notes" style="font-size:14px;color:var(--ink)">«${esc(document.getElementById('bubble').textContent||inspectorQuote(g.g))}»</div>
+    <div class="alertbox ${g.g==='D'?'wait':'rot'}">${g.g==='D'?'<b>El inspector no se va</b> hasta que la cocina llegue al menos a una C (40 puntos).':g.g==='A'?'<b>Cocina impecable.</b> El inspector solo ha pasado a felicitarte.':'<b>El inspector está en la puerta.</b> Si bajas de 40 entra a pasear por tu cocina.'}</div>
+    <div class="act-title">SANCIÓN PROPUESTA</div><div class="msg">${SANCION[g.g]}</div>
     <div class="act-title">LO QUE HA APUNTADO</div>
     <div class="list">${todo.map(t=>`<button class="li" data-zone="${t[0]}"><span class="nm">${esc(t[1])}</span><span class="meta">${t[2]}</span></button>`).join('')}</div>`);
 }
