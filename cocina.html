@@ -115,23 +115,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .world-holder{position:relative;}
 .world{position:absolute;top:0;left:0;width:1200px;height:900px;transform-origin:0 0;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 0 6px var(--wall);
-  --tile-a:#26363b;--tile-b:#2b3c41;
+  --tile-a:#7d9599;--tile-b:#8aa1a5;
   background:repeating-conic-gradient(var(--tile-a) 0 25%,var(--tile-b) 0 50%) 0 0/40px 40px;transition:filter .6s;}
-.world.t2{--tile-a:#283a40;--tile-b:#30464c;}
-.world.t3{--tile-a:#1f2c30;--tile-b:#3a4c51;}
-.world.t4{--tile-a:#33292a;--tile-b:#3c3132;}
-.world.t5{--tile-a:#2a2b33;--tile-b:#34363f;}
+.world.t2{--tile-a:#8ea79a;--tile-b:#9cb4a7;}
+.world.t3{--tile-a:#c9d3d6;--tile-b:#a9b8bc;}
+.world.t4{--tile-a:#b9785a;--tile-b:#c58866;}
+.world.t5{--tile-a:#4a4656;--tile-b:#575263;}
 .world.t5::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0,rgba(255,210,74,.10),transparent 55%);}
-.world.sucia{filter:saturate(.85) brightness(.95);}
-.world.caos{filter:saturate(.7) brightness(.88);box-shadow:inset 0 0 0 6px var(--wall),inset 0 0 160px rgba(255,90,90,.25);}
-.zone{position:absolute;border-radius:12px;background:linear-gradient(180deg,var(--c1),var(--c2));box-shadow:inset 0 0 0 3px var(--trim),inset 0 2px 0 6px rgba(255,255,255,.04),0 6px 0 rgba(0,0,0,.2);}
+.world.sucia{filter:saturate(.92);}
+.world.caos{filter:saturate(.8) brightness(.95);box-shadow:inset 0 0 0 6px var(--wall),inset 0 0 160px rgba(255,90,90,.25);}
+.zone{position:absolute;border-radius:12px;background:linear-gradient(180deg,var(--c1),var(--c2));box-shadow:inset 0 0 0 3px var(--zc,var(--trim)),inset 0 3px 0 6px rgba(255,255,255,.07),0 6px 0 rgba(0,0,0,.22),0 0 22px -6px var(--zc,transparent);}
 /* Cada cocina tiene su acabado: mostradores, remates, manteles y suelo del comedor */
-.world{--c1:#3f4b4f;--c2:#353f43;--trim:var(--wall);--cloth:radial-gradient(circle,#d7dcdc 0 18px,#b9c0c0 19px 21px);--dining:repeating-linear-gradient(0deg,#4a4f50 0 20px,#444a4b 20px 21px);}
-.world.t2{--c1:#4a5a5f;--c2:#3e4d52;--cloth:repeating-conic-gradient(#c94f3a 0 25%,#f4efe4 0 50%) 0 0/11px 11px;--dining:repeating-linear-gradient(45deg,#8a4b32 0 16px,#7d4229 16px 32px);}
-.world.t3{--c1:#4e6066;--c2:#415157;--cloth:radial-gradient(circle,#f4efe4 0 18px,#d9d0bd 19px 21px);--dining:repeating-linear-gradient(90deg,#5a3f2b 0 22px,#634631 22px 44px);}
-.world.t4{--c1:#4b5559;--c2:#3c4548;--trim:#a8643a;--cloth:radial-gradient(circle,#f7f2e7 0 18px,#ded5c2 19px 21px);--dining:repeating-linear-gradient(90deg,#3e2a1d 0 22px,#46301f 22px 44px);}
-.world.t5{--c1:#2b2b30;--c2:#222226;--trim:#b8932a;--cloth:radial-gradient(circle,#fbf8f1 0 17px,#d8b347 18px 19px,#fbf8f1 20px 21px);--dining:repeating-linear-gradient(90deg,#3b2c3a 0 22px,#433241 22px 44px);}
-.world.t5 .zone{background:linear-gradient(135deg,#2e2e33,#1f1f23 60%,#2a2a2f);}
+.world{--c1:#5f7479;--c2:#50646a;--trim:var(--wall);--cloth:radial-gradient(circle,#d7dcdc 0 18px,#b9c0c0 19px 21px);--dining:repeating-linear-gradient(0deg,#4a4f50 0 20px,#444a4b 20px 21px);}
+.world.t2{--c1:#62797f;--c2:#536a70;--cloth:repeating-conic-gradient(#c94f3a 0 25%,#f4efe4 0 50%) 0 0/11px 11px;--dining:repeating-linear-gradient(45deg,#8a4b32 0 16px,#7d4229 16px 32px);}
+.world.t3{--c1:#6a8288;--c2:#5a7177;--cloth:radial-gradient(circle,#f4efe4 0 18px,#d9d0bd 19px 21px);--dining:repeating-linear-gradient(90deg,#5a3f2b 0 22px,#634631 22px 44px);}
+.world.t4{--c1:#5f6d72;--c2:#4f5c61;--trim:#a8643a;--cloth:radial-gradient(circle,#f7f2e7 0 18px,#ded5c2 19px 21px);--dining:repeating-linear-gradient(90deg,#3e2a1d 0 22px,#46301f 22px 44px);}
+.world.t5{--c1:#3a3a42;--c2:#2e2e35;--trim:#b8932a;--cloth:radial-gradient(circle,#fbf8f1 0 17px,#d8b347 18px 19px,#fbf8f1 20px 21px);--dining:repeating-linear-gradient(90deg,#3b2c3a 0 22px,#433241 22px 44px);}
+.world.t5 .zone{background:linear-gradient(135deg,#3c3c44,#2c2c33 60%,#38383f);}
 /* Marco de pared: azulejo según cocina */
 .walls{position:absolute;inset:0;border-radius:16px;pointer-events:none;z-index:1;border:8px solid transparent;}
 .world.t1 .walls{border-image:repeating-linear-gradient(90deg,#5d6a6c 0 22px,#4d585a 22px 24px) 8;}
@@ -141,10 +141,11 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .world.t5 .walls{border-image:repeating-linear-gradient(90deg,#16161a 0 40px,#b8932a 40px 42px,#2a2a2f 42px 80px,#b8932a 80px 82px) 8;}
 .zone-sign{position:absolute;top:-1px;left:14px;transform:translateY(-50%);display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:7px;background:var(--wall);border:1px solid var(--border);font-family:var(--f-sign);font-weight:600;font-size:15.5px;letter-spacing:.06em;color:var(--ink);white-space:nowrap;z-index:7;cursor:pointer;}
 .zone-sign:hover{border-color:var(--lime);}
+.zone-sign{box-shadow:inset 4px 0 0 var(--zc,transparent),0 3px 0 rgba(0,0,0,.25);}
 .zone-sign .cnt{background:var(--panel-2);border-radius:5px;padding:0 6px;color:var(--lime);font-family:var(--f-body);font-weight:700;font-size:12px;}
 .zone-sign.alert{border-color:var(--red);}
 .zone-sign.alert .cnt{color:var(--red);}
-.zone-hint{position:absolute;bottom:7px;left:14px;right:14px;font-size:11px;color:#b9c6c8;opacity:.75;pointer-events:none;}
+.zone-hint{position:absolute;bottom:7px;left:14px;right:14px;font-size:11.5px;color:#eef5f3;opacity:.9;text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none;}
 .cap{position:absolute;top:10px;right:12px;font-family:var(--f-sign);font-weight:600;font-size:14px;color:var(--ink-2);background:var(--wall);padding:2px 7px;border-radius:5px;z-index:6;}
 .cap.full{color:var(--red);}
 .locked{position:absolute;border:2px dashed rgba(255,255,255,.22);border-radius:8px;display:grid;place-items:center;font-family:var(--f-sign);font-weight:600;font-size:13.5px;color:rgba(255,255,255,.4);pointer-events:none;text-align:center;line-height:1.2;}
@@ -176,7 +177,7 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .z-rail{background:transparent;box-shadow:none;}
 .rail{position:absolute;left:0;right:0;top:34px;height:9px;border-radius:5px;background:linear-gradient(var(--steel-lt),var(--steel-dk));box-shadow:0 3px 0 rgba(0,0,0,.3);}
 /* Fogones */
-.z-range{background:linear-gradient(180deg,#30383b,#262d30);}
+.z-range{background:linear-gradient(180deg,#414c50,#343e42);}
 .burner{position:absolute;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle,#15181a 0 17px,#41484b 18px 20px,#15181a 21px 25px,#41484b 26px 28px,#101315 29px);}
 .burner.hot{box-shadow:0 0 0 3px rgba(255,120,30,.35),0 0 26px 8px rgba(255,110,20,.35);animation:flame 1.2s ease-in-out infinite;}
 @keyframes flame{50%{box-shadow:0 0 0 4px rgba(255,140,40,.5),0 0 34px 12px rgba(255,110,20,.45);}}
@@ -184,14 +185,14 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .kds.live{color:var(--red);animation:blink 1s steps(2) infinite;}
 @keyframes blink{50%{opacity:.45;}}
 /* Pase */
-.z-pass{background:linear-gradient(180deg,#9aa9ad,#7d8c91);}
+.z-pass{background:linear-gradient(180deg,#bfcbce,#9fb0b4);}
 .z-pass .zone-hint{color:#1d2a2e;opacity:.8;}
 .lamp{position:absolute;top:22px;width:46px;height:14px;border-radius:0 0 23px 23px;background:#2a2f31;}
 .lamp::after{content:'';position:absolute;left:8px;right:8px;top:12px;height:70px;background:linear-gradient(rgba(255,140,40,.35),transparent);border-radius:0 0 50% 50%;pointer-events:none;}
 .bell{position:absolute;top:12px;right:14px;width:22px;height:16px;border-radius:11px 11px 3px 3px;background:var(--gold);box-shadow:0 3px 0 #9b7a14;}
 .bell.on{animation:shake .25s infinite;}
 /* Oficina */
-.z-office{background:linear-gradient(180deg,#2c4c55,#24424a);}
+.z-office{background:linear-gradient(180deg,#3d6874,#335b66);}
 .desk{position:absolute;left:24px;top:96px;width:130px;height:50px;border-radius:8px;background:#5b4a37;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25);}
 .phone{position:absolute;left:44px;top:84px;width:34px;height:18px;border-radius:5px;background:#111;}
 .phone::before{content:'';position:absolute;left:-3px;top:-7px;width:40px;height:9px;border-radius:5px;background:#222;}
@@ -208,21 +209,41 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .calls .upd{grid-column:1/-1;font-size:10.5px;color:var(--ink-3);}
 .calls-empty{grid-column:1/-1;font-size:12px;color:var(--ink-3);line-height:1.45;}
 /* Devoluciones */
-.tray{position:absolute;left:30px;right:30px;top:52px;bottom:30px;border-radius:12px;background:linear-gradient(#6c7a7f,#55636a);box-shadow:inset 0 0 0 4px #4a575c;}
+.tray{position:absolute;left:30px;right:30px;top:52px;bottom:30px;border-radius:12px;background:linear-gradient(#93a3a8,#788a90);box-shadow:inset 0 0 0 4px #67797e,inset 0 6px 12px rgba(255,255,255,.15);}
 /* Cámara */
-.z-fridge{background:linear-gradient(180deg,#2d4c58,#24404b);box-shadow:inset 0 0 0 3px var(--wall),inset 0 0 0 8px rgba(207,233,245,.12),0 6px 0 rgba(0,0,0,.2);}
+.z-fridge{background:linear-gradient(180deg,#46798b,#3a6878);box-shadow:inset 0 0 0 3px var(--wall),inset 0 0 0 8px rgba(207,233,245,.12),0 6px 0 rgba(0,0,0,.2);}
 .shelf{position:absolute;left:14px;right:14px;height:6px;border-radius:3px;background:linear-gradient(var(--steel-lt),var(--steel-dk));}
 .fridge-door{position:absolute;right:-4px;top:60px;width:12px;height:120px;border-radius:4px;background:linear-gradient(90deg,var(--steel-dk),var(--steel-lt));}
 .fridge-door.ajar{transform:rotate(-14deg);transform-origin:top right;}
 /* Friegue */
-.z-rot{background:radial-gradient(ellipse 60px 22px at 25% 82%,var(--slime) 0 60%,transparent 62%),radial-gradient(ellipse 40px 14px at 80% 72%,#4c5420 0 60%,transparent 62%),repeating-linear-gradient(135deg,var(--rot) 0 14px,var(--rot-2) 14px 28px);box-shadow:inset 0 0 0 3px #4a2b18,0 6px 0 rgba(0,0,0,.2);}
+.z-rot{background:radial-gradient(ellipse 60px 22px at 25% 82%,var(--slime) 0 60%,transparent 62%),radial-gradient(ellipse 40px 14px at 80% 72%,#4c5420 0 60%,transparent 62%),repeating-linear-gradient(135deg,#5a4a33 0 14px,#4c3e2b 14px 28px);box-shadow:inset 0 0 0 3px #8a4a26,0 6px 0 rgba(0,0,0,.2);}
 .z-rot .zone-sign{border-color:#7a3a1e;color:#ffb38a;}
 .z-rot .zone-sign .cnt{color:var(--red);}
 .sink{position:absolute;top:26px;width:110px;height:46px;border-radius:8px;background:linear-gradient(var(--steel-lt),var(--steel));box-shadow:inset 0 0 0 6px var(--steel-dk);}
 .sink::after{content:'';position:absolute;left:48px;top:-10px;width:12px;height:16px;border-radius:6px 6px 2px 2px;background:var(--steel-dk);}
 .bulb{position:absolute;top:84px;right:18px;width:10px;height:10px;border-radius:50%;background:#fff3b0;box-shadow:0 0 20px 8px rgba(255,240,170,.25);animation:flicker 3.2s infinite;}
 @keyframes flicker{0%,18%,22%,60%,64%,100%{opacity:1;}20%,62%{opacity:.15;}}
-.rot-empty{position:absolute;left:16px;right:16px;text-align:center;font-size:12px;color:#c9b79a;pointer-events:none;}
+/* Color propio de cada zona (borde, halo y rótulo) */
+#z-nuevas{--zc:#7FD81F;}#z-hoy{--zc:#ff8a3d;}#z-marcar{--zc:#ff6b6b;}#z-office{--zc:#4fc3d9;}
+#z-canceladas{--zc:#f2b632;}#z-seguimiento{--zc:#6fb3ff;}#z-vertedero{--zc:#c0793f;}#z-ventas{--zc:#ffd24a;}#z-papelera{--zc:#5fae5a;}
+#z-agenda .zone-sign{--zc:#f4f1e8;}
+.world .zone-sign[data-zone]{background:#10262c;}
+/* Rail: azulejo de pared detrás de las comandas para que se lean sobre el suelo claro */
+.z-rail{background:repeating-linear-gradient(90deg,rgba(255,255,255,.10) 0 38px,rgba(255,255,255,.04) 38px 40px),linear-gradient(180deg,#3f5a61,#344d54);box-shadow:inset 0 0 0 3px rgba(244,241,232,.55),0 6px 0 rgba(0,0,0,.2);}
+/* Luz cálida del techo sobre cada estación */
+.world::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;mix-blend-mode:soft-light;
+  background:radial-gradient(ellipse 260px 140px at 140px 230px,rgba(255,240,200,.55),transparent 70%),radial-gradient(ellipse 340px 140px at 560px 230px,rgba(255,240,200,.45),transparent 70%),radial-gradient(ellipse 240px 140px at 1020px 230px,rgba(255,200,140,.55),transparent 70%),
+    radial-gradient(ellipse 260px 150px at 190px 455px,rgba(255,240,200,.55),transparent 70%),radial-gradient(ellipse 280px 150px at 580px 455px,rgba(255,240,200,.45),transparent 70%),radial-gradient(ellipse 260px 150px at 990px 455px,rgba(255,240,200,.5),transparent 70%),
+    radial-gradient(ellipse 260px 200px at 216px 740px,rgba(220,240,255,.5),transparent 70%),radial-gradient(ellipse 260px 200px at 918px 740px,rgba(255,225,160,.6),transparent 70%);}
+.world.caos::after{opacity:.55;}
+/* Friegue: tres pilas por categoría */
+.basin{position:absolute;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(0,0,0,.18));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bc) 55%,transparent),inset 0 -26px 0 rgba(0,0,0,.25);z-index:2;}
+.basin.full{box-shadow:inset 0 0 0 2px var(--bc),inset 0 -26px 0 rgba(0,0,0,.3),0 0 14px -4px var(--bc);}
+.basin-l{position:absolute;left:0;right:0;bottom:3px;border:none;background:none;display:flex;align-items:baseline;justify-content:center;gap:5px;font-family:var(--f-sign);font-weight:700;font-size:13px;letter-spacing:.04em;color:#fff;cursor:pointer;}
+.basin-l b{font-family:var(--f-body);font-size:15px;color:var(--bc);}
+.basin:not(.full) .basin-l{opacity:.6;}
+.dirty.dtup{width:32px;height:26px;border-radius:5px;background:radial-gradient(circle at 35% 70%,#6b5f2a 0 5px,transparent 6px),linear-gradient(rgba(214,226,224,.9) 0 40%,#7d7445 40%);border-top:6px solid #4d7fae;}
+.rot-empty{position:absolute;left:16px;right:16px;text-align:center;font-size:13px;color:#f1e3c8;pointer-events:none;}
 .stink{position:absolute;font-family:var(--f-sign);font-weight:600;font-size:22.5px;color:#a8b84a;opacity:0;animation:stink 2.6s ease-in infinite;pointer-events:none;z-index:7;}
 @keyframes stink{0%{transform:translateY(0);opacity:0;}30%{opacity:.8;}100%{transform:translateY(-34px);opacity:0;}}
 .fly-bug{position:absolute;width:4px;height:4px;border-radius:50%;background:#000;z-index:8;pointer-events:none;animation:buzz var(--d,2s) linear infinite;}
@@ -1163,17 +1184,22 @@ function renderWorld(){
 
   // Friegue
   const V=Z.vertedero;
-  const starts=[0,8,15,21,26,29],widths=[8,7,6,5,3,2];
-  V.slice(0,31).forEach((d,i)=>{
-    let row=0;while(row<5&&i>=starts[row+1])row++;
-    const k=i-starts[row],w=widths[row];
-    const x=134-(w*30)/2+k*30+(hash(d.id)*8-4);
-    const y=232-row*26+(hash(d.id+7)*6-3);
-    const el=itEl(d,'dirty'+(d._zone==='canceladas'?' pan-d':''),x,y,{rot:Math.round(hash(d.id+3)*40-20),dot:CAT_COLOR[d._zone]});
-    if(arrivals.has(d.id))el.classList.add('arrive');
-    add('vertedero',el);
+  // Tres pilas, una por categoría, para ver de un vistazo qué hay que fregar
+  const BASINS=[['marcar','SIN MARCAR','dirty'],['seguimiento','VENCIDOS','dirty dtup'],['canceladas','DEVUELTOS','dirty pan-d']];
+  BASINS.forEach(([cat,lbl,cls],bi)=>{
+    const L=V.filter(d=>d._zone===cat),bx=12+bi*96;
+    const basin=divEl('basin'+(L.length?' full':''),bx,88,88,180,`<button class="basin-l" data-zone="vertedero"><b class="num">${L.length}</b>${lbl}</button>`);
+    basin.style.setProperty('--bc',CAT_COLOR[cat]);basin.dataset.cat=cat;
+    add('vertedero',basin);
+    L.slice(0,12).forEach((d,i)=>{
+      const c=i%2,r=Math.floor(i/2);
+      const el=itEl(d,cls,bx+9+c*38+(hash(d.id)*4-2),88+108-r*20+(hash(d.id+7)*4-2),{rot:Math.round(hash(d.id+3)*30-15)});
+      el.style.zIndex=3+r;
+      if(arrivals.has(d.id))el.classList.add('arrive');
+      add('vertedero',el);
+    });
+    if(L.length>12)add('vertedero',moreEl('vertedero',L.length-12,bx+24,90));
   });
-  if(V.length>31)add('vertedero',moreEl('vertedero',V.length-31,236,96));
   if(!V.length)add('vertedero',emptyEl('Friegue limpio. Así da gusto.',150,'rot-empty'));
   else{
     const flies=Math.min(10,3+Math.floor(V.length/4));
