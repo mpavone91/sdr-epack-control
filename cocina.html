@@ -2251,6 +2251,15 @@ function rt(){if(!rtClient)rtClient=window.supabase.createClient(SUPABASE_URL,SU
 const meInfo=()=>({id:currentUser.id,nombre:currentUser.nombre,rol:managerMode?'manager':'sdr',tier:managerMode?0:tierOfLvl(LEVEL),x:Math.round(avPos.x),y:Math.round(avPos.y)});
 // Hay chat en la propia cocina del SDR (modo real) y en las visitas del manager
 const chatHere=()=>managerMode?!!viewId:(MODE==='real'&&!viewId);
+// Supabase cierra el canal si un cliente manda más de 5 altas de presencia en 30 s.
+// La presencia solo se anuncia al entrar (la posición viaja por 'move') y las altas se espacian.
+let trackLog=[],rejoinT=null,pendingPos={};
+function safeTrack(ch,info){
+  const now=Date.now();trackLog=trackLog.filter(t=>now-t<30000);
+  const wait=trackLog.length<4?0:30000-(now-trackLog[0])+500;
+  trackLog.push(now+wait);
+  setTimeout(()=>{if(ch===kitchenChan||ch===lobbyChan)ch.track(info);},wait);
+}
 
 function joinKitchen(kid){
   leaveKitchen();
@@ -2260,7 +2269,10 @@ function joinKitchen(kid){
   const ch=rt().channel('cocina-sdr-'+kid,{config:{presence:{key:String(currentUser.id)},broadcast:{self:false}}});
   ch.on('presence',{event:'sync'},()=>{syncPeers(ch.presenceState());})
     .on('presence',{event:'join'},({newPresences})=>{
-      (newPresences||[]).filter(p=>p.id!==currentUser.id&&!peers[p.id]).forEach(p=>{
+      const nuevos=(newPresences||[]).filter(p=>p.id!==currentUser.id);
+      // Al que acaba de entrar le decimos dónde estamos
+      if(nuevos.length)ch.send({type:'broadcast',event:'move',payload:{id:currentUser.id,x:Math.round(avPos.x),y:Math.round(avPos.y)}});
+      nuevos.filter(p=>!peers[p.id]).forEach(p=>{
         if(p.rol==='manager'){toast(`${p.nombre} ha entrado en tu cocina`);const b=document.getElementById('bell');b.classList.add('on');setTimeout(()=>b.classList.toggle('on',Z&&Z.marcar.length>0),2500);}
         else toast(`${p.nombre} está en su cocina`);
       });
@@ -2271,13 +2283,21 @@ function joinKitchen(kid){
     .on('broadcast',{event:'move'},({payload})=>movePeer(payload))
     .on('broadcast',{event:'say'},({payload})=>{showSay(payload.id,payload.text);chatLog.push(payload);chatLog=chatLog.slice(-30);renderChat();})
     .on('broadcast',{event:'notas'},()=>{loadNotas(kitchenId);})
-    .subscribe(st=>{if(st==='SUBSCRIBED')ch.track(meInfo());});
+    .subscribe(st=>{
+      if(st==='SUBSCRIBED')safeTrack(ch,meInfo());
+      else if((st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')&&kitchenChan===ch){
+        // Reconexión automática pasado el periodo de espera de Supabase
+        clearTimeout(rejoinT);rejoinT=setTimeout(()=>{if(kitchenChan===ch&&kitchenId===kid)joinKitchen(kid);},31000);
+      }
+    });
   kitchenChan=ch;
   renderChat();
 }
 function leaveKitchen(){
-  if(kitchenChan){try{kitchenChan.untrack();rt().removeChannel(kitchenChan);}catch(e){}}
-  kitchenChan=null;kitchenId=null;demoPeer=false;
+  clearTimeout(rejoinT);
+  const old=kitchenChan;kitchenChan=null;
+  if(old){try{rt().removeChannel(old);}catch(e){}}
+  kitchenId=null;demoPeer=false;pendingPos={};
   Object.values(peers).forEach(p=>p.el.remove());peers={};chatLog=[];
   renderChat();
 }
@@ -2289,8 +2309,14 @@ function joinLobby(){
     const st=ch.presenceState();onlineIds=new Set();
     Object.values(st).forEach(arr=>arr.forEach(p=>{if(p.rol==='sdr')onlineIds.add(p.id);}));
     if(managerMode&&!viewId)renderCentral();
-  }).subscribe(s2=>{if(s2==='SUBSCRIBED')ch.track({id:currentUser.id,rol:managerMode?'manager':'sdr'});});
+  });
   lobbyChan=ch;
+  ch.subscribe(s2=>{
+    if(s2==='SUBSCRIBED')safeTrack(ch,{id:currentUser.id,rol:managerMode?'manager':'sdr'});
+    else if((s2==='CHANNEL_ERROR'||s2==='TIMED_OUT'||s2==='CLOSED')&&lobbyChan===ch){
+      setTimeout(()=>{if(lobbyChan===ch){try{rt().removeChannel(ch);}catch(e){}lobbyChan=null;joinLobby();}},31000);
+    }
+  });
 }
 function peerEl(p){
   const el=document.createElement('div');
@@ -2304,14 +2330,16 @@ function syncPeers(state){
   Object.values(state).forEach(arr=>{
     const p=arr[arr.length-1];if(!p||p.id===currentUser.id)return;
     vivos.add(String(p.id));
-    if(!peers[p.id]){peers[p.id]={info:p,el:peerEl(p)};placePeer(peers[p.id],p.x||HOME.x,p.y||HOME.y,0);}
-    else{peers[p.id].info=p;if(p.x&&(Math.abs(p.x-peers[p.id].x)>4||Math.abs(p.y-peers[p.id].y)>4))movePeer(p);}
+    if(!peers[p.id]){
+      const q=pendingPos[p.id]||p;delete pendingPos[p.id];
+      peers[p.id]={info:p,el:peerEl(p)};placePeer(peers[p.id],q.x||HOME.x,q.y||HOME.y,0);
+    }else peers[p.id].info=p;
   });
   Object.keys(peers).forEach(id=>{if(!vivos.has(String(id))){peers[id].el.remove();delete peers[id];}});
   renderChat();
 }
 function movePeer({id,x,y}){
-  const pr=peers[id];if(!pr)return;
+  const pr=peers[id];if(!pr){pendingPos[id]={x,y};return;}
   const dist=Math.hypot(x-pr.x,y-pr.y),dur=reduced()?0:Math.min(900,Math.max(150,dist/1.1));
   pr.el.classList.add('walk');placePeer(pr,x,y,dur);
   clearTimeout(pr.t);pr.t=setTimeout(()=>pr.el.classList.remove('walk'),dur);
@@ -2320,8 +2348,10 @@ let moveT=0,trackT=null;
 function rtMove(p){
   if(!kitchenChan)return;
   const now=Date.now();
-  if(now-moveT>80){moveT=now;kitchenChan.send({type:'broadcast',event:'move',payload:{id:currentUser.id,x:Math.round(p.x),y:Math.round(p.y)}});}
-  clearTimeout(trackT);trackT=setTimeout(()=>{kitchenChan&&kitchenChan.track(meInfo());},1200);
+  const send=()=>kitchenChan&&kitchenChan.send({type:'broadcast',event:'move',payload:{id:currentUser.id,x:Math.round(avPos.x),y:Math.round(avPos.y)}});
+  if(now-moveT>80){moveT=now;send();}
+  // Último aviso con la posición final (por broadcast, no por presencia)
+  clearTimeout(trackT);trackT=setTimeout(send,400);
 }
 function showSay(id,text){
   const el=id===currentUser.id?avatar:peers[id]?.el;if(!el)return;
@@ -2615,7 +2645,7 @@ document.getElementById('btn-exit').onclick=()=>{
   if(MODE==='real'&&sessionToken){rpc('sdr_logout').catch(()=>{});try{sessionStorage.removeItem('sdr_token');}catch(e){}sessionToken=null;}
   closeDrawer();MODE=null;document.getElementById('login').hidden=false;
   leaveKitchen();
-  if(lobbyChan){try{lobbyChan.untrack();rt().removeChannel(lobbyChan);}catch(e){}lobbyChan=null;}
+  if(lobbyChan){const l=lobbyChan;lobbyChan=null;try{rt().removeChannel(l);}catch(e){}}
   document.getElementById('postit').hidden=true;
   if(managerMode){managerMode=false;viewId=null;document.getElementById('central').hidden=true;document.getElementById('stage').hidden=false;document.querySelector('main.dash').hidden=false;document.getElementById('btn-central').hidden=true;document.getElementById('chip-grade').hidden=false;document.getElementById('chip-lvl').hidden=false;}
 };
