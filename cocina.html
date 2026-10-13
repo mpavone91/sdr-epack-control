@@ -2200,7 +2200,7 @@ function showCentral(){
   document.getElementById('btn-central').hidden=true;
   document.getElementById('chip-grade').hidden=true;
   document.getElementById('chip-lvl').hidden=true;
-  document.getElementById('hud-rank').textContent='Jefe de cocina';
+  document.getElementById('hud-rank').textContent='Manager';
   document.getElementById('hud-who').textContent=`${currentUser.nombre} · Central de cocinas`;
   renderCentral();
   scrollTo({top:0});
@@ -2217,7 +2217,7 @@ function visitKitchen(id){
   document.getElementById('chip-grade').hidden=false;
   document.getElementById('chip-lvl').hidden=false;
   document.getElementById('zone-add').hidden=true;
-  document.getElementById('avatar-name').textContent='JEFE · '+(currentUser.nombre||'').split(' ')[0].toUpperCase();
+  document.getElementById('avatar-name').textContent=(currentUser.nombre||'').split(' ')[0].toUpperCase();
   renderWorld();fit();placeAvatar({x:40,y:330},0);
   scrollTo({top:0});
   notas=MODE==='demo'?(demoNotas[id]||(demoNotas[id]=[])):[];
@@ -2321,7 +2321,7 @@ function joinLobby(){
 function peerEl(p){
   const el=document.createElement('div');
   el.className='avatar peer '+(p.rol==='manager'?'boss':'r'+(p.tier||1));
-  el.innerHTML=`<span class="avatar-name">${p.rol==='manager'?'JEFE · ':''}${esc((p.nombre||'').split(' ')[0].toUpperCase())}</span><div class="hat"></div><div class="head"></div><div class="body"></div><div class="scarf"></div><div class="legs"></div>`;
+  el.innerHTML=`<span class="avatar-name">${esc((p.nombre||'').split(' ')[0].toUpperCase())}</span><div class="hat"></div><div class="head"></div><div class="body"></div><div class="scarf"></div><div class="legs"></div>`;
   world.appendChild(el);return el;
 }
 function placePeer(pr,x,y,dur){pr.el.style.transitionDuration=dur+'ms';pr.el.style.left=(x-15)+'px';pr.el.style.top=(y-50)+'px';pr.x=x;pr.y=y;}
@@ -2368,7 +2368,7 @@ function sendSay(text){
   renderChat();
 }
 // Modo de ejemplo: el SDR visitado está en su cocina y contesta
-const DEMO_REPLIES=['¡Voy, jefe!','Ahora mismo lo saco del pase','Me pongo con el friegue','¡Marchando!','Esta tarde lo dejo limpio','Sí, chef'];
+const DEMO_REPLIES=['¡Voy!','Ahora mismo lo saco del pase','Me pongo con el friegue','¡Marchando!','Esta tarde lo dejo limpio','Sí, chef'];
 function addDemoPeer(){
   const p={id:viewId,nombre:viewName,rol:'sdr',tier:curTier};
   peers[p.id]={info:p,el:peerEl(p)};placePeer(peers[p.id],HOME.x,HOME.y,0);
