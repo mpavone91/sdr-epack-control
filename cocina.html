@@ -311,6 +311,61 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .bubble{transition:opacity .25s;position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:#fff;color:#222;font-size:11px;font-weight:600;padding:4px 8px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.3);}
 .bubble::after{content:'';position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-top-color:#fff;border-bottom:0;}
 
+/* ── OFFICE DEL PERSONAL ── */
+.office-btn b{color:var(--lime);margin-left:2px;}
+.oworld{position:absolute;top:0;left:0;width:1200px;height:900px;transform-origin:0 0;border-radius:16px;overflow:hidden;
+  background:repeating-linear-gradient(0deg,#c8925d 0 28px,#bb8653 28px 30px),#c8925d;box-shadow:inset 0 0 0 6px var(--wall);}
+.oworld button{border:none;padding:0;cursor:pointer;font:inherit;}
+.o-wall{position:absolute;left:0;right:0;top:0;height:112px;background:linear-gradient(#e9e1cf,#ddd2bb);box-shadow:0 6px 0 rgba(0,0,0,.12);}
+.o-sign{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:6px 16px;border-radius:8px;background:var(--teal-dk);color:var(--lime);font-family:var(--f-sign);font-weight:700;font-size:20px;letter-spacing:.12em;box-shadow:0 4px 0 rgba(0,0,0,.25);}
+.o-window{position:absolute;top:52px;width:130px;height:50px;border-radius:6px;background:linear-gradient(#bfe6ff,#e9f7ff);box-shadow:inset 0 0 0 5px #fff,0 3px 0 rgba(0,0,0,.15);}
+.o-window::after{content:'';position:absolute;left:62px;top:0;bottom:0;width:5px;background:#fff;}
+.o-clock{position:absolute;left:880px;top:30px;width:56px;height:56px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 4px var(--teal-dk),0 3px 0 rgba(0,0,0,.2);}
+.o-clock i,.o-clock b{position:absolute;left:27px;bottom:28px;width:3px;border-radius:2px;background:var(--teal-dk);transform-origin:50% 100%;}
+.o-clock i{height:15px;}.o-clock b{height:22px;width:2px;background:var(--red);}
+.o-door{position:absolute;left:0;top:420px;width:14px;height:110px;border-radius:0 6px 6px 0;background:linear-gradient(90deg,#7a4f2c,#9b6a3d);}
+.o-label{position:absolute;font-family:var(--f-sign);font-weight:700;font-size:16px;letter-spacing:.08em;color:#fff;background:rgba(19,42,49,.85);padding:2px 9px;border-radius:6px;z-index:3;pointer-events:none;}
+.oworld .o-board{position:absolute;width:320px;height:70px;border-radius:6px;background:#fbfbf7;box-shadow:inset 0 0 0 5px #9aa6a8,0 3px 0 rgba(0,0,0,.15);color:#2b5fa8;font-family:var(--f-chalk);font-size:21px;font-weight:700;display:grid;place-items:center;padding:0 12px;text-align:center;line-height:1.05;}
+.o-rug{position:absolute;border-radius:16px;background:repeating-linear-gradient(90deg,#7a9a8f 0 18px,#6d8d82 18px 36px);box-shadow:inset 0 0 0 6px #5c7a70;opacity:.9;}
+.o-rug.round{border-radius:50%;background:radial-gradient(circle,#d78b6a 0 30%,#c97a59 30% 55%,#b86c4d 55%);box-shadow:none;}
+.o-table{position:absolute;width:300px;height:120px;border-radius:60px;background:radial-gradient(ellipse at 40% 35%,#a87a4e,#7c5532);box-shadow:0 6px 0 rgba(0,0,0,.25);z-index:2;}
+.o-table::after{content:'☕  📒  💻  ☕';position:absolute;inset:0;display:grid;place-items:center;font-size:18px;letter-spacing:6px;}
+.o-chair{position:absolute;width:34px;height:30px;border-radius:9px;background:#2f5f6d;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25);z-index:1;}
+.o-pong{position:absolute;width:340px;height:170px;border-radius:6px;background:#1f7a55;box-shadow:inset 0 0 0 4px #fff,0 8px 0 rgba(0,0,0,.25);z-index:2;}
+.o-pong::before{content:'';position:absolute;left:4px;right:4px;top:83px;height:3px;background:rgba(255,255,255,.8);}
+.o-pong::after{content:'🏓';position:absolute;right:-20px;bottom:-14px;font-size:26px;transform:rotate(20deg);}
+.o-net{position:absolute;left:167px;top:-6px;bottom:-6px;width:6px;background:repeating-linear-gradient(#eee 0 3px,#999 3px 5px);border-radius:3px;}
+.o-ball{position:absolute;left:40px;top:76px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 2px 3px rgba(0,0,0,.4);opacity:0;}
+.o-ball.play{opacity:1;animation:pong 3.2s linear;}
+@keyframes pong{0%{left:30px;top:30px;}12%{left:300px;top:120px;}25%{left:30px;top:100px;}37%{left:300px;top:40px;}50%{left:30px;top:130px;}62%{left:300px;top:70px;}75%{left:30px;top:40px;}87%{left:300px;top:110px;}100%{left:150px;top:200px;opacity:0;}}
+.o-bell{position:absolute;width:90px;height:44px;background:none;display:grid;justify-items:center;z-index:3;}
+.o-bell i{width:30px;height:24px;border-radius:15px 15px 4px 4px;background:var(--gold);box-shadow:0 4px 0 #9b7a14;}
+.o-bell span{font-family:var(--f-sign);font-weight:700;font-size:11px;line-height:1;color:var(--teal-dk);margin-top:4px;}
+.o-bell.ring i{animation:shake .25s 8;}
+.o-sofa{position:absolute;width:250px;height:80px;border-radius:22px 22px 12px 12px;background:linear-gradient(#5a6fb8,#4b5ea3);box-shadow:inset 0 -24px 0 #43548f,0 6px 0 rgba(0,0,0,.25);z-index:2;}
+.o-sofa::before,.o-sofa::after{content:'';position:absolute;top:22px;width:28px;height:58px;border-radius:12px;background:#3f4f88;}
+.o-sofa::before{left:-10px;}.o-sofa::after{right:-10px;}
+.o-ctable{position:absolute;width:120px;height:56px;border-radius:12px;background:#e8dcc4;box-shadow:0 5px 0 rgba(0,0,0,.2);z-index:2;}
+.o-ctable::after{content:'🍕 🎮';position:absolute;inset:0;display:grid;place-items:center;font-size:18px;}
+.o-arcade{position:absolute;width:56px;height:96px;border-radius:8px 8px 4px 4px;background:linear-gradient(#d94a6a,#a8314e);box-shadow:0 6px 0 rgba(0,0,0,.25);z-index:2;}
+.o-arcade::before{content:'';position:absolute;left:8px;right:8px;top:10px;height:34px;border-radius:4px;background:linear-gradient(135deg,#2a2a5a,#6fb3ff);box-shadow:0 0 10px rgba(111,179,255,.6);}
+.o-arcade::after{content:'';position:absolute;left:14px;top:54px;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:16px 0 0 var(--lime);}
+.o-shelf{position:absolute;width:330px;height:46px;border-radius:4px;background:linear-gradient(transparent 36px,#7a4f2c 36px);z-index:1;}
+.o-shelf::before{content:'🍾🥃🍷🫙🍋🧃🍾🍷🥃';position:absolute;left:8px;top:6px;font-size:22px;letter-spacing:4px;}
+.o-bar{position:absolute;width:380px;height:70px;border-radius:12px 12px 6px 6px;background:linear-gradient(#5b3a22,#4a2f1b);box-shadow:inset 0 10px 0 #d9b98a,0 6px 0 rgba(0,0,0,.25);z-index:2;}
+.o-stool{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,#e04b3c 0 11px,#b5372b 12px);box-shadow:0 4px 0 rgba(0,0,0,.25);z-index:1;}
+.o-coffee{position:absolute;width:56px;height:58px;border-radius:8px 8px 4px 4px;background:linear-gradient(#3b3f42,#25292b);z-index:3;box-shadow:0 4px 0 rgba(0,0,0,.25);}
+.o-coffee::before{content:'';position:absolute;left:8px;right:8px;top:8px;height:10px;border-radius:3px;background:#7FD81F;opacity:.85;}
+.o-coffee::after{content:'☕';position:absolute;left:16px;bottom:2px;font-size:18px;}
+.o-tap{position:absolute;width:40px;height:40px;background:none;z-index:3;font-size:28px;}
+.o-tap::after{content:"🍺";font-size:28px;}
+.o-fridge{position:absolute;width:84px;height:150px;border-radius:10px;background:linear-gradient(90deg,#e7eef0,#fdfefe 60%,#d6e0e3);box-shadow:inset 0 0 0 3px #b8c5c9,0 6px 0 rgba(0,0,0,.25);z-index:3;}
+.o-fridge::before{content:'';position:absolute;left:3px;right:3px;top:52px;height:3px;background:#b8c5c9;}
+.o-fridge::after{content:'🧲 SDR';position:absolute;left:10px;top:70px;font-size:12px;font-weight:800;color:#d33b3b;}
+.o-plant{position:absolute;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#7ed34a,#3a8a22);z-index:4;pointer-events:none;}
+.o-plant::after{content:'';position:absolute;left:11px;top:32px;width:18px;height:18px;border-radius:4px;background:#b5603a;}
+.oworld [data-act]:hover{filter:brightness(1.12) drop-shadow(0 0 6px rgba(127,216,31,.8));}
+.o-fx{position:absolute;z-index:40;pointer-events:none;font-size:30px;animation:xp 1.6s ease-out forwards;}
 /* ── OBJETOS (cada demo) ── */
 .it{position:absolute;border:none;padding:0;background:none;z-index:3;transition:transform .15s,filter .15s;}
 .it:hover,.it:focus-visible{transform:translateY(-3px) scale(1.1);z-index:6;filter:brightness(1.1);}
@@ -632,6 +687,8 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
       <select class="sel" id="mirror" aria-label="Ver la cocina de otro SDR"><option value="">Mis demos</option></select>
     </label>
     <a class="btn" id="btn-central" href="#" style="text-decoration:none;" hidden>← Volver a la central</a>
+    <button class="btn office-btn" id="btn-office" hidden title="Office del personal: aquí coincide todo el equipo">☕ Office <b class="num" id="office-n"></b></button>
+    <button class="btn" id="btn-office-back" hidden>← Volver</button>
     <span class="chip" id="chip-grade" title="Nota de sanidad">
       <span class="grade-dot" id="grade-dot">A</span><span class="lbl">SANIDAD</span><b class="num" id="orden-val">—</b>
     </span>
@@ -728,6 +785,33 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
       <div id="ambient"></div>
       <button class="inspector" id="inspector" hidden aria-label="Inspector de sanidad"><span class="bubble" id="bubble"></span><span class="hat"></span><span class="ih"></span><span class="ib"></span><span class="clip"></span><span class="il"></span></button>
       <div class="avatar r1" id="avatar"><span class="avatar-name" id="avatar-name">TÚ</span><div class="hat"></div><div class="head"></div><div class="body"></div><div class="scarf"></div><div class="legs"></div></div>
+    </div>
+    <div class="oworld" id="office-world" hidden aria-label="Office del personal">
+      <div class="o-wall"></div>
+      <div class="o-sign">OFFICE DEL PERSONAL</div>
+      <div class="o-window" style="left:470px"></div><div class="o-window" style="left:640px"></div>
+      <div class="o-clock" id="o-clock"><i></i><b></b></div>
+      <div class="o-door"></div>
+      <div class="o-label" style="left:70px;top:118px">SALA DE REUNIONES</div>
+      <button class="o-board" data-act="pizarra" style="left:90px;top:36px" aria-label="Pizarra"><span id="o-board-txt"></span></button>
+      <div class="o-rug" style="left:60px;top:150px;width:420px;height:230px"></div>
+      <button class="o-table" data-act="mesa" style="left:120px;top:205px" aria-label="Mesa de reuniones"></button>
+      <div class="o-label" style="left:620px;top:118px">PING PONG</div>
+      <button class="o-pong" data-act="pong" style="left:640px;top:180px" aria-label="Mesa de ping pong"><i class="o-net"></i><i class="o-ball" id="o-ball"></i></button>
+      <button class="o-bell" data-act="campana" style="left:1080px;top:60px" aria-label="Campana de ventas"><i></i><span>CAMPANA<br>DE VENTAS</span></button>
+      <div class="o-label" style="left:70px;top:520px">ZONA CHILL</div>
+      <div class="o-rug round" style="left:70px;top:560px;width:380px;height:280px"></div>
+      <button class="o-sofa" data-act="sofa" style="left:110px;top:590px" aria-label="Sofá"></button>
+      <div class="o-ctable" style="left:180px;top:700px"></div>
+      <div class="o-arcade" style="left:390px;top:600px"></div>
+      <div class="o-label" style="left:700px;top:520px">BARRA</div>
+      <div class="o-shelf" style="left:720px;top:556px"></div>
+      <button class="o-fridge" data-act="nevera" style="left:1090px;top:520px" aria-label="Nevera"></button>
+      <div class="o-bar" style="left:700px;top:640px"></div>
+      <button class="o-coffee" data-act="cafe" style="left:730px;top:620px" aria-label="Cafetera"></button>
+      <button class="o-tap" data-act="caña" style="left:850px;top:618px" aria-label="Grifo"></button>
+      <div class="o-plant" style="left:30px;top:400px"></div><div class="o-plant" style="left:1140px;top:420px"></div><div class="o-plant" style="left:560px;top:820px"></div>
+      <div class="avatar r1" id="o-avatar"><span class="avatar-name" id="o-avatar-name">TÚ</span><div class="hat"></div><div class="head"></div><div class="body"></div><div class="scarf"></div><div class="legs"></div></div>
     </div>
   </div>
 </div>
@@ -1067,6 +1151,9 @@ function logLine(text,xp,k){game.log.unshift({t:Date.now(),d:today(),text,xp,k})
 // Render del mundo
 // ═══════════════════════════════════════════════════════════════
 const world=document.getElementById('world');
+const oWorld=document.getElementById('office-world'),oAvatar=document.getElementById('o-avatar');
+let inOffice=false;
+const roomEl=()=>inOffice?oWorld:world;
 const ZONES={};
 document.querySelectorAll('.zone').forEach(el=>{ZONES[el.id.slice(2)]=el;});
 const zoneBox=k=>{const el=ZONES[k]||ZONES.office;return{x:el.offsetLeft,y:el.offsetTop,w:el.offsetWidth,h:el.offsetHeight};};
@@ -1464,7 +1551,8 @@ function renderDash(){
 // ═══════════════════════════════════════════════════════════════
 // Avatar y efectos
 // ═══════════════════════════════════════════════════════════════
-const avatar=document.getElementById('avatar');
+const kAvatar=document.getElementById('avatar');
+let avatar=kAvatar;  // en el office se cambia por el avatar del office
 const HOME={x:470,y:500};
 let avPos={...HOME};
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1500,7 +1588,7 @@ function confettiAt(at,n=26){
     const c=document.createElement('div');c.className='confetti';
     c.style.left=at.x+'px';c.style.top=at.y+'px';c.style.background=cols[i%cols.length];
     c.style.setProperty('--dx',(Math.random()*240-120)+'px');c.style.setProperty('--dy',(Math.random()*-170-20)+'px');c.style.setProperty('--r',(Math.random()*720-360)+'deg');
-    world.appendChild(c);setTimeout(()=>c.remove(),1500);
+    roomEl().appendChild(c);setTimeout(()=>c.remove(),1500);
   }
 }
 function zoneTarget(k){
@@ -1875,7 +1963,7 @@ function fit(){
     s=Math.max(.6,Math.min(availW/1200,Math.max(availH/900,.85),1.3));
     sc.style.width=(1200*s)+'px';
   }
-  world.style.transform=`scale(${s})`;
+  world.style.transform=`scale(${s})`;oWorld.style.transform=`scale(${s})`;
   holder.style.width=(1200*s)+'px';holder.style.height=(900*s)+'px';
 }
 addEventListener('resize',fit);
@@ -1883,7 +1971,7 @@ function toast(msg,kind=''){const t=document.getElementById('toast');t.textConte
 
 // Cada minuto: las demos de hoy cuya hora pasó salen al pase
 setInterval(()=>{
-  if(!MODE||drawer.classList.contains('open'))return;
+  if(!MODE||drawer.classList.contains('open')||inOffice)return;
   if(managerMode&&!viewId){renderCentral();return;}
   const before=new Map(demos.map(d=>[d.id,d._place]));
   Z=classify();
@@ -2238,6 +2326,8 @@ async function enterManager(demo){
   const mc=document.getElementById('mode-chip');
   mc.className='chip '+(demo?'mode-demo':'mode-real');
   mc.textContent=demo?'Datos de ejemplo':'Conectado al SDR Hub';
+  document.getElementById('btn-office').hidden=false;setOfficeCount(demo?2:0);
+  if(!demo)watchOffice();
   showCentral();
 }
 document.getElementById('btn-demo-mgr').onclick=()=>enterManager(true);
@@ -2250,7 +2340,7 @@ const rtOk=()=>MODE==='real'&&!!SUPABASE_KEY&&!!(window.supabase&&window.supabas
 function rt(){if(!rtClient)rtClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{realtime:{params:{eventsPerSecond:10}}});return rtClient;}
 const meInfo=()=>({id:currentUser.id,nombre:currentUser.nombre,rol:managerMode?'manager':'sdr',tier:managerMode?0:tierOfLvl(LEVEL),x:Math.round(avPos.x),y:Math.round(avPos.y)});
 // Hay chat en la propia cocina del SDR (modo real) y en las visitas del manager
-const chatHere=()=>managerMode?!!viewId:(MODE==='real'&&!viewId);
+const chatHere=()=>inOffice||(managerMode?!!viewId:(MODE==='real'&&!viewId));
 // Supabase cierra el canal si un cliente manda más de 5 altas de presencia en 30 s.
 // La presencia solo se anuncia al entrar (la posición viaja por 'move') y las altas se espacian.
 let trackLog=[],rejoinT=null,pendingPos={};
@@ -2259,6 +2349,12 @@ function safeTrack(ch,info){
   const wait=trackLog.length<4?0:30000-(now-trackLog[0])+500;
   trackLog.push(now+wait);
   setTimeout(()=>{if(ch===kitchenChan||ch===lobbyChan)ch.track(info);},wait);
+}
+function safeUntrack(ch){
+  const now=Date.now();trackLog=trackLog.filter(t=>now-t<30000);
+  const wait=trackLog.length<4?0:30000-(now-trackLog[0])+500;
+  trackLog.push(now+wait);
+  setTimeout(()=>{if(ch!==kitchenChan)try{ch.untrack();}catch(e){}},wait);
 }
 
 function joinKitchen(kid){
@@ -2296,7 +2392,8 @@ function joinKitchen(kid){
 function leaveKitchen(){
   clearTimeout(rejoinT);
   const old=kitchenChan;kitchenChan=null;
-  if(old){try{rt().removeChannel(old);}catch(e){}}
+  if(old&&old===officeChan)safeUntrack(old);
+  else if(old){try{rt().removeChannel(old);}catch(e){}}
   kitchenId=null;demoPeer=false;pendingPos={};
   Object.values(peers).forEach(p=>p.el.remove());peers={};chatLog=[];
   renderChat();
@@ -2322,7 +2419,7 @@ function peerEl(p){
   const el=document.createElement('div');
   el.className='avatar peer '+(p.rol==='manager'?'boss':'r'+(p.tier||1));
   el.innerHTML=`<span class="avatar-name">${esc((p.nombre||'').split(' ')[0].toUpperCase())}</span><div class="hat"></div><div class="head"></div><div class="body"></div><div class="scarf"></div><div class="legs"></div>`;
-  world.appendChild(el);return el;
+  roomEl().appendChild(el);return el;
 }
 function placePeer(pr,x,y,dur){pr.el.style.transitionDuration=dur+'ms';pr.el.style.left=(x-15)+'px';pr.el.style.top=(y-50)+'px';pr.x=x;pr.y=y;}
 function syncPeers(state){
@@ -2364,7 +2461,8 @@ function sendSay(text){
   const msg={id:currentUser.id,nombre:currentUser.nombre,rol:managerMode?'manager':'sdr',text};
   showSay(msg.id,text);chatLog.push(msg);chatLog=chatLog.slice(-30);
   if(kitchenChan)kitchenChan.send({type:'broadcast',event:'say',payload:msg});
-  if(demoPeer)demoReply();
+  if(inOffice&&MODE==='demo')officeBotReply();
+  else if(demoPeer)demoReply();
   renderChat();
 }
 // Modo de ejemplo: el SDR visitado está en su cocina y contesta
@@ -2388,18 +2486,19 @@ function renderChat(){
   const val=prev?prev.value:'',foc=document.activeElement===prev;
   const otros=Object.values(peers).map(p=>p.info);
   const hay=otros.length>0;
-  const sinTiempoReal=MODE==='demo'&&!managerMode;
+  const sinTiempoReal=MODE==='demo'&&!managerMode&&!inOffice;
   let cuerpo='';
   if(sinTiempoReal)cuerpo='<div class="snext">En el modo de ejemplo no hay nadie más conectado. Cuando tu manager entre en tu cocina lo verás aquí y podréis hablar.</div>';
+  else if(!hay&&inOffice)cuerpo='<div class="snext">No hay nadie más en el office ahora mismo. Cuando entre alguien lo verás aquí y podréis hablar.</div>';
   else if(!hay)cuerpo=managerMode?`<div class="snext"><b>${esc(viewName)}</b> no está en su cocina ahora mismo. Si quieres, déjale una nota en la pizarra.</div>`:'<div class="snext">Estás solo en tu cocina. Si tu manager entra, aparecerá aquí y podréis hablar.</div>';
   box.innerHTML=`<div class="sbox chat">
-    <h4>EN DIRECTO <span class="aux">${hay?(otros.length+1)+' en la cocina':''}</span></h4>
+    <h4>EN DIRECTO <span class="aux">${hay?(otros.length+1)+(inOffice?' en el office':' en la cocina'):''}</span></h4>
     ${hay?`<div class="chat-who">${[{nombre:currentUser.nombre},...otros].map(p=>`<span>${esc((p.nombre||'').split(' ')[0])}</span>`).join('')}</div>`:''}
     ${cuerpo}
     ${chatLog.length?`<div class="chat-log" id="chat-log">${chatLog.map(m=>`<div class="${m.rol==='manager'?'boss':''}"><b>${esc((m.nombre||'').split(' ')[0])}:</b> ${esc(m.text)}</div>`).join('')}</div>`:''}
     ${hay?`<form class="chat-form" id="chat-form"><input class="inp" id="chat-inp" maxlength="200" placeholder="Escribe y pulsa Enter" autocomplete="off"><button class="btn primary" type="submit">Enviar</button></form>`:''}
-    ${managerMode?`<button class="btn" id="btn-nota" type="button">📌 Dejar una nota en su pizarra</button>`:''}
-  </div>`;
+    ${managerMode&&!inOffice?`<button class="btn" id="btn-nota" type="button">📌 Dejar una nota en su pizarra</button>`:''}
+  </div>${inOffice?`<div class="sbox"><h4>EN EL OFFICE</h4><div class="snext">Pulsa en el suelo para moverte. Prueba el ping pong, la cafetera, la nevera, el sofá o la <b>campana de ventas</b>: lo ven todas las que estén dentro.</div></div>`:''}`;
   const inp=document.getElementById('chat-inp');
   if(inp){inp.value=val;if(foc)inp.focus();}
   const log=document.getElementById('chat-log');if(log)log.scrollTop=log.scrollHeight;
@@ -2409,6 +2508,164 @@ document.getElementById('side-chat').addEventListener('submit',e=>{
   const inp=document.getElementById('chat-inp');const v=inp.value;inp.value='';sendSay(v);document.getElementById('chat-inp')?.focus();
 });
 document.getElementById('side-chat').addEventListener('click',e=>{if(e.target.closest('#btn-nota'))openNotas(true);});
+
+// ═══════════════════════════════════════════════════════════════
+// Office del personal: sala común para todo el equipo (en directo, no se guarda)
+// ═══════════════════════════════════════════════════════════════
+const OFFICE_HOME={x:70,y:475};
+let officeChan=null,officeCount=0,officeBotT=null;
+const BOARD_TXT=['Hoy se cierra una 💪','Pase vacío = jefe feliz','Una llamada más que ayer','¡Viernes de friegue limpio!','Café, CRM y a por ellas ☕'];
+let boardI=0;
+(function buildOffice(){
+  const add=(cls,x,y)=>{const d=document.createElement('div');d.className=cls;d.style.left=x+'px';d.style.top=y+'px';oWorld.insertBefore(d,oAvatar);};
+  [150,215,280,345].forEach(x=>{add('o-chair',x,168);add('o-chair',x,330);});
+  add('o-chair',84,250);add('o-chair',426,250);
+  [730,800,870,940,1010].forEach(x=>add('o-stool',x,722));
+  document.getElementById('o-board-txt').textContent=BOARD_TXT[0];
+  const tick=()=>{const d=new Date(),c=document.getElementById('o-clock');
+    c.querySelector('i').style.transform=`rotate(${(d.getHours()%12)*30+d.getMinutes()/2}deg)`;
+    c.querySelector('b').style.transform=`rotate(${d.getMinutes()*6}deg)`;};
+  tick();setInterval(tick,30000);
+})();
+// Quien mira desde fuera no se cuenta a sí mismo (aunque su salida aún no haya llegado)
+function officeCountFrom(st){setOfficeCount(Object.keys(st).filter(k=>inOffice||k!==String(currentUser.id)).length);}
+function setOfficeCount(n){
+  officeCount=n;
+  document.getElementById('office-n').textContent=n?`· ${n}`:'';
+  document.getElementById('btn-office').title=n?`${n} ${n===1?'persona':'personas'} en el office ahora`:'Office del personal: aquí coincide todo el equipo';
+}
+// Se escucha siempre (para saber cuánta gente hay); solo se marca presencia al entrar
+function watchOffice(){
+  if(!rtOk()||officeChan)return;
+  const ch=rt().channel('cocinas-office',{config:{presence:{key:String(currentUser.id)},broadcast:{self:false}}});
+  ch.on('presence',{event:'sync'},()=>{
+    const st=ch.presenceState();officeCountFrom(st);
+    if(inOffice&&kitchenChan===ch)syncPeers(st);
+  }).on('presence',{event:'join'},({newPresences})=>{
+    if(!inOffice)return;
+    const nuevos=(newPresences||[]).filter(p=>p.id!==currentUser.id);
+    if(nuevos.length)ch.send({type:'broadcast',event:'move',payload:{id:currentUser.id,x:Math.round(avPos.x),y:Math.round(avPos.y)}});
+    nuevos.filter(p=>!peers[p.id]).forEach(p=>toast(`${p.nombre} ha entrado en el office`));
+  }).on('presence',{event:'leave'},({leftPresences})=>{
+    if(inOffice)(leftPresences||[]).filter(p=>p.id!==currentUser.id).forEach(p=>toast(`${p.nombre} ha salido del office`));
+  }).on('broadcast',{event:'move'},({payload})=>{if(inOffice)movePeer(payload);})
+    .on('broadcast',{event:'say'},({payload})=>{if(!inOffice)return;showSay(payload.id,payload.text);chatLog.push(payload);chatLog=chatLog.slice(-30);renderChat();})
+    .on('broadcast',{event:'fx'},({payload})=>{if(inOffice)playFx(payload.kind,payload.nombre,payload.id);});
+  officeChan=ch;
+  ch.subscribe(st=>{
+    if(st==='SUBSCRIBED'){if(inOffice&&kitchenChan===ch)safeTrack(ch,meInfo());}
+    else if((st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')&&officeChan===ch){
+      setTimeout(()=>{if(officeChan!==ch)return;try{rt().removeChannel(ch);}catch(e){}officeChan=null;watchOffice();if(inOffice){kitchenChan=officeChan;}},31000);
+    }
+  });
+}
+function enterOffice(){
+  if(inOffice||!MODE)return;
+  closeDrawer();hideTip();
+  leaveKitchen();
+  inOffice=true;kitchenId='office';
+  document.getElementById('central').hidden=true;
+  document.getElementById('stage').hidden=false;
+  document.querySelector('main.dash').hidden=true;
+  world.hidden=true;oWorld.hidden=false;
+  document.getElementById('side-main').hidden=true;
+  ['btn-office','btn-central','chip-grade','chip-lvl','preview-wrap','mirror-wrap'].forEach(id=>document.getElementById(id).hidden=true);
+  document.getElementById('btn-office-back').hidden=false;
+  document.getElementById('btn-office-back').textContent=managerMode?'← Volver a la central':'← Volver a mi cocina';
+  document.getElementById('hud-rank').textContent='Office del personal';
+  document.getElementById('hud-who').textContent='Aquí coincide todo el equipo · lo que se dice no se guarda';
+  avatar=oAvatar;
+  oAvatar.className='avatar '+(managerMode?'boss':'r'+tierOfLvl(LEVEL));
+  document.getElementById('o-avatar-name').textContent=(currentUser.nombre||'TÚ').split(' ')[0].toUpperCase();
+  placeAvatar({x:-20,y:OFFICE_HOME.y},0);
+  fit();scrollTo({top:0});
+  if(MODE==='demo')addOfficeBots();
+  else if(rtOk()){
+    watchOffice();kitchenChan=officeChan;
+    safeTrack(officeChan,{...meInfo(),x:OFFICE_HOME.x,y:OFFICE_HOME.y});
+    syncPeers(officeChan.presenceState());
+  }
+  renderChat();
+  setTimeout(()=>walkTo(OFFICE_HOME),200);
+}
+function leaveOffice(){
+  if(!inOffice)return;
+  clearInterval(officeBotT);
+  leaveKitchen();
+  inOffice=false;
+  avatar=kAvatar;
+  oWorld.hidden=true;world.hidden=false;
+  document.getElementById('side-main').hidden=false;
+  document.getElementById('btn-office-back').hidden=true;
+  document.getElementById('btn-office').hidden=false;
+  if(officeChan)officeCountFrom(officeChan.presenceState());
+  if(managerMode){showCentral();return;}
+  document.querySelector('main.dash').hidden=false;
+  document.getElementById('chip-grade').hidden=false;document.getElementById('chip-lvl').hidden=false;
+  document.getElementById('preview-wrap').hidden=MODE!=='demo';
+  document.getElementById('mirror-wrap').hidden=!(MODE==='real'&&currentUser.es_prueba);
+  renderWorld();fit();placeAvatar(HOME,0);
+  if(MODE==='real'&&!viewId)joinKitchen(currentUser.id);else renderChat();
+  scrollTo({top:0});
+}
+document.getElementById('btn-office').addEventListener('click',enterOffice);
+document.getElementById('btn-office-back').addEventListener('click',leaveOffice);
+const pickOne=a=>a[Math.floor(Math.random()*a.length)];
+const OFFICE_SAYS={
+  cafe:['☕ ¿Alguien quiere café?','☕ Recargando energía…','☕ Café doble, que hoy hay demos'],
+  nevera:['🥤 Me pillo algo de la nevera','🧃 ¿Quién se ha comido mi yogur?','🍫 Chocolate de emergencia'],
+  'caña':['🍻 ¡Brindis por las ventas del mes!','🍺 Esta la pago cuando cierre la venta'],
+  sofa:['😴 Cinco minutitos y vuelvo a llamar','🛋️ Pausa estratégica'],
+  mesa:['📋 ¿Hacemos un repaso rápido?','🤝 Reunión improvisada en la mesa'],
+};
+oWorld.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');
+  if(a){
+    const act=a.dataset.act;
+    const to={x:Math.max(40,Math.min(1160,a.offsetLeft+a.offsetWidth/2)),y:Math.min(870,a.offsetTop+a.offsetHeight+34)};
+    if(act==='nevera')to.x=a.offsetLeft-20,to.y=a.offsetTop+120;
+    if(act==='campana')to.y=a.offsetTop+110;
+    walkTo(to).then(()=>officeAct(act));
+    return;
+  }
+  const r=oWorld.getBoundingClientRect(),s=r.width/1200;
+  walkTo({x:Math.max(30,Math.min(1170,(e.clientX-r.left)/s)),y:Math.max(140,Math.min(880,(e.clientY-r.top)/s+25))});
+});
+function officeAct(act){
+  if(act==='pong'||act==='campana'){
+    playFx(act,currentUser.nombre,currentUser.id);
+    if(kitchenChan===officeChan&&officeChan)officeChan.send({type:'broadcast',event:'fx',payload:{kind:act,nombre:currentUser.nombre,id:currentUser.id}});
+    if(MODE==='demo'&&act==='campana')setTimeout(()=>botSay('🎉 ¡Vamooos!'),900);
+    return;
+  }
+  if(act==='pizarra'){boardI=(boardI+1)%BOARD_TXT.length;document.getElementById('o-board-txt').textContent=BOARD_TXT[boardI];return;}
+  if(OFFICE_SAYS[act])sendSay(pickOne(OFFICE_SAYS[act]));
+}
+function fxAt(txt,x,y){const e=document.createElement('div');e.className='o-fx';e.textContent=txt;e.style.left=x+'px';e.style.top=y+'px';oWorld.appendChild(e);setTimeout(()=>e.remove(),1700);}
+function playFx(kind,nombre,id){
+  if(kind==='pong'){
+    const b=document.getElementById('o-ball');b.classList.remove('play');void b.offsetWidth;b.classList.add('play');
+    fxAt('🏓',650,150);setTimeout(()=>fxAt('¡Pim!',700,160),300);setTimeout(()=>fxAt('¡Pam!',920,160),1100);
+  }
+  if(kind==='campana'){
+    const b=oWorld.querySelector('.o-bell');b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring');
+    confettiAt({x:1125,y:90},40);
+    toast(`🔔 ¡DING! ${(nombre||'').split(' ')[0]} ha tocado la campana de ventas`);
+    if(id!==currentUser.id)showSay(id,'🔔 ¡Venta!');
+  }
+}
+// Modo de ejemplo: un par de compañeros de mentira para probar el office
+const OFFICE_BOTS=[{id:-101,nombre:'Luz',rol:'sdr',tier:3},{id:-102,nombre:'Roberto',rol:'sdr',tier:2}];
+function addOfficeBots(){
+  OFFICE_BOTS.forEach((p,i)=>{peers[p.id]={info:p,el:peerEl(p)};placePeer(peers[p.id],[300,820][i],[420,460][i],0);});
+  clearInterval(officeBotT);
+  officeBotT=setInterval(()=>{
+    const p=pickOne(OFFICE_BOTS);if(!peers[p.id])return;
+    movePeer({id:p.id,x:120+Math.random()*960,y:180+Math.random()*660});
+  },4500);
+}
+function botSay(text){const p=pickOne(OFFICE_BOTS);if(!peers[p.id])return;showSay(p.id,text);chatLog.push({id:p.id,nombre:p.nombre,rol:'sdr',text});renderChat();}
+function officeBotReply(){setTimeout(()=>botSay(pickOne(['¡Jajaja!','Yo me apunto','Ahora voy, que tengo una llamada','¿Ping pong después?','Ese café me lo pido 😄','¡Vamos equipo!'])),1100);}
 
 // ═══════════════════════════════════════════════════════════════
 // Notas del manager en la pizarra (estas sí se guardan)
@@ -2630,8 +2887,9 @@ async function enter(mode){
   mc.className='chip '+(mode==='demo'?'mode-demo':'mode-real');
   mc.textContent=mode==='demo'?'Datos de ejemplo':'Conectado al SDR Hub';
   renderWorld();fit();placeAvatar(HOME,0);
+  document.getElementById('btn-office').hidden=false;setOfficeCount(mode==='demo'?2:0);
   if(mode==='real'){
-    joinKitchen(currentUser.id);joinLobby();loadTeamLevels();
+    joinKitchen(currentUser.id);joinLobby();loadTeamLevels();watchOffice();
     loadNotas(currentUser.id).then(()=>{const n=notas.filter(x=>!x.leida_at).length;if(n)setTimeout(()=>toast(`📌 Tienes ${n} ${n===1?'nota':'notas'} de tu manager en la pizarra`),1800);});
   }else{
     notas=[{id:1,sdr_id:0,autor_id:-9,texto:'¡Buen ritmo esta semana! Ojo con el pase, que se te acumulan los platos. Sácalos hoy y te invito a un café.',created_at:new Date(Date.now()-3*3600e3).toISOString(),leida_at:null}];
@@ -2643,8 +2901,11 @@ async function enter(mode){
 document.getElementById('btn-demo').onclick=()=>enter('demo');
 document.getElementById('btn-exit').onclick=()=>{
   if(MODE==='real'&&sessionToken){rpc('sdr_logout').catch(()=>{});try{sessionStorage.removeItem('sdr_token');}catch(e){}sessionToken=null;}
+  if(inOffice)leaveOffice();
   closeDrawer();MODE=null;document.getElementById('login').hidden=false;
   leaveKitchen();
+  if(officeChan){const o=officeChan;officeChan=null;try{rt().removeChannel(o);}catch(e){}}
+  document.getElementById('btn-office').hidden=true;
   if(lobbyChan){const l=lobbyChan;lobbyChan=null;try{rt().removeChannel(l);}catch(e){}}
   document.getElementById('postit').hidden=true;
   if(managerMode){managerMode=false;viewId=null;document.getElementById('central').hidden=true;document.getElementById('stage').hidden=false;document.querySelector('main.dash').hidden=false;document.getElementById('btn-central').hidden=true;document.getElementById('chip-grade').hidden=false;document.getElementById('chip-lvl').hidden=false;}
