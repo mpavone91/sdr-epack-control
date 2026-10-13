@@ -1052,7 +1052,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="topbar-title">SDR Hub</div>
     </div>
     <div class="topbar-right">
-      <a class="logout-btn cocina-btn" id="btn-cocina" href="cocina.html" title="Cocina SDR (en pruebas)" style="display:none;text-decoration:none;">🍳<span class="pin-btn-txt"> Mi cocina</span></a>
+      <a class="logout-btn cocina-btn" id="btn-cocina" href="cocina.html" title="Cocina SDR" style="display:none;text-decoration:none;">🍳<span class="pin-btn-txt"> Mi cocina</span></a>
       <button class="task-bell" id="task-bell" onclick="openTareasModal()" title="Tareas pendientes">🔔<span class="task-bell-badge" id="task-bell-badge">0</span></button>
       <div class="user-chip">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -1347,7 +1347,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <div class="topbar-title">SDR Hub · Manager</div>
     </div>
     <div class="topbar-right">
-      <a class="logout-btn cocina-btn" href="cocina.html" title="Central de cocinas (en pruebas)" style="text-decoration:none;">🍳<span class="pin-btn-txt"> Cocinas</span></a>
+      <a class="logout-btn cocina-btn" href="cocina.html" title="Central de cocinas" style="text-decoration:none;">🍳<span class="pin-btn-txt"> Cocinas</span></a>
       <div class="user-chip"><div class="user-avatar" id="mgr-avatar">M</div><span id="mgr-name">Manager</span></div>
       <button class="logout-btn" onclick="openPinModal()" title="Cambiar mi PIN">🔑<span class="pin-btn-txt"> PIN</span></button>
       <button class="logout-btn" onclick="logout()">Salir</button>
@@ -2410,8 +2410,7 @@ async function enterApp(){
   document.getElementById('user-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('hello-name').textContent=currentUser.nombre.split(' ')[0];
   document.getElementById('today-date').textContent=fmtDateLong();
-  // La cocina (gamificación) está en pruebas: solo la ven los usuarios de prueba
-  document.getElementById('btn-cocina').style.display=currentUser.es_prueba?'':'none';
+  document.getElementById('btn-cocina').style.display='';
   await Promise.all([loadComerciales(),loadCiudades(),loadMessage(),loadObjetivos(),loadNoticias(),loadKudosForSdr(),loadTareas(),loadMisLlamadas(),loadConfig(),loadComercialAusencias()]);
   await loadDemos();
   // Start live refresh since Hoy is the default view

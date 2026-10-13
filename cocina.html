@@ -2585,12 +2585,6 @@ async function enter(mode){
   if(mode==='demo'){currentUser={id:0,nombre:'SDR de prueba'};loadGame();demos=demoData();}
   else{
     if(currentUser.rol==='manager'){MODE=null;return enterManager(false);}
-    // En pruebas: de momento solo entran los usuarios marcados como de prueba
-    if(!currentUser.es_prueba){
-      MODE=null;
-      document.getElementById('login-err').innerHTML='La cocina está en pruebas y todavía no está abierta para tu usuario. <a href="index.html" style="color:var(--lime)">Volver al SDR Hub</a>';
-      return;
-    }
     try{await loadReal();}catch(e){console.error(e);document.getElementById('login-err').textContent='No se pudieron cargar tus demos. Vuelve a entrar.';return;}
     loadGame();
     await syncExtras();
