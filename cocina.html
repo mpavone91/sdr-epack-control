@@ -2385,7 +2385,7 @@ function joinKitchen(kid){
       (leftPresences||[]).filter(p=>p.id!==currentUser.id).forEach(p=>toast(`${p.nombre} ha salido de la cocina`));
     })
     .on('broadcast',{event:'move'},({payload})=>movePeer(payload))
-    .on('broadcast',{event:'say'},({payload})=>{showSay(payload.id,payload.text);chatLog.push(payload);chatLog=chatLog.slice(-30);renderChat();})
+    .on('broadcast',{event:'say'},({payload})=>{showSay(payload.id,payload.text);if(payload.emote)return;chatLog.push(payload);chatLog=chatLog.slice(-30);renderChat();})
     .on('broadcast',{event:'notas'},()=>{loadNotas(kitchenId);})
     .subscribe(st=>{
       if(st==='SUBSCRIBED')safeTrack(ch,meInfo());
@@ -2476,11 +2476,14 @@ function showSay(id,text){
   const b=document.createElement('span');b.className='say';b.textContent=text;el.appendChild(b);
   clearTimeout(el._sayT);el._sayT=setTimeout(()=>b.remove(),9000);
 }
-function sendSay(text){
+// emote: frases automáticas al pinchar objetos; salen en bocadillo pero no en el chat
+function sendSay(text,emote=false){
   text=text.trim().slice(0,200);if(!text)return;
-  const msg={id:currentUser.id,nombre:currentUser.nombre,rol:managerMode?'manager':'sdr',text};
-  showSay(msg.id,text);chatLog.push(msg);chatLog=chatLog.slice(-30);
+  const msg={id:currentUser.id,nombre:currentUser.nombre,rol:managerMode?'manager':'sdr',text,...(emote?{emote:true}:{})};
+  showSay(msg.id,text);
+  if(!emote){chatLog.push(msg);chatLog=chatLog.slice(-30);}
   if(kitchenChan)kitchenChan.send({type:'broadcast',event:'say',payload:msg});
+  if(emote)return;
   if(inOffice&&MODE==='demo')officeBotReply();
   else if(demoPeer)demoReply();
   renderChat();
@@ -2585,7 +2588,7 @@ function watchOffice(){
   }).on('presence',{event:'leave'},({leftPresences})=>{
     if(inOffice)(leftPresences||[]).filter(p=>p.id!==currentUser.id).forEach(p=>toast(`${p.nombre} ha salido del office`));
   }).on('broadcast',{event:'move'},({payload})=>{if(inOffice)movePeer(payload);})
-    .on('broadcast',{event:'say'},({payload})=>{if(!inOffice)return;showSay(payload.id,payload.text);chatLog.push(payload);chatLog=chatLog.slice(-30);renderChat();})
+    .on('broadcast',{event:'say'},({payload})=>{if(!inOffice)return;showSay(payload.id,payload.text);if(payload.emote)return;chatLog.push(payload);chatLog=chatLog.slice(-30);renderChat();})
     .on('broadcast',{event:'fx'},({payload})=>{if(inOffice)playFx(payload.kind,payload.nombre,payload.id,payload.x,payload.y);});
   officeChan=ch;
   ch.subscribe(st=>{
@@ -2665,7 +2668,7 @@ function sitAt(id,frase){
   const st=SEATS[id];
   return walkTo({x:st.x,y:st.y}).then(()=>{
     mySeat=id;avatar.classList.add('sit');rtMove(avPos);
-    if(frase)sendSay(frase);
+    if(frase)sendSay(frase,true);
     if(st.mesa)setTimeout(()=>document.getElementById('chat-inp')?.focus(),50);
     return true;
   });
@@ -2699,7 +2702,7 @@ oWorld.addEventListener('click',e=>{
   walkTo({x:Math.max(30,Math.min(1170,(e.clientX-r.left)/s)),y:Math.max(140,Math.min(880,(e.clientY-r.top)/s+25))});
 });
 function drinkAct(d,el){
-  sendSay(pickOne(d.say));
+  sendSay(pickOne(d.say),true);
   if(d.hold)holdDrink(d.hold);
   if(d.fx){
     const x=el.offsetLeft+16,y=el.offsetTop;
@@ -2711,11 +2714,11 @@ function officeAct(act){
   if(act==='pong'||act==='campana'){
     playFx(act,currentUser.nombre,currentUser.id);
     if(kitchenChan===officeChan&&officeChan)officeChan.send({type:'broadcast',event:'fx',payload:{kind:act,nombre:currentUser.nombre,id:currentUser.id}});
-    if(MODE==='demo'&&act==='campana')setTimeout(()=>botSay('🎉 ¡Vamooos!'),900);
+    if(MODE==='demo'&&act==='campana')setTimeout(()=>botSay('🎉 ¡Vamooos!',true),900);
     return;
   }
   if(act==='pizarra'){boardI=(boardI+1)%BOARD_TXT.length;document.getElementById('o-board-txt').textContent=BOARD_TXT[boardI];return;}
-  if(OFFICE_SAYS[act])sendSay(pickOne(OFFICE_SAYS[act]));
+  if(OFFICE_SAYS[act])sendSay(pickOne(OFFICE_SAYS[act]),true);
 }
 function fxAt(txt,x,y){const e=document.createElement('div');e.className='o-fx';e.textContent=txt;e.style.left=x+'px';e.style.top=y+'px';oWorld.appendChild(e);setTimeout(()=>e.remove(),1700);}
 function playFx(kind,nombre,id,x,y){
@@ -2744,7 +2747,7 @@ function addOfficeBots(){
     movePeer({id:p.id,x:120+Math.random()*960,y:180+Math.random()*660});
   },4500);
 }
-function botSay(text){const p=pickOne(OFFICE_BOTS);if(!peers[p.id])return;showSay(p.id,text);chatLog.push({id:p.id,nombre:p.nombre,rol:'sdr',text});renderChat();}
+function botSay(text,emote=false){const p=pickOne(OFFICE_BOTS);if(!peers[p.id])return;showSay(p.id,text);if(emote)return;chatLog.push({id:p.id,nombre:p.nombre,rol:'sdr',text});renderChat();}
 function officeBotReply(){setTimeout(()=>botSay(pickOne(['¡Jajaja!','Yo me apunto','Ahora voy, que tengo una llamada','¿Ping pong después?','Ese café me lo pido 😄','¡Vamos equipo!'])),1100);}
 
 // ═══════════════════════════════════════════════════════════════
