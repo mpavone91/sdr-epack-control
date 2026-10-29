@@ -1013,6 +1013,168 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   .pd-bulk-bar{bottom:12px;gap:10px;padding:12px;}
   .pd-bulk-bar .pd-actions{width:100%;}
 }
+
+/* ══════════ PLANIFICACIÓN ══════════ */
+.pl-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;align-items:start;}
+.pl-palette{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow-y:auto;}
+.pl-pal-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--teal-dark);}
+.pl-pal-sub{font-size:11.5px;color:var(--muted);margin:2px 0 12px;line-height:1.4;}
+.pl-chip{--c:#3b7dd8;display:block;width:100%;text-align:left;border:1.5px solid color-mix(in srgb,var(--c) 35%,white);border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 9%,white);border-radius:11px;padding:9px 11px;margin-bottom:8px;cursor:grab;font-family:'Inter',sans-serif;touch-action:none;user-select:none;transition:transform 0.12s,box-shadow 0.12s;}
+.pl-chip:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.07);}
+.pl-chip.armed{box-shadow:0 0 0 3px var(--c);}
+.pl-chip-t{font-size:13px;font-weight:700;color:var(--teal-dark);line-height:1.3;}
+.pl-chip-m{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11px;color:var(--muted);margin-top:3px;align-items:center;}
+.pl-chip.prio-urgente{animation:plPulse 1.8s ease-in-out infinite;}
+@keyframes plPulse{0%,100%{box-shadow:0 0 0 0 rgba(226,61,61,0.0);}50%{box-shadow:0 0 0 4px rgba(226,61,61,0.22);}}
+.pl-prio{font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;padding:1px 7px;border-radius:20px;}
+.pl-prio.urgente{background:var(--red);color:#fff;}
+.pl-prio.alta{background:var(--amber);color:#fff;}
+.pl-used{font-weight:700;color:var(--green);}
+.pl-pal-empty{font-size:12.5px;color:var(--muted);padding:14px 4px;text-align:center;}
+.pl-pal-add{width:100%;border:1.5px dashed var(--border);background:none;border-radius:11px;padding:9px;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;margin-top:4px;}
+.pl-pal-add:hover{border-color:var(--teal-light);color:var(--teal-dark);}
+.pl-armed-hint{background:var(--lime-soft);color:var(--teal-dark);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600;margin-bottom:10px;}
+
+.pl-cal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px 16px;min-width:0;}
+.pl-cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.pl-nav{display:flex;align-items:center;gap:6px;}
+.pl-week-label{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--teal-dark);min-width:170px;text-align:center;}
+.pl-stats{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.pl-stat{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:5px 10px;}
+.pl-stat b{color:var(--teal-dark);}
+.pl-link-btn{background:none;border:1px solid var(--border);border-radius:9px;padding:5px 10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--teal);cursor:pointer;}
+.pl-link-btn:hover{border-color:var(--teal-dark);color:var(--teal-dark);}
+.pl-scroll{overflow-x:auto;}
+.pl-grid{display:grid;grid-template-columns:46px repeat(5,minmax(110px,1fr));min-width:600px;}
+.pl-dh{text-align:center;padding:4px 2px 8px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);}
+.pl-dh b{display:block;font-family:'Fraunces',serif;font-size:18px;color:var(--teal-dark);line-height:1.1;}
+.pl-dh small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);}
+.pl-dh.today{color:var(--teal-dark);}
+.pl-dh.today b{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--lime);}
+.pl-times{position:relative;}
+.pl-time{position:absolute;right:6px;font-size:10.5px;font-weight:600;color:var(--muted);transform:translateY(-50%);}
+.pl-day-body{position:relative;border-left:1px solid var(--border);background-image:linear-gradient(to bottom,var(--border) 1px,transparent 1px),linear-gradient(to bottom,#f1f4f3 1px,transparent 1px);background-size:100% 48px,100% 24px;cursor:copy;}
+.pl-day-body.today{background-color:#fbfef6;}
+.pl-day-body.festivo{background-color:#f6f6f6;cursor:not-allowed;}
+.pl-festivo-tag{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:var(--muted);}
+.pl-now{position:absolute;left:0;right:0;height:2px;background:var(--red);z-index:3;pointer-events:none;}
+.pl-now::before{content:'';position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--red);}
+.pl-block{--c:#3b7dd8;position:absolute;left:3px;right:3px;border-radius:8px;background:color-mix(in srgb,var(--c) 16%,white);border:1px solid color-mix(in srgb,var(--c) 40%,white);border-left:4px solid var(--c);padding:3px 7px;overflow:hidden;cursor:grab;touch-action:none;user-select:none;z-index:2;transition:box-shadow 0.12s;}
+.pl-block:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:4;}
+.pl-block.dragging{opacity:0.35;}
+.pl-block-t{font-size:12px;font-weight:700;color:var(--teal-dark);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pl-block-h{font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pl-block.short{padding-top:1px;padding-bottom:1px;}
+.pl-block.short .pl-block-t{font-size:11px;}
+.pl-block.short .pl-block-h{display:none;}
+.pl-block-bar{position:absolute;left:0;bottom:0;height:3px;background:var(--c);}
+.pl-block.st-completado{background:color-mix(in srgb,var(--c) 7%,white);}
+.pl-block.st-completado .pl-block-t::before{content:'✓ ';color:var(--green);}
+.pl-block.st-en_curso{box-shadow:0 0 0 2px var(--green);animation:plRun 2s ease-in-out infinite;}
+@keyframes plRun{50%{box-shadow:0 0 0 4px rgba(31,168,86,0.35);}}
+.pl-block.st-pausado{box-shadow:0 0 0 2px var(--amber);}
+.pl-block.st-perdido,.pl-block.st-saltado{background:repeating-linear-gradient(135deg,#fff,#fff 6px,#fbeeee 6px,#fbeeee 12px);border-color:#f3c2c2;}
+.pl-block.st-perdido .pl-block-h,.pl-block.st-saltado .pl-block-h{color:var(--red);}
+.pl-block.st-ahora{box-shadow:0 0 0 2px var(--blue);}
+.pl-block.locked{cursor:pointer;}
+.pl-resize{position:absolute;left:0;right:0;bottom:0;height:8px;cursor:ns-resize;}
+.pl-resize::after{content:'';position:absolute;left:50%;bottom:2px;width:22px;height:3px;margin-left:-11px;border-radius:3px;background:color-mix(in srgb,var(--c) 55%,white);opacity:0;transition:opacity 0.12s;}
+.pl-block:hover .pl-resize::after{opacity:1;}
+.pl-preview{position:absolute;left:3px;right:3px;border-radius:8px;border:2px dashed var(--teal);background:rgba(44,79,91,0.08);z-index:5;pointer-events:none;font-size:11px;font-weight:700;color:var(--teal-dark);padding:2px 7px;}
+.pl-preview.bad{border-color:var(--red);background:rgba(226,61,61,0.08);color:var(--red);}
+.pl-ghost{--c:#3b7dd8;position:fixed;z-index:1000;pointer-events:none;background:color-mix(in srgb,var(--c) 18%,white);border-left:4px solid var(--c);border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--teal-dark);box-shadow:0 10px 24px rgba(0,0,0,0.18);transform:translate(-12px,-50%) rotate(-2deg);white-space:nowrap;}
+.pl-hint{font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+/* Barra de foco (arriba en el panel del SDR) */
+.pl-focus{position:sticky;top:60px;z-index:40;margin:-24px -28px 18px;padding:10px 28px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.pl-focus:empty{display:none;}
+.pl-focus.run{background:linear-gradient(90deg,#effaf3,#fff);border-bottom-color:#bfe6cd;}
+.pl-focus.pause{background:linear-gradient(90deg,var(--amber-soft),#fff);border-bottom-color:#f0d58a;}
+.pl-focus.rest{background:linear-gradient(90deg,var(--blue-soft),#fff);border-bottom-color:#c9daf5;}
+.pl-focus.late{background:linear-gradient(90deg,var(--red-soft),#fff);border-bottom-color:#f3c2c2;}
+.pl-focus-ico{font-size:22px;}
+.pl-focus-info{flex:1;min-width:180px;}
+.pl-focus-lbl{font-size:10.5px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);}
+.pl-focus.run .pl-focus-lbl{color:var(--green);}
+.pl-focus.pause .pl-focus-lbl{color:#8a5e00;}
+.pl-focus.late .pl-focus-lbl{color:var(--red);}
+.pl-focus-t{font-size:14.5px;font-weight:700;color:var(--teal-dark);}
+.pl-focus-prog{height:5px;border-radius:5px;background:var(--border);margin-top:5px;overflow:hidden;max-width:420px;}
+.pl-focus-prog div{height:100%;background:var(--green);transition:width 0.9s linear;}
+.pl-focus.pause .pl-focus-prog div{background:var(--amber);}
+.pl-focus-clock{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--teal-dark);font-variant-numeric:tabular-nums;}
+.pl-focus-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.pl-btn{padding:9px 15px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--teal-dark);cursor:pointer;white-space:nowrap;}
+.pl-btn:hover{border-color:var(--teal-light);}
+.pl-btn.play{background:var(--green);border-color:var(--green);color:#fff;}
+.pl-btn.pause{background:var(--amber);border-color:var(--amber);color:#fff;}
+.pl-btn.done{background:var(--lime);border-color:var(--lime);}
+.pl-btn.danger{border-color:#f3c2c2;background:var(--red-soft);color:var(--red);}
+.pl-btn.ghost{border-style:dashed;color:var(--muted);}
+.pl-btn:hover{filter:brightness(0.97);}
+
+/* Detalle de bloque */
+.pl-det-strip{height:6px;border-radius:6px;margin-bottom:14px;}
+.pl-det-t{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);}
+.pl-det-m{font-size:13px;color:var(--muted);margin:3px 0 12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;}
+.pl-det-desc{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;white-space:pre-wrap;}
+.pl-det-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;}
+.pl-det-sep{height:1px;background:var(--border);margin:16px 0;}
+.pl-swatches{display:flex;gap:8px;flex-wrap:wrap;}
+.pl-swatch{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;}
+.pl-swatch.on{box-shadow:0 0 0 2.5px var(--teal-dark);}
+.pl-st{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-2);color:var(--muted);white-space:nowrap;}
+.pl-st.ok{background:var(--green-soft);color:var(--green);}
+.pl-st.run{background:var(--green);color:#fff;}
+.pl-st.pause{background:var(--amber-soft);color:#8a5e00;}
+.pl-st.bad{background:var(--red-soft);color:var(--red);}
+.pl-st.rest{background:var(--blue-soft);color:var(--blue);}
+.pl-st.now{background:var(--blue);color:#fff;}
+
+/* Manager: en directo y bloques */
+.pl-live{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+.pl-live-card{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:13px;padding:12px 14px;background:var(--surface);transition:box-shadow 0.12s;display:flex;flex-direction:column;}
+.pl-live-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pl-live-actions{display:flex;gap:6px;margin-top:auto;padding-top:10px;}
+.pl-mgr-tag{position:absolute;top:2px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--teal-dark);color:#fff;font-size:9.5px;font-weight:800;line-height:15px;text-align:center;}
+.pl-mgr-tag.unseen{background:var(--amber);}
+.pl-block.nuevo{animation:plNuevo 1.2s ease-in-out 4;}
+@keyframes plNuevo{50%{box-shadow:0 0 0 4px var(--amber);}}
+.pl-block .pl-block-t{padding-right:14px;}
+.pl-guia{background:var(--lime-soft);border:1px solid #cbe9a4;border-radius:14px;padding:14px 18px;margin-bottom:16px;font-size:13.5px;color:var(--teal-dark);}
+.pl-guia-t{font-family:'Fraunces',serif;font-size:16px;font-weight:700;margin-bottom:6px;}
+.pl-guia ol{margin:0 0 10px 18px;display:flex;flex-direction:column;gap:4px;}
+.pl-focus-notice{flex-basis:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--amber-soft);border:1px solid #f0d58a;border-radius:11px;padding:8px 12px;font-size:13.5px;color:#5c3f00;}
+.pl-res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pl-met-ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.pl-live-card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.06);}
+.pl-live-card.run{border-left-color:var(--green);background:#f7fcf9;}
+.pl-live-card.pause{border-left-color:var(--amber);}
+.pl-live-card.rest{border-left-color:var(--blue);}
+.pl-live-card.late{border-left-color:var(--red);background:#fffafa;}
+.pl-live-name{font-weight:700;color:var(--teal-dark);font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.pl-live-what{font-size:13px;margin-top:6px;color:var(--text);}
+.pl-live-sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.pl-live-prog{height:4px;border-radius:4px;background:var(--border);margin-top:7px;overflow:hidden;}
+.pl-live-prog div{height:100%;background:var(--green);}
+.pl-tpl-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.pl-tpl{--c:#3b7dd8;border:1px solid var(--border);border-left:5px solid var(--c);border-radius:12px;padding:11px 13px;background:color-mix(in srgb,var(--c) 6%,white);}
+.pl-tpl-t{font-weight:700;color:var(--teal-dark);font-size:14px;}
+.pl-tpl-m{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;}
+.pl-tpl-d{font-size:12px;color:var(--text);margin-top:6px;}
+.pl-tpl-a{display:flex;gap:6px;margin-top:8px;}
+.pl-pct{font-family:'Fraunces',serif;font-weight:700;}
+.pl-pct.ok{color:var(--green);}.pl-pct.mid{color:var(--amber);}.pl-pct.bad{color:var(--red);}
+
+@media (max-width:900px){
+  .pl-layout{grid-template-columns:1fr;}
+  .pl-palette{position:static;max-height:none;display:flex;gap:8px;overflow-x:auto;padding:10px;flex-wrap:nowrap;}
+  .pl-palette>.pl-pal-head{display:none;}
+  .pl-chip{width:auto;min-width:150px;margin-bottom:0;flex-shrink:0;touch-action:pan-x;}
+  .pl-pal-add{width:auto;margin-top:0;flex-shrink:0;padding:9px 14px;}
+  .pl-focus{margin:-18px -16px 14px;padding:10px 16px;}
+  .pl-armed-hint{flex-shrink:0;}
+}
 </style>
 </head>
 <body>
@@ -1068,6 +1230,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <nav class="sdr-sidebar" id="sdr-sidebar">
       <button class="sdr-nav-btn active" data-panel="inicio" onclick="showPanel('inicio')"><span class="sdr-nav-ico">🏠</span><span class="sdr-nav-txt">Inicio</span></button>
       <button class="sdr-nav-btn" data-panel="pendientes" onclick="showPanel('pendientes')"><span class="sdr-nav-ico">⏳</span><span class="sdr-nav-txt">Pendientes</span><span class="sdr-nav-badge" id="nav-badge-pendientes"></span></button>
+      <button class="sdr-nav-btn" data-panel="planificacion" onclick="showPanel('planificacion')"><span class="sdr-nav-ico">🗓️</span><span class="sdr-nav-txt">Mi planificación</span><span class="sdr-nav-badge urgent" id="nav-badge-plan"></span></button>
       <button class="sdr-nav-btn" data-panel="demos" onclick="showPanel('demos')"><span class="sdr-nav-ico">📋</span><span class="sdr-nav-txt">Mis demos</span></button>
       <button class="sdr-nav-btn" data-panel="metricas" onclick="showPanel('metricas')"><span class="sdr-nav-ico">📊</span><span class="sdr-nav-txt">Mis métricas</span></button>
       <button class="sdr-nav-btn" data-panel="equipo" onclick="showPanel('equipo')"><span class="sdr-nav-ico">👥</span><span class="sdr-nav-txt">Equipo</span><span class="sdr-nav-badge info" id="nav-badge-equipo"></span></button>
@@ -1078,6 +1241,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </nav>
 
     <main class="sdr-main">
+      <!-- Barra de foco: el bloque de la planificación que toca ahora (play / pausa / terminar) -->
+      <div class="pl-focus" id="pl-focus"></div>
       <!-- ═════ INICIO ═════ -->
       <section class="sdr-panel active" id="panel-inicio">
         <div id="kudos-banner-wrap"></div>
@@ -1324,6 +1489,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       </div>
     </div>
       </section>
+
+      <!-- ═════ MI PLANIFICACIÓN ═════ -->
+      <section class="sdr-panel" id="panel-planificacion">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Mi planificación</div>
+            <div class="page-sub">Arrastra los bloques a tu semana y dale a ▶ cuando empieces cada uno. Al acabar, 15 min de descanso.</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn-primary btn-soft" id="pl-avisos-btn" onclick="plPedirPermisoAvisos()">🔔 Activar avisos</button>
+            <button class="btn-primary" onclick="plOpenCustom()">+ Bloque propio</button>
+          </div>
+        </div>
+        <div id="sdr-plan-cal"></div>
+      </section>
     </main>
   </div>
 </div>
@@ -1336,6 +1516,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="modal-close" onclick="closeDemoPopup()">✕</button>
     </div>
     <div class="modal-body" id="demo-popup-body"></div>
+  </div>
+</div>
+
+<!-- PLANIFICACIÓN: detalle de bloque / bloque propio / bloque del manager -->
+<div class="modal-overlay" id="pl-modal" onclick="if(event.target===this)plCloseModal()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div class="modal-title" id="pl-modal-title">Bloque</div>
+      <button class="modal-close" onclick="plCloseModal()">✕</button>
+    </div>
+    <div class="modal-body" id="pl-modal-body"></div>
   </div>
 </div>
 
@@ -1369,6 +1560,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="mgr-nav">
       <button class="mgr-nav-btn active" onclick="setMgrTab('equipo',this)">📊 Visión equipo</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('individual',this)">👤 Por SDR</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('planificacion',this)">🗓️ Planificación</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('resumenes',this)">📅 Resúmenes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('generador',this)">✍️ Generador de mensajes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('llamadas',this)">📞 Llamadas</button>
@@ -1477,6 +1669,67 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     <div class="mgr-tab" id="mgrtab-individual">
       <div class="mgr-sdr-selector" id="mgr-sdr-selector"></div>
       <div id="mgr-individual-content"></div>
+    </div>
+
+    <!-- TAB: PLANIFICACIÓN -->
+    <div class="mgr-tab" id="mgrtab-planificacion">
+      <div class="mgr-block">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">🟢 En directo</div>
+          <div class="mgr-block-sub" id="pl-live-upd">Qué está haciendo cada SDR ahora mismo · se actualiza solo</div>
+        </div>
+        <div id="pl-live"></div>
+      </div>
+
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div>
+            <div class="mgr-block-title">🧱 Bloques para el equipo</div>
+            <div class="mgr-block-sub">Lo que creas aquí les aparece para arrastrarlo a su calendario. Los urgentes salen arriba, parpadean y les llega un email.</div>
+          </div>
+          <button class="btn-primary" onclick="plOpenPlantilla()">+ Nuevo bloque</button>
+        </div>
+        <div id="pl-plantillas-list"></div>
+      </div>
+
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div>
+            <div class="mgr-block-title">🗓️ Calendario por SDR</div>
+            <div class="mgr-block-sub">Mira la semana de cada uno. También puedes colocarle tú los bloques.</div>
+          </div>
+        </div>
+        <div class="mgr-sdr-selector" id="pl-sdr-selector" style="margin-bottom:16px;"></div>
+        <div id="mgr-plan-cal"></div>
+      </div>
+
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div class="mgr-block-title">✅ Cumplimiento de la semana</div>
+          <div class="mgr-block-sub">Bloques cuya hora ya ha pasado: cuántos se hicieron (con play) y cuántos no</div>
+        </div>
+        <div class="mgr-table-wrap" id="pl-cumplimiento"></div>
+      </div>
+
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div>
+            <div class="mgr-block-title">📈 Resultados por tipo de bloque</div>
+            <div class="mgr-block-sub">Lo que apuntan los SDR al terminar cada bloque: qué tipo de bloque saca más demos por hora</div>
+          </div>
+        </div>
+        <div id="pl-metricas"></div>
+      </div>
+
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div>
+            <div class="mgr-block-title">📧 Avisos por email</div>
+            <div class="mgr-block-sub">Email al empezar cada bloque, al terminarlo (con los 15 min de descanso) y cuando creas un bloque urgente.</div>
+          </div>
+        </div>
+        <div class="mgr-table-wrap" id="pl-emails"></div>
+      </div>
     </div>
 
     <!-- TAB: RESÚMENES -->
@@ -2417,6 +2670,7 @@ async function enterApp(){
   if(!liveInterval)liveInterval=setInterval(()=>{renderHome();renderPendientes();updateLiveClock();},60000);
   let savedPanel=null;try{savedPanel=sessionStorage.getItem('sdr_panel');}catch(e){}
   showPanel(savedPanel||'inicio');
+  plInitSdr();
 }
 
 // ── MANAGER STATE ──
@@ -3783,6 +4037,7 @@ function setMgrTab(tab,btn){
   btn.classList.add('active');
   if(tab==='resumenes')renderResumen();
   if(tab==='generador')renderGenTopics();
+  if(tab==='planificacion')openMgrPlan();
 }
 
 // ── RESÚMENES ──
@@ -5077,6 +5332,9 @@ function showPanel(p){
   if(slot&&nav&&nav.parentElement!==slot)slot.appendChild(nav);
   try{sessionStorage.setItem('sdr_panel',p);}catch(e){}
   window.scrollTo(0,0);
+  if(p==='planificacion'){plArmed=null;loadPlanificacion().then(()=>{plRenderAll();return plMarcarVistos();}).then(plRenderAll);}
+  else plNuevos.clear();
+  if(typeof plRenderFocus==='function')plRenderFocus();
   if(p==='metricas'&&!metricsAutoOpened){
     metricsAutoOpened=true;
     const mp=document.getElementById('metrics-panel-inline');
@@ -7836,6 +8094,925 @@ async function moveRegla(id,dir){
     await sb(`reglas?id=eq.${b.id}`,{method:'PATCH',body:JSON.stringify({orden:a.orden})});
     await loadReglas();renderReglasEditor();
   }catch(e){showToast('❌ Error reordenando');console.error(e);}
+}
+
+// ══════════ PLANIFICACIÓN ══════════
+// El manager crea bloques (planificacion_plantillas); cada SDR los arrastra a su
+// semana (planificacion_bloques) y los ejecuta con play / pausa / terminar.
+// El tiempo trabajado = trabajado_seg + lo que lleva corriendo desde corriendo_desde.
+const PL_H_INI=8,PL_H_FIN=20,PL_SLOT=15,PL_SLOT_PX=12,PL_DESCANSO_MIN=15;
+const PL_COLORES=['#3b7dd8','#1fa856','#6BB81A','#e8a317','#e23d3d','#8b5cf6','#db2777','#2C4F5B'];
+const PL_DURACIONES=[15,30,45,60,90,120,150,180,240];
+const PL_PRIO_ORDEN={urgente:0,alta:1,normal:2};
+let plPlantillas=[],plBloques=[],plWeekOffset=0,plMgrSdr=null,plMgrSdrs=[];
+let plArmed=null,plDrag=null,plReady=false,plError=false,plTickTimer=null,plTicks=0,plMgrTimer=null;
+let plMensajes=[],plNuevos=new Set(),plMet30=null,plMetPeriodo='semana',plMetSdr='';
+let plAvisados=new Set();
+try{plAvisados=new Set(JSON.parse(sessionStorage.getItem('pl_avisados')||'[]'));}catch(e){}
+
+function plIsMgr(){return!!currentUser&&currentUser.rol==='manager';}
+function plSdrId(){return plIsMgr()?plMgrSdr:(currentUser&&currentUser.id);}
+function plRoot(){return document.getElementById(plIsMgr()?'mgr-plan-cal':'sdr-plan-cal');}
+function plEsc(s){return escapeHtmlTxt(s==null?'':String(s)).replace(/"/g,'&quot;');}
+function plMin(t){const[h,m]=String(t||'0:0').split(':').map(Number);return h*60+(m||0);}
+function plHora(min){return`${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;}
+function plDur(min){if(min<60)return`${min} min`;const h=Math.floor(min/60),m=min%60;return m?`${h} h ${m}`:`${h} h`;}
+function plDurSeg(seg){return seg<60?'menos de 1 min':plDur(Math.round(seg/60));}
+function plFin(b){return plMin(b.hora_inicio)+b.duracion_min;}
+function plRango(b){return`${plHora(plMin(b.hora_inicio))}–${plHora(plFin(b))}`;}
+function plNowMin(){const d=madridNow();return d.getHours()*60+d.getMinutes();}
+function plClock(seg){seg=Math.max(0,Math.round(seg));const h=Math.floor(seg/3600),m=Math.floor(seg%3600/60),s=seg%60;return(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0');}
+function plWorked(b,now=Date.now()){return(b.trabajado_seg||0)+(b.corriendo_desde?Math.max(0,(now-new Date(b.corriendo_desde).getTime())/1000):0);}
+function plWeek(off=plWeekOffset){
+  const d=new Date();const day=d.getDay();
+  const mon=new Date(d.getFullYear(),d.getMonth(),d.getDate()+(day===0?-6:1-day)+off*7);
+  return[0,1,2,3,4].map(i=>localDateStr(new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i)));
+}
+function plAddDays(s,n){const[y,m,d]=s.split('-').map(Number);return localDateStr(new Date(y,m-1,d+n));}
+function plDiaLargo(s){const[y,m,d]=s.split('-').map(Number);const dt=new Date(y,m-1,d);return`${['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][dt.getDay()]} ${d} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][m-1]}`;}
+function plSort(a,b){return a.fecha.localeCompare(b.fecha)||plMin(a.hora_inicio)-plMin(b.hora_inicio);}
+
+// Estado visible de un bloque: el guardado más los que se deducen de la hora
+function plEstado(b,now=madridNow()){
+  if(b.estado!=='planificado')return b.estado;
+  const hoy=todayStr(),nm=now.getHours()*60+now.getMinutes();
+  if(b.fecha<hoy||(b.fecha===hoy&&nm>=plFin(b)))return'perdido';
+  if(b.fecha===hoy&&nm>=plMin(b.hora_inicio))return'ahora';
+  return'planificado';
+}
+const PL_EST_TXT={planificado:['Planificado',''],ahora:['⏰ Toca ahora','now'],en_curso:['▶ En curso','run'],pausado:['⏸ En pausa','pause'],completado:['✓ Hecho','ok'],saltado:['✕ No hecho','bad'],perdido:['Sin empezar','bad']};
+function plEstPill(st){const[t,c]=PL_EST_TXT[st]||[st,''];return`<span class="pl-st ${c}">${t}</span>`;}
+function plPrioPill(p){return p==='urgente'?'<span class="pl-prio urgente">Urgente</span>':p==='alta'?'<span class="pl-prio alta">Alta</span>':'';}
+
+// Plantillas que ve un SDR: las de todo el equipo y las suyas, urgentes primero
+function plPaleta(sdrId){
+  return plPlantillas.filter(p=>p.activa!==false&&(!p.sdr_id||p.sdr_id===sdrId))
+    .sort((a,b)=>(PL_PRIO_ORDEN[a.prioridad]??2)-(PL_PRIO_ORDEN[b.prioridad]??2)||(a.orden||0)-(b.orden||0)||b.id-a.id);
+}
+// Urgentes que el SDR aún no ha puesto en su calendario (de hoy en adelante)
+function plUrgentesSinPlanificar(sdrId){
+  const hoy=todayStr();
+  return plPaleta(sdrId).filter(p=>p.prioridad==='urgente'&&!plBloques.some(b=>b.sdr_id===sdrId&&b.plantilla_id===p.id&&(b.fecha>=hoy||b.estado==='completado')));
+}
+function plSolapa(sdrId,fecha,ini,dur,exceptId){
+  return plBloques.some(b=>b.sdr_id===sdrId&&b.fecha===fecha&&b.id!==exceptId&&ini<plFin(b)&&plMin(b.hora_inicio)<ini+dur);
+}
+function plPorManager(b){return b.creado_por!=null&&b.creado_por!==b.sdr_id;}
+function plNum(v){return v==null||v===''?0:+v;}
+function plEsFestivo(f){return FESTIVOS_2026.includes(f);}
+
+// ── Carga ──
+async function loadPlanificacion(){
+  const dias=plWeek(),hoy=todayStr();
+  const desde=dias[0]<hoy?dias[0]:hoy,hasta=dias[4]>hoy?dias[4]:hoy;
+  const filtro=plIsMgr()?'':`sdr_id=eq.${currentUser.id}&`;
+  try{
+    const[pls,bls]=await Promise.all([
+      sb('planificacion_plantillas?activa=is.true&select=*&order=orden.asc,created_at.desc'),
+      sbAll(`planificacion_bloques?${filtro}fecha=gte.${desde}&fecha=lte.${hasta}&select=*&order=fecha.asc,hora_inicio.asc`)
+    ]);
+    plPlantillas=pls||[];plBloques=bls||[];plReady=true;plError=false;
+  }catch(e){console.error(e);plError=true;}
+  try{
+    const desde7=new Date(Date.now()-7*864e5).toISOString();
+    plMensajes=await sb(plIsMgr()?`planificacion_mensajes?created_at=gte.${desde7}&select=*&order=created_at.desc`
+      :`planificacion_mensajes?sdr_id=eq.${currentUser.id}&leida_at=is.null&select=*&order=created_at.asc`)||[];
+  }catch(e){plMensajes=[];}
+  if(!plIsMgr())await plCerrarVencidos();
+}
+// Si cerró el Hub con un bloque corriendo y el tiempo ya se cumplió, se da por terminado
+async function plCerrarVencidos(){
+  for(const b of plBloques.filter(x=>x.sdr_id===currentUser.id&&x.estado==='en_curso'&&x.corriendo_desde)){
+    const falta=b.duracion_min*60-(b.trabajado_seg||0);
+    if(plWorked(b)>=b.duracion_min*60){
+      const fin=new Date(new Date(b.corriendo_desde).getTime()+Math.max(0,falta)*1000).toISOString();
+      await plPatch(b,{estado:'completado',trabajado_seg:b.duracion_min*60,corriendo_desde:null,completed_at:fin},true);
+      plMarcarAvisado('fin-'+b.id);
+    }
+  }
+}
+
+async function plPatch(b,cambios,silencioso){
+  const antes={...b};Object.assign(b,cambios);
+  try{
+    const r=await sb(`planificacion_bloques?id=eq.${b.id}`,{method:'PATCH',body:JSON.stringify(cambios)});
+    if(r&&r[0])Object.assign(b,r[0]);
+    return true;
+  }catch(e){Object.assign(b,antes);console.error(e);if(!silencioso)showToast('❌ No se pudo guardar el bloque');return false;}
+  finally{plRenderAll();}
+}
+async function plInsert(rows){
+  try{
+    const r=await sb('planificacion_bloques',{method:'POST',body:JSON.stringify(rows)});
+    plBloques.push(...(r||[]));plBloques.sort(plSort);
+    return r||[];
+  }catch(e){console.error(e);showToast('❌ No se pudo guardar el bloque');return null;}
+  finally{plRenderAll();}
+}
+
+function plRenderAll(){
+  if(!currentUser)return;
+  if(plIsMgr()){renderPlanMgr();return;}
+  renderPlanCal();plRenderFocus();plUpdateBadge();
+}
+function plUpdateBadge(){
+  const el=document.getElementById('nav-badge-plan');if(!el)return;
+  const n=plReady?plUrgentesSinPlanificar(currentUser.id).length:0;
+  el.textContent=n;el.classList.toggle('show',n>0);
+  el.title=n?`${n} bloque${n>1?'s':''} urgente${n>1?'s':''} sin planificar`:'';
+}
+
+// ── Calendario (SDR y manager usan el mismo) ──
+function renderPlanCal(){
+  const root=plRoot();if(!root)return;
+  if(plError){root.innerHTML='<div class="pd-empty"><div class="pd-empty-icon">🛠️</div><div class="pd-empty-title">La planificación aún no está activada</div><div class="pd-empty-text">Falta aplicar la migración <b>20261029_planificacion.sql</b> en Supabase.</div></div>';return;}
+  const sdrId=plSdrId();
+  if(!sdrId){root.innerHTML='<div class="home-empty">Elige un SDR para ver su semana.</div>';return;}
+  const dias=plWeek(),hoy=todayStr(),now=madridNow(),nm=plNowMin();
+  const mios=plBloques.filter(b=>b.sdr_id===sdrId&&dias.includes(b.fecha));
+  const paleta=plPaleta(sdrId);
+  const altura=(PL_H_FIN-PL_H_INI)*60/PL_SLOT*PL_SLOT_PX;
+  const minPx=PL_SLOT_PX/PL_SLOT;
+
+  // Paleta
+  const usados=id=>mios.filter(b=>b.plantilla_id===id).length;
+  let pal=`<div class="pl-pal-head"><div class="pl-pal-title">Bloques</div><div class="pl-pal-sub">Arrástralos a un hueco del calendario. En el móvil: toca uno y luego toca la hora.</div></div>`;
+  if(plArmed)pal+=`<div class="pl-armed-hint">👆 Toca una hora del calendario para colocar <b>${plEsc(plArmed.titulo)}</b></div>`;
+  pal+=paleta.length?paleta.map(p=>{
+    const u=usados(p.id);
+    return`<div class="pl-chip prio-${p.prioridad}${plArmed&&plArmed.id===p.id?' armed':''}" data-pid="${p.id}" style="--c:${p.color}" title="${plEsc(p.descripcion||p.titulo)}">
+      <div class="pl-chip-t">${p.emoji?plEsc(p.emoji)+' ':''}${plEsc(p.titulo)}</div>
+      <div class="pl-chip-m"><span>⏱ ${plDur(p.duracion_min)}</span>${plPrioPill(p.prioridad)}${p.sdr_id?'<span>👤 solo para ti</span>':''}${p.fecha_limite?`<span>📅 antes del ${fmtDate(p.fecha_limite)}</span>`:''}${u?`<span class="pl-used">✓ ${u} esta semana</span>`:''}</div>
+    </div>`;}).join(''):`<div class="pl-pal-empty">${plIsMgr()?'Crea bloques arriba para que aparezcan aquí.':'Tu manager aún no ha creado bloques. Puedes añadir uno propio.'}</div>`;
+  pal+=`<button class="pl-pal-add" onclick="plOpenCustom()">+ Bloque propio</button>`;
+
+  // Cabecera con totales de la semana
+  const plan=mios.reduce((s,b)=>s+b.duracion_min,0);
+  const hecho=mios.filter(b=>b.estado==='completado').reduce((s,b)=>s+b.duracion_min,0);
+  const[y0,m0,d0]=dias[0].split('-').map(Number),[,m4,d4]=dias[4].split('-').map(Number);
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const label=plWeekOffset===0?'Esta semana':plWeekOffset===1?'Semana que viene':plWeekOffset===-1?'Semana pasada':`${d0} ${meses[m0-1]} – ${d4} ${meses[m4-1]}`;
+  const head=`<div class="pl-cal-head">
+    <div class="pl-nav">
+      <button class="cal-nav-btn" onclick="plNavWeek(-1)">‹</button>
+      <div class="pl-week-label">${label}<div style="font-family:Inter,sans-serif;font-size:11px;font-weight:600;color:var(--muted);">${d0} ${meses[m0-1]} – ${d4} ${meses[m4-1]} ${y0}</div></div>
+      <button class="cal-nav-btn" onclick="plNavWeek(1)">›</button>
+      ${plWeekOffset!==0?'<button class="cal-today-btn" onclick="plNavWeek(0)">Hoy</button>':''}
+    </div>
+    <div class="pl-stats">
+      <span class="pl-stat">Planificado <b>${plan?plDur(plan):'0 h'}</b></span>
+      <span class="pl-stat">Hecho <b>${hecho?plDur(hecho):'0 h'}</b></span>
+      ${mios.some(b=>b.res_demos)?`<span class="pl-stat">Demos <b>${mios.reduce((t,b)=>t+plNum(b.res_demos),0)}</b></span>`:''}
+      ${mios.length?'<button class="pl-link-btn" onclick="plCopiarSemana()" title="Repite estos bloques la semana siguiente">⧉ Copiar a la semana siguiente</button>':''}
+      ${mios.length&&plIsMgr()?'<button class="pl-link-btn" onclick="plOpenCopiarSdr()" title="Pon esta misma semana a otros SDR">👥 Copiar a otro SDR</button>':''}
+    </div>
+  </div>`;
+
+  // Rejilla
+  let grid=`<div class="pl-grid"><div class="pl-dh"></div>`;
+  dias.forEach(f=>{
+    const[,mm,dd]=f.split('-').map(Number);
+    const tot=mios.filter(b=>b.fecha===f).reduce((s,b)=>s+b.duracion_min,0);
+    grid+=`<div class="pl-dh${f===hoy?' today':''}">${['Lun','Mar','Mié','Jue','Vie'][dias.indexOf(f)]} <b>${dd}</b><small>${plEsFestivo(f)?'Festivo':tot?plDur(tot):'—'}</small></div>`;
+  });
+  grid+=`<div class="pl-times" style="height:${altura}px">`;
+  for(let h=PL_H_INI+1;h<PL_H_FIN;h++)grid+=`<div class="pl-time" style="top:${(h-PL_H_INI)*60*minPx}px">${h}:00</div>`;
+  grid+=`</div>`;
+  dias.forEach(f=>{
+    grid+=`<div class="pl-day-body${f===hoy?' today':''}${plEsFestivo(f)?' festivo':''}" data-date="${f}" style="height:${altura}px">`;
+    if(plEsFestivo(f))grid+=`<div class="pl-festivo-tag">🎉 Festivo</div>`;
+    mios.filter(b=>b.fecha===f).forEach(b=>{
+      const ini=plMin(b.hora_inicio),st=plEstado(b,now);
+      const top=(ini-PL_H_INI*60)*minPx,h=b.duracion_min*minPx;
+      const w=plWorked(b),pct=Math.min(100,w/(b.duracion_min*60)*100);
+      const locked=b.estado==='completado'||b.estado==='en_curso';
+      const ico=st==='en_curso'?' · ▶':st==='pausado'?' · ⏸':st==='perdido'?' · sin empezar':st==='saltado'?' · no hecho':'';
+      const mgr=plPorManager(b);
+      const mgrTag=mgr?`<span class="pl-mgr-tag${plIsMgr()&&!b.visto_at?' unseen':''}" title="${plIsMgr()?(b.visto_at?'Lo ha visto':'Aún no lo ha visto'):'Te lo ha puesto tu manager'}">${plIsMgr()?(b.visto_at?'👀':'M'):'M'}</span>`:'';
+      grid+=`<div class="pl-block st-${st}${h<=24?' short':''}${locked?' locked':''}${plNuevos.has(b.id)?' nuevo':''}" data-id="${b.id}" style="--c:${b.color};top:${top}px;height:${h-2}px" title="${plEsc(b.titulo)} · ${plRango(b)}${mgr?' · puesto por el manager':''}">${mgrTag}
+        <div class="pl-block-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
+        <div class="pl-block-h">${plRango(b)}${ico}${b.res_demos?` · 🎯 ${b.res_demos}`:''}</div>
+        ${w>0&&b.estado!=='completado'?`<div class="pl-block-bar" style="width:${pct}%"></div>`:''}
+        ${locked?'':'<div class="pl-resize"></div>'}
+      </div>`;
+    });
+    if(f===hoy&&nm>=PL_H_INI*60&&nm<PL_H_FIN*60)grid+=`<div class="pl-now" style="top:${(nm-PL_H_INI*60)*minPx}px"></div>`;
+    grid+=`</div>`;
+  });
+  grid+=`</div>`;
+
+  let guia='';
+  try{if(!plIsMgr()&&!localStorage.getItem('pl_guia_ok'))guia=`<div class="pl-guia">
+    <div class="pl-guia-t">¿Cómo funciona?</div>
+    <ol><li><b>Arrastra</b> un bloque de la izquierda a la hora que quieras (en el móvil: tócalo y luego toca la hora). Empieza por los <b style="color:var(--red)">urgentes</b>.</li>
+    <li>Cuando empieces, dale a <b>▶ Play</b> en la barra de arriba. Al acabar el tiempo te avisa y tienes <b>15 min de descanso</b>.</li>
+    <li>Al terminar, apunta <b>llamadas, conectadas y demos</b> que sacaste. Los bloques con una <b>M</b> te los ha puesto tu manager.</li></ol>
+    <button class="pl-link-btn" onclick="try{localStorage.setItem('pl_guia_ok','1')}catch(e){};renderPlanCal()">Entendido</button></div>`;}catch(e){}
+  root.innerHTML=guia+`<div class="pl-layout"><aside class="pl-palette">${pal}</aside><div class="pl-cal">${head}<div class="pl-scroll">${grid}</div>
+    <div class="pl-hint">Arrastra un bloque para moverlo · tira del borde de abajo para cambiar su duración · haz clic para verlo, darle a play o borrarlo.</div></div></div>`;
+  root.onpointerdown=plPointerDown;
+}
+function plNavWeek(d){plWeekOffset=d===0?0:plWeekOffset+d;plArmed=null;loadPlanificacion().then(plRenderAll);}
+
+// ── Arrastrar y soltar (ratón y dedo, con pointer events) ──
+function plPointerDown(e){
+  if(e.button>0)return;
+  const chip=e.target.closest('.pl-chip[data-pid]');
+  const blkEl=e.target.closest('.pl-block[data-id]');
+  const body=e.target.closest('.pl-day-body');
+  const handle=e.target.closest('.pl-resize');
+  if(!chip&&!blkEl&&!body)return;
+  const d={x0:e.clientX,y0:e.clientY,moved:false};
+  if(chip){
+    const p=plPlantillas.find(x=>x.id===+chip.dataset.pid);if(!p)return;
+    Object.assign(d,{mode:'new',src:p,dur:p.duracion_min,off:0,label:(p.emoji?p.emoji+' ':'')+p.titulo,color:p.color});
+  }else if(blkEl){
+    const b=plBloques.find(x=>x.id===+blkEl.dataset.id);if(!b)return;
+    const locked=b.estado==='completado'||b.estado==='en_curso';
+    const r=blkEl.getBoundingClientRect();
+    const off=Math.floor((e.clientY-r.top)/PL_SLOT_PX)*PL_SLOT;
+    Object.assign(d,{mode:handle&&!locked?'resize':locked?'click':'move',src:b,el:blkEl,dur:b.duracion_min,off,label:(b.emoji?b.emoji+' ':'')+b.titulo,color:b.color});
+  }else{
+    if(body.classList.contains('festivo'))return;
+    Object.assign(d,{mode:'slot',body});
+  }
+  plDrag=d;
+  if(d.mode!=='slot')e.preventDefault();
+  document.addEventListener('pointermove',plPointerMove);
+  document.addEventListener('pointerup',plPointerUp);
+  document.addEventListener('pointercancel',plPointerCancel);
+}
+function plTargetAt(x,y){
+  const el=document.elementFromPoint(x,y);
+  const body=el&&el.closest('.pl-day-body');
+  if(!body||!plRoot().contains(body))return null;
+  const r=body.getBoundingClientRect();
+  let ini=PL_H_INI*60+Math.floor((y-r.top)/PL_SLOT_PX)*PL_SLOT-plDrag.off;
+  ini=Math.max(PL_H_INI*60,Math.min(PL_H_FIN*60-plDrag.dur,ini));
+  const exc=plDrag.mode==='move'?plDrag.src.id:null;
+  const bad=body.classList.contains('festivo')||plSolapa(plSdrId(),body.dataset.date,ini,plDrag.dur,exc);
+  return{body,fecha:body.dataset.date,ini,bad};
+}
+function plPreview(t){
+  let pv=document.getElementById('pl-preview');
+  if(!t){if(pv)pv.remove();return;}
+  if(!pv){pv=document.createElement('div');pv.id='pl-preview';pv.className='pl-preview';}
+  if(pv.parentElement!==t.body)t.body.appendChild(pv);
+  const minPx=PL_SLOT_PX/PL_SLOT;
+  pv.style.top=(t.ini-PL_H_INI*60)*minPx+'px';pv.style.height=(plDrag.dur*minPx-2)+'px';
+  pv.classList.toggle('bad',t.bad);
+  pv.textContent=t.bad?'⛔ Se solapa':`${plHora(t.ini)}–${plHora(t.ini+plDrag.dur)}`;
+}
+function plPointerMove(e){
+  const d=plDrag;if(!d)return;
+  if(!d.moved){
+    if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<5||d.mode==='slot'||d.mode==='click')return;
+    d.moved=true;
+    if(d.mode!=='resize'){
+      d.ghost=document.createElement('div');d.ghost.className='pl-ghost';d.ghost.style.setProperty('--c',d.color);
+      d.ghost.textContent=d.label;document.body.appendChild(d.ghost);
+      if(d.el)d.el.classList.add('dragging');
+    }
+  }
+  if(d.mode==='resize'){
+    const r=d.el.getBoundingClientRect(),ini=plMin(d.src.hora_inicio);
+    let dur=Math.max(PL_SLOT,Math.ceil((e.clientY-r.top)/PL_SLOT_PX)*PL_SLOT);
+    dur=Math.min(dur,PL_H_FIN*60-ini);
+    d.dur=dur;d.bad=plSolapa(d.src.sdr_id,d.src.fecha,ini,dur,d.src.id);
+    d.el.style.height=(dur*PL_SLOT_PX/PL_SLOT-2)+'px';
+    d.el.style.outline=d.bad?'2px solid var(--red)':'';
+    const hh=d.el.querySelector('.pl-block-h');if(hh)hh.textContent=`${plHora(ini)}–${plHora(ini+dur)} · ${plDur(dur)}`;
+    return;
+  }
+  d.ghost.style.left=e.clientX+'px';d.ghost.style.top=e.clientY+'px';
+  d.target=plTargetAt(e.clientX,e.clientY);plPreview(d.target);
+}
+function plPointerCancel(){plEndDrag();plRenderAll();}
+function plEndDrag(){
+  document.removeEventListener('pointermove',plPointerMove);
+  document.removeEventListener('pointerup',plPointerUp);
+  document.removeEventListener('pointercancel',plPointerCancel);
+  if(plDrag&&plDrag.ghost)plDrag.ghost.remove();
+  plPreview(null);
+  const d=plDrag;plDrag=null;return d;
+}
+function plPointerUp(e){
+  const d=plEndDrag();if(!d)return;
+  if(!d.moved){
+    if(d.mode==='move'||d.mode==='click'||d.mode==='resize'){plOpenBloque(d.src.id);return;}
+    if(d.mode==='new'){plArmed=plArmed&&plArmed.id===d.src.id?null:d.src;renderPlanCal();return;}
+    if(d.mode==='slot'){
+      const r=d.body.getBoundingClientRect();
+      const ini=PL_H_INI*60+Math.floor((e.clientY-r.top)/PL_SLOT_PX)*PL_SLOT;
+      if(plArmed){
+        const p=plArmed,start=Math.min(ini,PL_H_FIN*60-p.duracion_min);
+        if(plSolapa(plSdrId(),d.body.dataset.date,start,p.duracion_min)){showToast('⛔ Ese hueco ya está ocupado');return;}
+        plArmed=null;plCrearDesde(p,d.body.dataset.date,start);
+      }else plOpenCustom(d.body.dataset.date,ini);
+    }
+    return;
+  }
+  if(d.mode==='resize'){
+    if(d.bad||d.dur===d.src.duracion_min){plRenderAll();if(d.bad)showToast('⛔ Se solapa con otro bloque');return;}
+    plPatch(d.src,{duracion_min:d.dur});return;
+  }
+  const t=d.target;
+  if(!t){plRenderAll();return;}
+  if(t.bad){plRenderAll();showToast('⛔ Ese hueco ya está ocupado');return;}
+  if(d.mode==='new')plCrearDesde(d.src,t.fecha,t.ini);
+  else if(d.mode==='move'){
+    if(t.fecha===d.src.fecha&&t.ini===plMin(d.src.hora_inicio)){plRenderAll();return;}
+    const c={fecha:t.fecha,hora_inicio:plHora(t.ini)};
+    // Si se mueve a una hora que aún no ha llegado, vuelve a avisar al empezar
+    if(d.src.estado==='planificado'||d.src.estado==='saltado')Object.assign(c,{estado:'planificado',aviso_inicio_at:null});
+    plPatch(d.src,c);
+  }
+}
+async function plCrearDesde(p,fecha,ini){
+  const r=await plInsert([{sdr_id:plSdrId(),plantilla_id:p.id||null,titulo:p.titulo,emoji:p.emoji||null,color:p.color,prioridad:p.prioridad||'normal',
+    fecha,hora_inicio:plHora(ini),duracion_min:p.duracion_min,creado_por:currentUser.id}]);
+  if(r&&r.length)showToast(`✓ ${p.titulo} · ${plDiaLargo(fecha)} ${plHora(ini)}`);
+}
+
+// ── Modal ──
+function plModal(titulo,html){
+  document.getElementById('pl-modal-title').textContent=titulo;
+  document.getElementById('pl-modal-body').innerHTML=html;
+  document.getElementById('pl-modal').classList.add('active');
+}
+function plCloseModal(){document.getElementById('pl-modal').classList.remove('active');}
+function plOpcionesHora(sel){let o='';for(let m=PL_H_INI*60;m<PL_H_FIN*60;m+=PL_SLOT)o+=`<option value="${m}"${m===sel?' selected':''}>${plHora(m)}</option>`;return o;}
+function plOpcionesDur(sel){return PL_DURACIONES.concat(PL_DURACIONES.includes(sel)?[]:[sel]).sort((a,b)=>a-b).map(m=>`<option value="${m}"${m===sel?' selected':''}>${plDur(m)}</option>`).join('');}
+function plSwatches(sel){return`<div class="pl-swatches">${PL_COLORES.map(c=>`<span class="pl-swatch${c===sel?' on':''}" data-c="${c}" style="background:${c}" onclick="this.parentElement.querySelectorAll('.pl-swatch').forEach(s=>s.classList.remove('on'));this.classList.add('on')"></span>`).join('')}</div>`;}
+function plSwatchSel(){const s=document.querySelector('#pl-modal .pl-swatch.on');return s?s.dataset.c:PL_COLORES[0];}
+
+function plOpenBloque(id){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  const st=plEstado(b),hoy=todayStr(),propio=!plIsMgr()&&b.sdr_id===currentUser.id;
+  const p=b.plantilla_id&&plPlantillas.find(x=>x.id===b.plantilla_id);
+  const w=plWorked(b);
+  let acc='';
+  if(propio&&b.fecha===hoy){
+    if(b.estado==='en_curso')acc+=`<button class="pl-btn pause" onclick="plPause(${b.id});plCloseModal()">⏸ Pausa</button><button class="pl-btn done" onclick="plFinish(${b.id});plCloseModal()">✓ Terminar</button>`;
+    else if(b.estado==='pausado')acc+=`<button class="pl-btn play" onclick="plPlay(${b.id});plCloseModal()">▶ Reanudar</button><button class="pl-btn done" onclick="plFinish(${b.id});plCloseModal()">✓ Terminar</button>`;
+    else if(b.estado==='planificado'||b.estado==='saltado')acc+=`<button class="pl-btn play" onclick="plPlay(${b.id});plCloseModal()">▶ Empezar ahora</button>`;
+  }
+  if(propio&&b.fecha<=hoy&&(st==='perdido'||st==='ahora'))acc+=`<button class="pl-btn ghost" onclick="plSkip(${b.id})">✕ No lo he hecho</button>`;
+  if(b.estado==='completado'||b.estado==='saltado')acc+=`<button class="pl-btn ghost" onclick="plReset(${b.id})">↺ Volver a planificado</button>`;
+  const editable=b.estado!=='completado'&&b.estado!=='en_curso';
+  plModal('Bloque',`
+    <div class="pl-det-strip" style="background:${b.color}"></div>
+    <div class="pl-det-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
+    <div class="pl-det-m"><span>📅 ${plDiaLargo(b.fecha)} · ${plRango(b)} (${plDur(b.duracion_min)})</span>${plPrioPill(b.prioridad)}${plEstPill(st)}</div>
+    ${plPorManager(b)?`<div class="form-hint" style="margin:-4px 0 10px;">📌 ${plIsMgr()?`Puesto por ti · ${b.visto_at?`👀 lo vio el ${new Date(b.visto_at).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}`:'<b style="color:var(--red)">aún no lo ha visto</b>'}`:'Te lo ha puesto tu manager'}</div>`:''}
+    ${p&&p.descripcion?`<div class="pl-det-desc">${plEsc(p.descripcion)}</div>`:''}
+    ${w>0?`<div class="form-hint" style="margin-bottom:10px;">⏱ Trabajado: <b>${plDurSeg(w)}</b> de ${plDur(b.duracion_min)}${b.completed_at?` · terminado a las ${new Date(b.completed_at).toTimeString().slice(0,5)}`:''}</div>`:''}
+    ${acc?`<div class="pl-det-actions">${acc}</div>`:''}
+    ${editable?`<div class="pl-det-sep"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Empieza</label><select class="form-select" id="pl-e-hora">${plOpcionesHora(plMin(b.hora_inicio))}</select></div>
+      <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-e-dur">${plOpcionesDur(b.duracion_min)}</select></div>
+    </div>`:''}
+    ${b.estado==='completado'||b.estado==='pausado'||b.estado==='en_curso'||plNum(b.res_llamadas)+plNum(b.res_demos)>0?plResInputs(b,'pl-e',plIsMgr()):''}
+    <div class="form-group"><label class="form-label">Notas ${plIsMgr()?'del SDR':'(cómo ha ido, algo a destacar…)'}</label><textarea class="form-textarea" id="pl-e-notas" maxlength="500" ${plIsMgr()?'readonly':''}>${plEsc(b.notas||'')}</textarea></div>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button class="btn-primary" onclick="plGuardarBloque(${b.id})">Guardar</button>
+      ${editable?`<button class="btn-primary btn-soft" onclick="plCopiarDias(${b.id})" title="Mismo bloque, a la misma hora, de lunes a viernes">⧉ Repetir toda la semana</button>`:''}
+      ${b.estado!=='en_curso'?`<button class="pl-btn danger" style="margin-left:auto;" onclick="plBorrar(${b.id})">🗑 Quitar</button>`:''}
+    </div>`);
+}
+async function plGuardarBloque(id){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  const c={};
+  const notas=document.getElementById('pl-e-notas').value.trim()||null;
+  if(!plIsMgr()&&notas!==(b.notas||null))c.notas=notas;
+  if(!plIsMgr())Object.assign(c,plResLeer('pl-e',b));
+  const h=document.getElementById('pl-e-hora'),du=document.getElementById('pl-e-dur');
+  if(h&&du){
+    const ini=+h.value,dur=Math.min(+du.value,PL_H_FIN*60-ini);
+    if(ini!==plMin(b.hora_inicio)||dur!==b.duracion_min){
+      if(plSolapa(b.sdr_id,b.fecha,ini,dur,b.id)){showToast('⛔ Se solapa con otro bloque');return;}
+      c.hora_inicio=plHora(ini);c.duracion_min=dur;
+      if(b.estado==='planificado')c.aviso_inicio_at=null;
+    }
+  }
+  if(!Object.keys(c).length){plCloseModal();return;}
+  if(await plPatch(b,c)){plCloseModal();showToast('✓ Bloque guardado');}
+}
+async function plBorrar(id){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  if(!confirm(`¿Quitar "${b.titulo}" del calendario?`))return;
+  try{
+    await sb(`planificacion_bloques?id=eq.${id}`,{method:'DELETE'});
+    plBloques=plBloques.filter(x=>x.id!==id);plCloseModal();plRenderAll();
+  }catch(e){console.error(e);showToast('❌ No se pudo quitar');}
+}
+async function plCopiarDias(id){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  const ini=plMin(b.hora_inicio);
+  const dias=plWeek().filter(f=>f!==b.fecha&&!plEsFestivo(f)&&f>=todayStr());
+  const libres=dias.filter(f=>!plSolapa(b.sdr_id,f,ini,b.duracion_min));
+  if(!libres.length){showToast('⛔ No hay más días libres a esa hora esta semana');return;}
+  const r=await plInsert(libres.map(f=>({sdr_id:b.sdr_id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:f,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id})));
+  if(r){plCloseModal();showToast(`✓ Repetido en ${r.length} día${r.length>1?'s':''}${libres.length<dias.length?' (los ocupados se han saltado)':''}`);}
+}
+async function plCopiarSemana(){
+  const sdrId=plSdrId(),dias=plWeek();
+  const mios=plBloques.filter(b=>b.sdr_id===sdrId&&dias.includes(b.fecha));
+  if(!confirm(`¿Copiar los ${mios.length} bloques de esta semana a la semana siguiente? Los huecos ya ocupados se saltan.`))return;
+  // Hay que tener cargada la semana de destino para no solaparse
+  plWeekOffset++;await loadPlanificacion();
+  const rows=mios.map(b=>({...b,fecha:plAddDays(b.fecha,7)}))
+    .filter(b=>!plEsFestivo(b.fecha)&&!plSolapa(sdrId,b.fecha,plMin(b.hora_inicio),b.duracion_min))
+    .map(b=>({sdr_id:sdrId,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id}));
+  if(!rows.length){plRenderAll();showToast('La semana siguiente ya tiene esos huecos ocupados');return;}
+  const r=await plInsert(rows);
+  if(r)showToast(`✓ ${r.length} bloques copiados a la semana siguiente`);
+}
+
+// Bloque propio (sin plantilla): el SDR o el manager lo crean en un hueco concreto
+function plOpenCustom(fecha,ini){
+  const dias=plWeek(),hoy=todayStr();
+  fecha=fecha||(dias.includes(hoy)?hoy:dias[0]);
+  if(ini==null){const nm=plNowMin();ini=fecha===hoy&&nm>=PL_H_INI*60&&nm<PL_H_FIN*60-60?Math.ceil(nm/PL_SLOT)*PL_SLOT:9*60;}
+  plModal('Nuevo bloque propio',`
+    <div class="form-group"><label class="form-label">¿Qué vas a hacer?</label>
+      <div style="display:flex;gap:8px;"><input class="form-input" id="pl-c-emoji" maxlength="4" placeholder="📞" style="width:64px;text-align:center;"/><input class="form-input" id="pl-c-titulo" maxlength="80" placeholder="Ej.: Seguimiento de propuestas"/></div></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Día</label><select class="form-select" id="pl-c-fecha">${dias.map(f=>`<option value="${f}"${f===fecha?' selected':''}>${plDiaLargo(f)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Empieza</label><select class="form-select" id="pl-c-hora">${plOpcionesHora(ini)}</select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-c-dur">${plOpcionesDur(60)}</select></div>
+    <div class="form-group"><label class="form-label">Color</label>${plSwatches(PL_COLORES[5])}</div>
+    <div class="modal-actions"><button class="btn-primary" onclick="plGuardarCustom()">Añadir al calendario</button></div>`);
+  setTimeout(()=>document.getElementById('pl-c-titulo').focus(),50);
+}
+async function plGuardarCustom(){
+  const titulo=document.getElementById('pl-c-titulo').value.trim();
+  if(!titulo){showToast('⚠️ Ponle un nombre al bloque');return;}
+  const fecha=document.getElementById('pl-c-fecha').value,ini=+document.getElementById('pl-c-hora').value;
+  const dur=Math.min(+document.getElementById('pl-c-dur').value,PL_H_FIN*60-ini);
+  if(plSolapa(plSdrId(),fecha,ini,dur)){showToast('⛔ Se solapa con otro bloque');return;}
+  plCloseModal();
+  await plCrearDesde({titulo,emoji:document.getElementById('pl-c-emoji').value.trim()||null,color:plSwatchSel(),prioridad:'normal',duracion_min:dur},fecha,ini);
+}
+
+// ── Play / pausa / terminar ──
+async function plPlay(id){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  plPedirPermisoAvisos(true);
+  // Solo un bloque corriendo a la vez
+  for(const o of plBloques.filter(x=>x.id!==id&&x.sdr_id===b.sdr_id&&x.estado==='en_curso'))
+    await plPatch(o,{estado:'pausado',trabajado_seg:Math.round(plWorked(o)),corriendo_desde:null},true);
+  const now=new Date().toISOString();
+  await plPatch(b,{estado:'en_curso',corriendo_desde:now,started_at:b.started_at||now,completed_at:null});
+  plMarcarAvisado('ini-'+b.id);
+  plEnsureTick();
+}
+async function plPause(id){
+  const b=plBloques.find(x=>x.id===id);if(!b||b.estado!=='en_curso')return;
+  await plPatch(b,{estado:'pausado',trabajado_seg:Math.round(plWorked(b)),corriendo_desde:null});
+}
+async function plFinish(id,auto){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  const seg=auto?b.duracion_min*60:Math.round(plWorked(b));
+  if(!await plPatch(b,{estado:'completado',trabajado_seg:seg,corriendo_desde:null,completed_at:new Date().toISOString()},auto))return;
+  plMarcarAvisado('fin-'+b.id);
+  const sig=plSiguiente(b.sdr_id);
+  const msg=`Tómate ${PL_DESCANSO_MIN} minutos de descanso antes de lo siguiente.`;
+  plNotify(auto?'⏰ ¡Se acabó tu bloque!':'✓ ¡Bloque terminado!',`${b.titulo} · ${msg}`);
+  plModal(auto?'⏰ ¡Se acabó tu bloque!':'✓ ¡Bloque terminado!',`
+    <div style="text-align:center;padding:6px 0 4px;">
+      <div style="font-size:46px;">☕</div>
+      <div class="pl-det-t" style="margin-top:4px;">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
+      <p style="font-size:14px;color:var(--muted);margin:8px 0 14px;">${msg} Levántate, bebe agua, estira.</p>
+      ${sig?`<div class="pl-det-desc" style="text-align:left;">Siguiente: <b>${sig.emoji?plEsc(sig.emoji)+' ':''}${plEsc(sig.titulo)}</b> a las <b>${plHora(plMin(sig.hora_inicio))}</b></div>`:'<div class="pl-det-desc">No tienes más bloques planificados hoy.</div>'}
+      <div style="text-align:left;">${plResInputs(b,'pl-fin',false,'¿Qué has sacado de este bloque?')}</div>
+      <div class="form-group" style="text-align:left;"><label class="form-label">Notas (opcional)</label><textarea class="form-textarea" id="pl-fin-notas" maxlength="500" placeholder="Cómo ha ido, algo a destacar…">${plEsc(b.notas||'')}</textarea></div>
+      <button class="btn-primary" onclick="plGuardarNotaFin(${b.id})">Vale</button>
+    </div>`);
+}
+async function plGuardarNotaFin(id){
+  const b=plBloques.find(x=>x.id===id);const n=(document.getElementById('pl-fin-notas').value||'').trim()||null;
+  const c=b?plResLeer('pl-fin',b):{};
+  plCloseModal();
+  if(b&&n!==(b.notas||null))c.notas=n;
+  if(b&&Object.keys(c).length){await plPatch(b,c);showToast('✓ Resultados guardados');}
+}
+// Resultados de un bloque (llamadas / conectadas / demos)
+function plResInputs(b,pre,soloLectura,label){
+  const f=(k,t,ph)=>`<div class="form-group" style="margin-bottom:0;"><label class="form-label">${t}</label><input class="form-input" type="number" min="0" max="2000" inputmode="numeric" id="${pre}-${k}" value="${b['res_'+k]??''}" placeholder="${ph}" ${soloLectura?'readonly':''}/></div>`;
+  return`<div class="form-group"><label class="form-label" style="font-weight:700;">${label||'Resultados del bloque'}</label>
+    <div class="pl-res-grid">${f('llamadas','📞 Llamadas','0')}${f('conectadas','🗣️ Conectadas','0')}${f('demos','🎯 Demos','0')}</div></div>`;
+}
+function plResLeer(pre,b){
+  const c={};
+  ['llamadas','conectadas','demos'].forEach(k=>{
+    const el=document.getElementById(`${pre}-${k}`);if(!el)return;
+    const v=el.value===''?null:Math.max(0,Math.min(k==='demos'?200:2000,parseInt(el.value)||0));
+    if(v!==(b['res_'+k]??null))c['res_'+k]=v;
+  });
+  return c;
+}
+async function plSkip(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'saltado',corriendo_desde:null}))plCloseModal();}
+async function plReset(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'planificado',trabajado_seg:0,corriendo_desde:null,started_at:null,completed_at:null,aviso_fin_at:null}))plCloseModal();}
+
+function plSiguiente(sdrId,now=madridNow()){
+  const hoy=todayStr(),nm=now.getHours()*60+now.getMinutes();
+  return plBloques.filter(b=>b.sdr_id===sdrId&&b.fecha===hoy&&b.estado==='planificado'&&plFin(b)>nm).sort(plSort)[0]||null;
+}
+// Situación actual de un SDR: lo que muestran la barra de foco y el "en directo" del manager
+function plAhora(sdrId){
+  const hoy=todayStr(),now=madridNow(),nm=now.getHours()*60+now.getMinutes();
+  const deHoy=plBloques.filter(b=>b.sdr_id===sdrId&&b.fecha===hoy);
+  const run=plBloques.find(b=>b.sdr_id===sdrId&&b.estado==='en_curso');
+  if(run)return{tipo:'run',b:run};
+  const pausa=deHoy.find(b=>b.estado==='pausado');
+  const ult=deHoy.filter(b=>b.estado==='completado'&&b.completed_at).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at))[0];
+  const finDescanso=ult?new Date(ult.completed_at).getTime()+PL_DESCANSO_MIN*60000:0;
+  const toca=deHoy.find(b=>b.estado==='planificado'&&nm>=plMin(b.hora_inicio)&&nm<plFin(b));
+  if(ult&&Date.now()<finDescanso&&!(toca&&nm>=plMin(toca.hora_inicio)+PL_DESCANSO_MIN))return{tipo:'rest',b:ult,hasta:finDescanso,sig:plSiguiente(sdrId,now)};
+  if(toca)return{tipo:'late',b:toca};
+  if(pausa)return{tipo:'pause',b:pausa};
+  const sig=plSiguiente(sdrId,now);
+  if(sig)return{tipo:'next',b:sig};
+  return{tipo:deHoy.length?'done':'none',total:deHoy.length,hechos:deHoy.filter(b=>b.estado==='completado').length};
+}
+
+// ── Barra de foco del SDR ──
+function plRenderFocus(){
+  const el=document.getElementById('pl-focus');if(!el||plIsMgr())return;
+  if(!plReady||plError){el.innerHTML='';el.className='pl-focus';return;}
+  const a=plAhora(currentUser.id),b=a.b;
+  const tit=b?`${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}`:'';
+  const urg=plUrgentesSinPlanificar(currentUser.id).length;
+  const urgTxt=urg?`<button class="pl-btn danger" onclick="showPanel('planificacion')">🚨 ${urg} urgente${urg>1?'s':''} sin planificar</button>`:'';
+  let cls='',html='';
+  if(a.tipo==='run'||a.tipo==='pause'){
+    const w=plWorked(b),tot=b.duracion_min*60,pct=Math.min(100,w/tot*100);
+    cls=a.tipo;
+    html=`<div class="pl-focus-ico">${a.tipo==='run'?'▶️':'⏸️'}</div>
+      <div class="pl-focus-info"><div class="pl-focus-lbl">${a.tipo==='run'?'En curso':'En pausa'} · ${plRango(b)}</div><div class="pl-focus-t">${tit}</div><div class="pl-focus-prog"><div style="width:${pct}%"></div></div></div>
+      <div class="pl-focus-clock" title="Tiempo que queda">${plClock(tot-w)}</div>
+      <div class="pl-focus-actions">${a.tipo==='run'?`<button class="pl-btn pause" onclick="plPause(${b.id})">⏸ Pausa</button>`:`<button class="pl-btn play" onclick="plPlay(${b.id})">▶ Reanudar</button>`}<button class="pl-btn done" onclick="plFinish(${b.id})">✓ Terminar</button></div>`;
+  }else if(a.tipo==='rest'){
+    cls='rest';
+    html=`<div class="pl-focus-ico">☕</div>
+      <div class="pl-focus-info"><div class="pl-focus-lbl">Descanso</div><div class="pl-focus-t">${a.sig?`Siguiente: ${a.sig.emoji?plEsc(a.sig.emoji)+' ':''}${plEsc(a.sig.titulo)} a las ${plHora(plMin(a.sig.hora_inicio))}`:'Bloque terminado. ¡Buen trabajo!'}</div></div>
+      <div class="pl-focus-clock">${plClock((a.hasta-Date.now())/1000)}</div>
+      <div class="pl-focus-actions">${a.sig?`<button class="pl-btn play" onclick="plPlay(${a.sig.id})">▶ Empezar ya</button>`:''}</div>`;
+  }else if(a.tipo==='late'){
+    cls='late';
+    html=`<div class="pl-focus-ico">⏰</div>
+      <div class="pl-focus-info"><div class="pl-focus-lbl">Toca ahora · ${plRango(b)}</div><div class="pl-focus-t">${tit}</div></div>
+      <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Play</button><button class="pl-btn ghost" onclick="plOpenBloque(${b.id})">Ver</button></div>`;
+  }else if(a.tipo==='next'){
+    const falta=plMin(b.hora_inicio)-plNowMin();
+    html=`<div class="pl-focus-ico">🗓️</div>
+      <div class="pl-focus-info"><div class="pl-focus-lbl">Siguiente · ${plRango(b)} · en ${plDur(Math.max(1,falta))}</div><div class="pl-focus-t">${tit}</div></div>
+      <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Empezar ya</button></div>`;
+  }else if(a.tipo==='done'){
+    html=`<div class="pl-focus-ico">${a.hechos<a.total?'📋':'🏁'}</div><div class="pl-focus-info"><div class="pl-focus-lbl">Hoy</div><div class="pl-focus-t">${a.hechos<a.total?`${a.hechos} de ${a.total} bloques hechos. No queda nada más planificado para hoy.`:`¡Has hecho los ${a.total} bloques de hoy! 🎉`}</div></div>`;
+  }else{
+    html=`<div class="pl-focus-ico">🗓️</div><div class="pl-focus-info"><div class="pl-focus-lbl">Hoy</div><div class="pl-focus-t">No tienes nada planificado para hoy.</div></div>
+      <div class="pl-focus-actions"><button class="pl-btn" onclick="showPanel('planificacion')">Planificar mi día →</button></div>`;
+  }
+  // Avisos del manager: mensajes sin leer y bloques que te ha puesto y aún no has visto
+  let avisos='';
+  plMensajes.filter(m=>!m.leida_at).forEach(m=>{
+    avisos+=`<div class="pl-focus-notice"><span>💬 <b>Tu manager:</b> ${plEsc(m.texto)}</span><button class="pl-btn" onclick="plLeerMensaje(${m.id})">Entendido</button></div>`;
+  });
+  const sinVer=plBloques.filter(b=>b.sdr_id===currentUser.id&&plPorManager(b)&&!b.visto_at&&b.fecha>=todayStr());
+  if(sinVer.length&&currentPanel!=='planificacion')avisos+=`<div class="pl-focus-notice"><span>📌 Tu manager te ha planificado <b>${sinVer.length} bloque${sinVer.length>1?'s':''}</b></span><button class="pl-btn play" onclick="showPanel('planificacion')">Ver mi planificación</button></div>`;
+  el.className='pl-focus'+(cls?' '+cls:'');
+  el.innerHTML=avisos+html+(urgTxt?`<div class="pl-focus-actions">${urgTxt}</div>`:'');
+}
+async function plLeerMensaje(id){
+  const m=plMensajes.find(x=>x.id===id);if(!m)return;
+  m.leida_at=new Date().toISOString();plRenderFocus();
+  try{await sb(`planificacion_mensajes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({leida_at:m.leida_at})});}
+  catch(e){console.error(e);m.leida_at=null;plRenderFocus();showToast('❌ No se pudo marcar como leído');}
+}
+// Al abrir su planificación, los bloques que le puso el manager quedan como vistos (y se resaltan esta vez)
+async function plMarcarVistos(){
+  if(plIsMgr())return;
+  const sinVer=plBloques.filter(b=>b.sdr_id===currentUser.id&&plPorManager(b)&&!b.visto_at);
+  if(!sinVer.length)return;
+  plNuevos=new Set(sinVer.map(b=>b.id));
+  const ahora=new Date().toISOString();
+  sinVer.forEach(b=>b.visto_at=ahora);
+  try{await sb(`planificacion_bloques?id=in.(${sinVer.map(b=>b.id).join(',')})`,{method:'PATCH',body:JSON.stringify({visto_at:ahora})});}
+  catch(e){console.error(e);sinVer.forEach(b=>b.visto_at=null);}
+  showToast(`📌 Tu manager te ha planificado ${sinVer.length} bloque${sinVer.length>1?'s':''} (resaltados)`);
+}
+
+// ── Avisos dentro de la app (notificación del navegador + sonido + aviso) ──
+function plMarcarAvisado(k){plAvisados.add(k);try{sessionStorage.setItem('pl_avisados',JSON.stringify([...plAvisados]));}catch(e){}}
+function plPedirPermisoAvisos(silencioso){
+  if(!('Notification' in window)){if(!silencioso)showToast('Este navegador no permite avisos. Te avisaremos dentro del Hub y por email.');return;}
+  if(Notification.permission==='granted'){if(!silencioso){showToast('🔔 Los avisos ya están activados');plBeep();}return;}
+  if(Notification.permission==='denied'){if(!silencioso)showToast('🔕 Los avisos están bloqueados en este navegador (candado de la barra de direcciones)');return;}
+  Notification.requestPermission().then(p=>{plUpdateAvisosBtn();if(p==='granted'&&!silencioso)showToast('🔔 Avisos activados');});
+}
+function plUpdateAvisosBtn(){
+  const b=document.getElementById('pl-avisos-btn');if(!b)return;
+  b.style.display=('Notification' in window)&&Notification.permission==='granted'?'none':'';
+}
+function plBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [0,0.22].forEach((t,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=i?1046:784;o.connect(g);g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.25,ctx.currentTime+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+t+0.35);
+      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+0.4);});
+    setTimeout(()=>ctx.close(),1200);
+  }catch(e){}
+}
+function plNotify(titulo,cuerpo){
+  showToast(titulo);plBeep();
+  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(titulo,{body:cuerpo,tag:'sdr-plan'});n.onclick=()=>{window.focus();n.close();};}}catch(e){}
+}
+function plTick(){
+  if(!currentUser||plIsMgr()||!plReady)return;
+  plTicks++;
+  const yo=currentUser.id,hoy=todayStr(),nm=plNowMin();
+  const run=plBloques.find(b=>b.sdr_id===yo&&b.estado==='en_curso');
+  if(run&&plWorked(run)>=run.duracion_min*60&&!plAvisados.has('fin-'+run.id)){plMarcarAvisado('fin-'+run.id);plFinish(run.id,true);return;}
+  plBloques.filter(b=>b.sdr_id===yo&&b.fecha===hoy&&b.estado==='planificado'&&nm>=plMin(b.hora_inicio)&&nm<plMin(b.hora_inicio)+10).forEach(b=>{
+    if(plAvisados.has('ini-'+b.id))return;
+    plMarcarAvisado('ini-'+b.id);
+    if(!run)plNotify(`⏰ Empieza: ${b.titulo}`,`${plRango(b)} · Dale a ▶ Play en el SDR Hub`);
+  });
+  const a=plAhora(yo);
+  if(a.tipo==='rest'&&a.hasta-Date.now()<1000&&!plAvisados.has('desc-'+a.b.id)){
+    plMarcarAvisado('desc-'+a.b.id);
+    plNotify('⏱ Fin del descanso',a.sig?`Siguiente: ${a.sig.titulo} a las ${plHora(plMin(a.sig.hora_inicio))}`:'A por lo siguiente');
+  }
+  plRenderFocus();
+  if(plTicks%60===0&&currentPanel==='planificacion'&&!plDrag)renderPlanCal();
+  if(plTicks%180===0&&!plDrag)loadPlanificacion().then(plRenderAll);
+}
+function plEnsureTick(){if(!plTickTimer)plTickTimer=setInterval(plTick,1000);}
+async function plInitSdr(){
+  await loadPlanificacion();plRenderAll();plUpdateAvisosBtn();plEnsureTick();
+}
+
+// ══════════ PLANIFICACIÓN · MANAGER ══════════
+async function openMgrPlan(){
+  try{plMgrSdrs=await sb('sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre,email,avisos_email,es_prueba&order=nombre.asc')||[];}
+  catch(e){
+    // Sin la migración no existen email/avisos_email: se carga lo básico
+    try{plMgrSdrs=await sb('sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre,es_prueba&order=nombre.asc')||[];}catch(e2){plMgrSdrs=[];}
+  }
+  if(!plMgrSdr||!plMgrSdrs.some(s=>s.id===plMgrSdr))plMgrSdr=(plMgrSdrs.find(s=>!s.es_prueba)||plMgrSdrs[0]||{}).id||null;
+  plMet30=null;
+  await loadPlanificacion();renderPlanMgr();
+  if(plMetPeriodo==='30')plSetMetPeriodo('30');
+  if(!plMgrTimer)plMgrTimer=setInterval(()=>{
+    const tab=document.getElementById('mgrtab-planificacion');
+    if(!currentUser||!plIsMgr()||!tab||!tab.classList.contains('active')||plDrag)return;
+    if(document.getElementById('pl-modal').classList.contains('active'))return;
+    loadPlanificacion().then(renderPlanMgr);
+  },30000);
+}
+function plMgrVerSdr(id){
+  plMgrSdr=id;plArmed=null;renderPlanMgr();
+  document.getElementById('mgr-plan-cal').scrollIntoView({behavior:'smooth',block:'start'});
+}
+// Recordatorio del manager → lo ve el SDR arriba en el Hub hasta que le da a "Entendido"
+function plOpenRecordar(id){
+  const s=plMgrSdrs.find(x=>x.id===id);if(!s)return;
+  const n=s.nombre.split(' ')[0],hoy=todayStr();
+  const a=plAhora(id),semana=plBloques.filter(x=>x.sdr_id===id&&plWeek(0).includes(x.fecha)).length;
+  const sinVer=plBloques.filter(x=>x.sdr_id===id&&plPorManager(x)&&!x.visto_at&&x.fecha>=hoy).length;
+  const txt=!semana?`${n}, aún no tienes nada planificado esta semana. Entra en "Mi planificación" y organiza tus bloques, empezando por los urgentes.`
+    :sinVer?`${n}, te he dejado ${sinVer} bloque${sinVer>1?'s':''} en tu planificación. Échale${sinVer>1?'s':''} un vistazo y dale a ▶ cuando empieces.`
+    :a.tipo==='late'?`${n}, ahora te toca "${a.b.titulo}". Dale a ▶ Play cuando empieces.`
+    :a.tipo==='none'?`${n}, hoy no tienes nada planificado. Entra en "Mi planificación" y organiza el día.`
+    :`${n}, recuerda revisar tu planificación y darle a ▶ en cada bloque.`;
+  plModal(`📣 Recordar a ${s.nombre}`,`
+    <p class="form-hint" style="margin:-6px 0 12px;">Le aparece arriba del todo en el Hub hasta que le da a "Entendido". Aquí verás si lo ha leído.</p>
+    <div class="form-group"><textarea class="form-textarea" id="pl-r-txt" maxlength="500" style="min-height:100px;">${plEsc(txt)}</textarea></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="plEnviarRecordar(${id})">Enviar recordatorio</button></div>`);
+}
+async function plEnviarRecordar(id){
+  const texto=document.getElementById('pl-r-txt').value.trim();
+  if(!texto){showToast('⚠️ Escribe el mensaje');return;}
+  try{
+    const r=await sb('planificacion_mensajes',{method:'POST',body:JSON.stringify({sdr_id:id,autor_id:currentUser.id,texto})});
+    plMensajes.unshift(...(r||[]));plCloseModal();renderPlanLive();
+    showToast(`✓ Recordatorio enviado a ${plNombre(id)}`);
+  }catch(e){console.error(e);showToast('❌ No se pudo enviar (¿falta la migración?)');}
+}
+// Copiar la semana que estás viendo de un SDR a otros
+function plOpenCopiarSdr(){
+  const otros=plMgrSdrs.filter(s=>s.id!==plMgrSdr);
+  plModal(`Copiar la semana de ${plNombre(plMgrSdr)}`,`
+    <p class="form-hint" style="margin:-6px 0 12px;">Les pone los mismos bloques, mismo día y hora. Si alguien ya tiene algo a esa hora, ese bloque se salta.</p>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:700;margin-bottom:10px;cursor:pointer;"><input type="checkbox" onchange="document.querySelectorAll('.pl-cp-sdr').forEach(c=>c.checked=this.checked)" style="width:18px;height:18px;"/> Todo el equipo</label>
+    ${otros.map(s=>`<label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" class="pl-cp-sdr" value="${s.id}" style="width:18px;height:18px;"/> ${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</label>`).join('')}
+    <div class="modal-actions" style="margin-top:14px;"><button class="btn-primary" onclick="plCopiarASdrs()">Copiar</button></div>`);
+}
+async function plCopiarASdrs(){
+  const ids=[...document.querySelectorAll('.pl-cp-sdr:checked')].map(c=>+c.value);
+  if(!ids.length){showToast('⚠️ Elige al menos un SDR');return;}
+  const dias=plWeek(),hoy=todayStr();
+  const origen=plBloques.filter(b=>b.sdr_id===plMgrSdr&&dias.includes(b.fecha)&&b.fecha>=hoy);
+  const rows=[];
+  ids.forEach(id=>origen.forEach(b=>{
+    const ini=plMin(b.hora_inicio);
+    if(plSolapa(id,b.fecha,ini,b.duracion_min)||rows.some(r=>r.sdr_id===id&&r.fecha===b.fecha&&ini<plMin(r.hora_inicio)+r.duracion_min&&plMin(r.hora_inicio)<ini+b.duracion_min))return;
+    rows.push({sdr_id:id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id});
+  }));
+  if(!rows.length){showToast('No había huecos libres (o no quedan días por delante esta semana)');return;}
+  plCloseModal();
+  const r=await plInsert(rows);
+  if(r)showToast(`✓ ${r.length} bloques copiados a ${ids.length} SDR${ids.length>1?'s':''}`);
+}
+// Resultados por tipo de bloque: qué bloque saca más demos por hora
+async function plSetMetPeriodo(p){
+  plMetPeriodo=p;
+  if(p==='30'&&!plMet30){
+    const d=new Date(Date.now()-30*864e5);
+    try{plMet30=await sbAll(`planificacion_bloques?estado=eq.completado&fecha=gte.${localDateStr(d)}&select=sdr_id,plantilla_id,titulo,emoji,color,trabajado_seg,duracion_min,res_llamadas,res_conectadas,res_demos`)||[];}
+    catch(e){console.error(e);plMet30=[];}
+  }
+  renderPlanMetricas();
+}
+function renderPlanMetricas(){
+  const el=document.getElementById('pl-metricas');if(!el)return;
+  if(plError){el.innerHTML='';return;}
+  const dias=plWeek();
+  let base=plMetPeriodo==='30'?(plMet30||[]):plBloques.filter(b=>dias.includes(b.fecha)&&b.estado==='completado');
+  if(plMetSdr)base=base.filter(b=>b.sdr_id===+plMetSdr);
+  const grupos={};
+  base.forEach(b=>{
+    const k=b.plantilla_id?'p'+b.plantilla_id:'t'+b.titulo.toLowerCase();
+    const g=grupos[k]||(grupos[k]={titulo:b.titulo,emoji:b.emoji,color:b.color,n:0,seg:0,ll:0,co:0,de:0,conRes:0,sdrs:new Set()});
+    g.n++;g.seg+=b.trabajado_seg||b.duracion_min*60;g.ll+=plNum(b.res_llamadas);g.co+=plNum(b.res_conectadas);g.de+=plNum(b.res_demos);g.sdrs.add(b.sdr_id);
+    if(b.res_llamadas!=null||b.res_demos!=null||b.res_conectadas!=null)g.conRes++;
+  });
+  const filas=Object.values(grupos).sort((a,b)=>b.de/Math.max(1,b.seg)-a.de/Math.max(1,a.seg)||b.n-a.n);
+  const sel=`<div class="pl-met-ctrl">
+    <div class="canal-filter-wrap"><button class="canal-filter-btn${plMetPeriodo==='semana'?' active':''}" onclick="plSetMetPeriodo('semana')">Semana del calendario</button><button class="canal-filter-btn${plMetPeriodo==='30'?' active':''}" onclick="plSetMetPeriodo('30')">Últimos 30 días</button></div>
+    <select class="form-select" style="width:auto;padding:6px 28px 6px 12px;font-size:12px;" onchange="plMetSdr=this.value;renderPlanMetricas()"><option value="">Todo el equipo</option>${plMgrSdrs.map(s=>`<option value="${s.id}"${String(s.id)===plMetSdr?' selected':''}>${plEsc(s.nombre)}</option>`).join('')}</select></div>`;
+  if(!filas.length){el.innerHTML=sel+'<div class="home-empty">Aún no hay bloques terminados en este periodo. Cuando los SDR terminen bloques y apunten sus resultados, aquí verás qué funciona mejor.</div>';return;}
+  const tot=filas.reduce((t,f)=>({n:t.n+f.n,seg:t.seg+f.seg,ll:t.ll+f.ll,co:t.co+f.co,de:t.de+f.de,conRes:t.conRes+f.conRes}),{n:0,seg:0,ll:0,co:0,de:0,conRes:0});
+  const fila=(f,total)=>{
+    const h=f.seg/3600;
+    return`<tr${total?' class="row-total"':''}><td>${total?'Total':`<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${f.color};margin-right:6px;"></span>${f.emoji?plEsc(f.emoji)+' ':''}${plEsc(f.titulo)}`}</td>
+      <td>${f.n}${total?'':` <span class="mini-ratio">(${f.sdrs.size} SDR)</span>`}</td><td>${plDurSeg(f.seg)}</td>
+      <td>${f.ll||'—'}</td><td>${f.co||'—'}${f.ll?` <span class="mini-ratio">${Math.round(f.co/f.ll*100)}%</span>`:''}</td>
+      <td class="num" style="color:var(--green)">${f.de||'—'}</td>
+      <td>${h>0&&f.de?(f.de/h).toFixed(2):'—'}</td><td>${f.co?Math.round(f.de/f.co*100)+'%':'—'}</td>
+      <td class="mini-ratio">${f.conRes}/${f.n}</td></tr>`;
+  };
+  el.innerHTML=sel+`<div class="mgr-table-wrap"><table class="mgr-table"><thead><tr><th>Bloque</th><th>Veces hecho</th><th>Horas</th><th>Llamadas</th><th>Conectadas</th><th>Demos</th><th>Demos / hora</th><th>Demo / conectada</th><th>Con resultados</th></tr></thead><tbody>
+    ${filas.map(f=>fila(f)).join('')}${filas.length>1?fila(tot,true):''}</tbody></table></div>
+    <div class="form-hint">Ordenado por demos por hora. "Con resultados" = cuántos de esos bloques tienen apuntado lo que sacaron.</div>`;
+}
+function plNombre(id){const s=plMgrSdrs.find(x=>x.id===id);return s?s.nombre:'—';}
+function renderPlanMgr(){
+  if(!plIsMgr())return;
+  const sel=document.getElementById('pl-sdr-selector');
+  if(sel)sel.innerHTML=plMgrSdrs.map(s=>`<button class="mgr-sdr-chip${s.id===plMgrSdr?' active':''}" onclick="plMgrSdr=${s.id};plArmed=null;renderPlanMgr()">${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</button>`).join('');
+  renderPlanLive();renderPlanPlantillas();renderPlanCal();renderPlanCumplimiento();renderPlanMetricas();renderPlanEmails();
+}
+function renderPlanLive(){
+  const el=document.getElementById('pl-live');if(!el)return;
+  if(plError){el.innerHTML='<div class="home-empty">Falta aplicar la migración <b>20261029_planificacion.sql</b> en Supabase.</div>';return;}
+  const hoy=todayStr();
+  el.innerHTML=`<div class="pl-live">${plMgrSdrs.map(s=>{
+    const a=plAhora(s.id),b=a.b;
+    const deHoy=plBloques.filter(x=>x.sdr_id===s.id&&x.fecha===hoy);
+    const plan=deHoy.reduce((t,x)=>t+x.duracion_min,0),hecho=deHoy.filter(x=>x.estado==='completado').length;
+    const tit=b?`${b.emoji?plEsc(b.emoji)+' ':''}<b>${plEsc(b.titulo)}</b>`:'';
+    let cls='',what='',extra='';
+    if(a.tipo==='run'||a.tipo==='pause'){
+      const w=plWorked(b),pct=Math.min(100,w/(b.duracion_min*60)*100);
+      cls=a.tipo;what=`${a.tipo==='run'?'▶ En curso':'⏸ En pausa'}: ${tit}`;
+      extra=`<div class="pl-live-prog"><div style="width:${pct}%;${a.tipo==='pause'?'background:var(--amber)':''}"></div></div><div class="pl-live-sub">${plRango(b)} · llevan ${plDurSeg(w)} de ${plDur(b.duracion_min)}</div>`;
+    }else if(a.tipo==='rest'){cls='rest';what=`☕ Descanso tras ${tit}`;extra=`<div class="pl-live-sub">Quedan ${Math.max(1,Math.ceil((a.hasta-Date.now())/60000))} min${a.sig?` · luego ${plEsc(a.sig.titulo)}`:''}</div>`;}
+    else if(a.tipo==='late'){cls='late';what=`⚠️ Debería estar en ${tit}`;extra=`<div class="pl-live-sub">${plRango(b)} · aún no le ha dado a play</div>`;}
+    else if(a.tipo==='next')what=`Siguiente: ${tit} <span style="color:var(--muted)">a las ${plHora(plMin(b.hora_inicio))}</span>`;
+    else if(a.tipo==='done'&&a.hechos<a.total){cls='late';what=`⚠️ ${a.total-a.hechos} bloque${a.total-a.hechos>1?'s':''} de hoy sin hacer`;}
+    else if(a.tipo==='done')what='🏁 Ha hecho todo lo planificado hoy';
+    else what='<span style="color:var(--muted)">Sin nada planificado hoy</span>';
+    const semana=plBloques.filter(x=>x.sdr_id===s.id&&plWeek(0).includes(x.fecha)).length;
+    const sinVer=plBloques.filter(x=>x.sdr_id===s.id&&plPorManager(x)&&!x.visto_at&&x.fecha>=hoy).length;
+    const ult=plMensajes.find(m=>m.sdr_id===s.id);
+    const alertas=[];
+    if(!semana)alertas.push('<span class="pl-st bad">Semana sin planificar</span>');
+    if(sinVer)alertas.push(`<span class="pl-st pause" title="Bloques que le has puesto y aún no ha visto">📌 ${sinVer} sin ver</span>`);
+    if(ult)alertas.push(`<span class="pl-st ${ult.leida_at?'ok':''}" title="${plEsc(ult.texto)}">📣 ${new Date(ult.created_at).toLocaleString('es-ES',{weekday:'short',hour:'2-digit',minute:'2-digit'})} · ${ult.leida_at?'leído ✓':'sin leer'}</span>`);
+    return`<div class="pl-live-card ${cls}">
+      <div class="pl-live-name"><span>${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</span><span class="pl-st">${hecho}/${deHoy.length} · ${plan?plDur(plan):'0 h'}</span></div>
+      <div class="pl-live-what">${what}</div>${extra}
+      ${alertas.length?`<div class="pl-live-tags">${alertas.join('')}</div>`:''}
+      <div class="pl-live-actions"><button class="pl-link-btn" onclick="plMgrVerSdr(${s.id})">🗓️ Planificar</button><button class="pl-link-btn" onclick="plOpenRecordar(${s.id})">📣 Recordar</button></div></div>`;
+  }).join('')}</div>`;
+  const upd=document.getElementById('pl-live-upd');
+  if(upd)upd.textContent=`Qué está haciendo cada SDR ahora mismo · actualizado a las ${new Date().toTimeString().slice(0,5)}`;
+}
+function renderPlanPlantillas(){
+  const el=document.getElementById('pl-plantillas-list');if(!el)return;
+  if(plError){el.innerHTML='';return;}
+  const lista=[...plPlantillas].sort((a,b)=>(PL_PRIO_ORDEN[a.prioridad]??2)-(PL_PRIO_ORDEN[b.prioridad]??2)||b.id-a.id);
+  if(!lista.length){el.innerHTML='<div class="home-empty"><b>Aún no hay bloques</b>Crea el primero: por ejemplo "📞 Llamar inbounds · 1 h".</div>';return;}
+  const dias=plWeek();
+  el.innerHTML=`<div class="pl-tpl-list">${lista.map(p=>{
+    const para=p.sdr_id?plNombre(p.sdr_id):'Todo el equipo';
+    const quien=p.sdr_id?[p.sdr_id]:plMgrSdrs.filter(s=>!s.es_prueba).map(s=>s.id);
+    const con=quien.filter(id=>plBloques.some(b=>b.sdr_id===id&&b.plantilla_id===p.id&&dias.includes(b.fecha))).length;
+    return`<div class="pl-tpl" style="--c:${p.color}">
+      <div class="pl-tpl-t">${p.emoji?plEsc(p.emoji)+' ':''}${plEsc(p.titulo)}</div>
+      <div class="pl-tpl-m"><span>⏱ ${plDur(p.duracion_min)}</span>${plPrioPill(p.prioridad)}<span>👥 ${plEsc(para)}</span>${p.fecha_limite?`<span>📅 antes del ${fmtDate(p.fecha_limite)}</span>`:''}</div>
+      ${p.descripcion?`<div class="pl-tpl-d">${plEsc(p.descripcion)}</div>`:''}
+      <div class="pl-tpl-m" style="margin-top:6px;"><span>Esta semana lo han planificado <b>${con}/${quien.length}</b></span></div>
+      <div class="pl-tpl-a"><button class="pl-link-btn" onclick="plOpenPlantilla(${p.id})">✏️ Editar</button><button class="pl-link-btn" onclick="plArchivarPlantilla(${p.id})">🗄 Archivar</button></div>
+    </div>`;}).join('')}</div>`;
+}
+function plOpenPlantilla(id){
+  const p=id?plPlantillas.find(x=>x.id===id):null;
+  const v=p||{titulo:'',emoji:'',color:PL_COLORES[0],duracion_min:60,prioridad:'normal',sdr_id:null,fecha_limite:'',descripcion:''};
+  plModal(p?'Editar bloque':'Nuevo bloque para el equipo',`
+    <div class="form-group"><label class="form-label">Nombre del bloque</label>
+      <div style="display:flex;gap:8px;"><input class="form-input" id="pl-p-emoji" maxlength="4" placeholder="📞" value="${plEsc(v.emoji||'')}" style="width:64px;text-align:center;"/><input class="form-input" id="pl-p-titulo" maxlength="80" placeholder="Ej.: Llamar inbounds, Campaña Black Friday…" value="${plEsc(v.titulo)}"/></div></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-p-dur">${plOpcionesDur(v.duracion_min)}</select></div>
+      <div class="form-group"><label class="form-label">Prioridad</label><select class="form-select" id="pl-p-prio">
+        <option value="normal"${v.prioridad==='normal'?' selected':''}>Normal</option>
+        <option value="alta"${v.prioridad==='alta'?' selected':''}>Alta</option>
+        <option value="urgente"${v.prioridad==='urgente'?' selected':''}>🚨 Urgente (les llega email)</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">¿Para quién?</label><select class="form-select" id="pl-p-sdr"><option value="">Todo el equipo</option>${plMgrSdrs.map(s=>`<option value="${s.id}"${v.sdr_id===s.id?' selected':''}>${plEsc(s.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Hacer antes del (opcional)</label><input class="form-input" type="date" id="pl-p-limite" value="${v.fecha_limite||''}"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Instrucciones (opcional)</label><textarea class="form-textarea" id="pl-p-desc" maxlength="500" placeholder="Qué tienen que hacer en este bloque, lista a usar, objetivo…">${plEsc(v.descripcion||'')}</textarea></div>
+    <div class="form-group"><label class="form-label">Color</label>${plSwatches(v.color)}</div>
+    <div class="modal-actions"><button class="btn-primary" onclick="plGuardarPlantilla(${p?p.id:'null'})">${p?'Guardar cambios':'Crear bloque'}</button></div>`);
+  setTimeout(()=>document.getElementById('pl-p-titulo').focus(),50);
+}
+async function plGuardarPlantilla(id){
+  const titulo=document.getElementById('pl-p-titulo').value.trim();
+  if(!titulo){showToast('⚠️ Ponle un nombre al bloque');return;}
+  const row={titulo,emoji:document.getElementById('pl-p-emoji').value.trim()||null,color:plSwatchSel(),
+    duracion_min:+document.getElementById('pl-p-dur').value,prioridad:document.getElementById('pl-p-prio').value,
+    sdr_id:document.getElementById('pl-p-sdr').value?+document.getElementById('pl-p-sdr').value:null,
+    fecha_limite:document.getElementById('pl-p-limite').value||null,descripcion:document.getElementById('pl-p-desc').value.trim()||null};
+  try{
+    if(id)await sb(`planificacion_plantillas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(row)});
+    else await sb('planificacion_plantillas',{method:'POST',body:JSON.stringify({...row,autor_id:currentUser.id})});
+    plCloseModal();showToast(id?'✓ Bloque actualizado':row.prioridad==='urgente'?'✓ Bloque urgente creado · les llegará un email':'✓ Bloque creado · ya lo ven en su planificación');
+    await loadPlanificacion();renderPlanMgr();
+  }catch(e){console.error(e);showToast('❌ No se pudo guardar el bloque');}
+}
+async function plArchivarPlantilla(id){
+  const p=plPlantillas.find(x=>x.id===id);if(!p)return;
+  if(!confirm(`¿Archivar "${p.titulo}"? Dejará de salirles para arrastrar. Lo que ya tengan en el calendario se queda.`))return;
+  try{await sb(`planificacion_plantillas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activa:false})});await loadPlanificacion();renderPlanMgr();showToast('✓ Bloque archivado');}
+  catch(e){console.error(e);showToast('❌ No se pudo archivar');}
+}
+function renderPlanCumplimiento(){
+  const el=document.getElementById('pl-cumplimiento');if(!el)return;
+  if(plError){el.innerHTML='';return;}
+  const dias=plWeek(),now=madridNow();
+  const filas=plMgrSdrs.map(s=>{
+    const sem=plBloques.filter(b=>b.sdr_id===s.id&&dias.includes(b.fecha));
+    const pasados=sem.filter(b=>['completado','saltado','perdido'].includes(plEstado(b,now)));
+    const hechos=pasados.filter(b=>b.estado==='completado');
+    const pct=pasados.length?Math.round(hechos.length/pasados.length*100):null;
+    const trab=sem.reduce((t,b)=>t+plWorked(b),0);
+    return{s,plan:sem.reduce((t,b)=>t+b.duracion_min,0),n:sem.length,pasados:pasados.length,hechos:hechos.length,no:pasados.length-hechos.length,pct,trab,urg:plUrgentesSinPlanificar(s.id).length,demos:sem.reduce((t,b)=>t+plNum(b.res_demos),0)};
+  });
+  el.innerHTML=`<table class="mgr-table"><thead><tr><th>SDR</th><th>Planificado</th><th>Bloques</th><th>Ya tocaban</th><th>Hechos</th><th>No hechos</th><th>Cumplimiento</th><th>Tiempo con play</th><th>Demos</th><th>Urgentes sin planificar</th></tr></thead><tbody>
+    ${filas.map(f=>`<tr style="cursor:pointer" onclick="plMgrVerSdr(${f.s.id})">
+      <td>${plEsc(f.s.nombre)}${f.s.es_prueba?' 🧪':''}</td><td>${f.plan?plDur(f.plan):'—'}</td><td>${f.n}</td><td>${f.pasados}</td>
+      <td style="color:var(--green);font-weight:700">${f.hechos}</td><td style="color:${f.no?'var(--red)':'inherit'};font-weight:700">${f.no}</td>
+      <td>${f.pct==null?'—':`<span class="pl-pct ${f.pct>=80?'ok':f.pct>=50?'mid':'bad'}">${f.pct}%</span>`}</td>
+      <td>${f.trab?plDurSeg(f.trab):'—'}</td><td class="num">${f.demos||'—'}</td>
+      <td>${f.urg?`<span class="pl-st bad">🚨 ${f.urg}</span>`:'<span class="pl-st ok">0</span>'}</td></tr>`).join('')}
+  </tbody></table><div class="form-hint">Semana que se ve en el calendario de arriba (cámbiala con sus flechas).</div>`;
+}
+function renderPlanEmails(){
+  const el=document.getElementById('pl-emails');if(!el)return;
+  if(!plMgrSdrs.length||!('avisos_email' in plMgrSdrs[0])){el.innerHTML='<div class="home-empty">Falta aplicar la migración para guardar los emails.</div>';return;}
+  el.innerHTML=`<table class="mgr-table"><thead><tr><th>SDR</th><th>Email</th><th>Avisos por email</th><th></th></tr></thead><tbody>
+    ${plMgrSdrs.map(s=>`<tr><td>${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</td>
+      <td><input type="email" id="pl-mail-${s.id}" value="${plEsc(s.email||'')}" placeholder="nombre@empresa.com" style="width:240px;text-align:left;"/></td>
+      <td><label style="display:inline-flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" id="pl-mailon-${s.id}" ${s.avisos_email!==false?'checked':''} style="width:18px;height:18px;accent-color:var(--teal-dark);"/> Activos</label></td>
+      <td><button class="pl-link-btn" onclick="plGuardarEmail(${s.id})">Guardar</button></td></tr>`).join('')}
+  </tbody></table>`;
+}
+async function plGuardarEmail(id){
+  const email=document.getElementById('pl-mail-'+id).value.trim()||null;
+  if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showToast('⚠️ Ese email no parece válido');return;}
+  const on=document.getElementById('pl-mailon-'+id).checked;
+  try{
+    await sb(`sdr_users?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({email,avisos_email:on})});
+    const s=plMgrSdrs.find(x=>x.id===id);if(s){s.email=email;s.avisos_email=on;}
+    showToast('✓ Avisos por email guardados');
+  }catch(e){console.error(e);showToast('❌ No se pudo guardar el email');}
 }
 
 // ── INIT ──
