@@ -1133,7 +1133,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 /* Manager: en directo y bloques */
 .pl-live{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
-.pl-live-card{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:13px;padding:12px 14px;background:var(--surface);cursor:pointer;transition:box-shadow 0.12s;}
+.pl-live-card{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:13px;padding:12px 14px;background:var(--surface);transition:box-shadow 0.12s;display:flex;flex-direction:column;}
+.pl-live-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pl-live-actions{display:flex;gap:6px;margin-top:auto;padding-top:10px;}
+.pl-mgr-tag{position:absolute;top:2px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--teal-dark);color:#fff;font-size:9.5px;font-weight:800;line-height:15px;text-align:center;}
+.pl-mgr-tag.unseen{background:var(--amber);}
+.pl-block.nuevo{animation:plNuevo 1.2s ease-in-out 4;}
+@keyframes plNuevo{50%{box-shadow:0 0 0 4px var(--amber);}}
+.pl-block .pl-block-t{padding-right:14px;}
+.pl-guia{background:var(--lime-soft);border:1px solid #cbe9a4;border-radius:14px;padding:14px 18px;margin-bottom:16px;font-size:13.5px;color:var(--teal-dark);}
+.pl-guia-t{font-family:'Fraunces',serif;font-size:16px;font-weight:700;margin-bottom:6px;}
+.pl-guia ol{margin:0 0 10px 18px;display:flex;flex-direction:column;gap:4px;}
+.pl-focus-notice{flex-basis:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--amber-soft);border:1px solid #f0d58a;border-radius:11px;padding:8px 12px;font-size:13.5px;color:#5c3f00;}
+.pl-res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pl-met-ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .pl-live-card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.06);}
 .pl-live-card.run{border-left-color:var(--green);background:#f7fcf9;}
 .pl-live-card.pause{border-left-color:var(--amber);}
@@ -1696,6 +1709,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           <div class="mgr-block-sub">Bloques cuya hora ya ha pasado: cuántos se hicieron (con play) y cuántos no</div>
         </div>
         <div class="mgr-table-wrap" id="pl-cumplimiento"></div>
+      </div>
+
+      <div class="mgr-block" style="margin-top:20px;">
+        <div class="mgr-block-head">
+          <div>
+            <div class="mgr-block-title">📈 Resultados por tipo de bloque</div>
+            <div class="mgr-block-sub">Lo que apuntan los SDR al terminar cada bloque: qué tipo de bloque saca más demos por hora</div>
+          </div>
+        </div>
+        <div id="pl-metricas"></div>
       </div>
 
       <div class="mgr-block" style="margin-top:20px;">
@@ -5309,7 +5332,9 @@ function showPanel(p){
   if(slot&&nav&&nav.parentElement!==slot)slot.appendChild(nav);
   try{sessionStorage.setItem('sdr_panel',p);}catch(e){}
   window.scrollTo(0,0);
-  if(p==='planificacion'){plArmed=null;loadPlanificacion().then(plRenderAll);}
+  if(p==='planificacion'){plArmed=null;loadPlanificacion().then(()=>{plRenderAll();return plMarcarVistos();}).then(plRenderAll);}
+  else plNuevos.clear();
+  if(typeof plRenderFocus==='function')plRenderFocus();
   if(p==='metricas'&&!metricsAutoOpened){
     metricsAutoOpened=true;
     const mp=document.getElementById('metrics-panel-inline');
@@ -8081,6 +8106,7 @@ const PL_DURACIONES=[15,30,45,60,90,120,150,180,240];
 const PL_PRIO_ORDEN={urgente:0,alta:1,normal:2};
 let plPlantillas=[],plBloques=[],plWeekOffset=0,plMgrSdr=null,plMgrSdrs=[];
 let plArmed=null,plDrag=null,plReady=false,plError=false,plTickTimer=null,plTicks=0,plMgrTimer=null;
+let plMensajes=[],plNuevos=new Set(),plMet30=null,plMetPeriodo='semana',plMetSdr='';
 let plAvisados=new Set();
 try{plAvisados=new Set(JSON.parse(sessionStorage.getItem('pl_avisados')||'[]'));}catch(e){}
 
@@ -8131,6 +8157,8 @@ function plUrgentesSinPlanificar(sdrId){
 function plSolapa(sdrId,fecha,ini,dur,exceptId){
   return plBloques.some(b=>b.sdr_id===sdrId&&b.fecha===fecha&&b.id!==exceptId&&ini<plFin(b)&&plMin(b.hora_inicio)<ini+dur);
 }
+function plPorManager(b){return b.creado_por!=null&&b.creado_por!==b.sdr_id;}
+function plNum(v){return v==null||v===''?0:+v;}
 function plEsFestivo(f){return FESTIVOS_2026.includes(f);}
 
 // ── Carga ──
@@ -8145,6 +8173,11 @@ async function loadPlanificacion(){
     ]);
     plPlantillas=pls||[];plBloques=bls||[];plReady=true;plError=false;
   }catch(e){console.error(e);plError=true;}
+  try{
+    const desde7=new Date(Date.now()-7*864e5).toISOString();
+    plMensajes=await sb(plIsMgr()?`planificacion_mensajes?created_at=gte.${desde7}&select=*&order=created_at.desc`
+      :`planificacion_mensajes?sdr_id=eq.${currentUser.id}&leida_at=is.null&select=*&order=created_at.asc`)||[];
+  }catch(e){plMensajes=[];}
   if(!plIsMgr())await plCerrarVencidos();
 }
 // Si cerró el Hub con un bloque corriendo y el tiempo ya se cumplió, se da por terminado
@@ -8229,7 +8262,9 @@ function renderPlanCal(){
     <div class="pl-stats">
       <span class="pl-stat">Planificado <b>${plan?plDur(plan):'0 h'}</b></span>
       <span class="pl-stat">Hecho <b>${hecho?plDur(hecho):'0 h'}</b></span>
+      ${mios.some(b=>b.res_demos)?`<span class="pl-stat">Demos <b>${mios.reduce((t,b)=>t+plNum(b.res_demos),0)}</b></span>`:''}
       ${mios.length?'<button class="pl-link-btn" onclick="plCopiarSemana()" title="Repite estos bloques la semana siguiente">⧉ Copiar a la semana siguiente</button>':''}
+      ${mios.length&&plIsMgr()?'<button class="pl-link-btn" onclick="plOpenCopiarSdr()" title="Pon esta misma semana a otros SDR">👥 Copiar a otro SDR</button>':''}
     </div>
   </div>`;
 
@@ -8252,9 +8287,11 @@ function renderPlanCal(){
       const w=plWorked(b),pct=Math.min(100,w/(b.duracion_min*60)*100);
       const locked=b.estado==='completado'||b.estado==='en_curso';
       const ico=st==='en_curso'?' · ▶':st==='pausado'?' · ⏸':st==='perdido'?' · sin empezar':st==='saltado'?' · no hecho':'';
-      grid+=`<div class="pl-block st-${st}${h<=24?' short':''}${locked?' locked':''}" data-id="${b.id}" style="--c:${b.color};top:${top}px;height:${h-2}px" title="${plEsc(b.titulo)} · ${plRango(b)}">
+      const mgr=plPorManager(b);
+      const mgrTag=mgr?`<span class="pl-mgr-tag${plIsMgr()&&!b.visto_at?' unseen':''}" title="${plIsMgr()?(b.visto_at?'Lo ha visto':'Aún no lo ha visto'):'Te lo ha puesto tu manager'}">${plIsMgr()?(b.visto_at?'👀':'M'):'M'}</span>`:'';
+      grid+=`<div class="pl-block st-${st}${h<=24?' short':''}${locked?' locked':''}${plNuevos.has(b.id)?' nuevo':''}" data-id="${b.id}" style="--c:${b.color};top:${top}px;height:${h-2}px" title="${plEsc(b.titulo)} · ${plRango(b)}${mgr?' · puesto por el manager':''}">${mgrTag}
         <div class="pl-block-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
-        <div class="pl-block-h">${plRango(b)}${ico}</div>
+        <div class="pl-block-h">${plRango(b)}${ico}${b.res_demos?` · 🎯 ${b.res_demos}`:''}</div>
         ${w>0&&b.estado!=='completado'?`<div class="pl-block-bar" style="width:${pct}%"></div>`:''}
         ${locked?'':'<div class="pl-resize"></div>'}
       </div>`;
@@ -8264,7 +8301,14 @@ function renderPlanCal(){
   });
   grid+=`</div>`;
 
-  root.innerHTML=`<div class="pl-layout"><aside class="pl-palette">${pal}</aside><div class="pl-cal">${head}<div class="pl-scroll">${grid}</div>
+  let guia='';
+  try{if(!plIsMgr()&&!localStorage.getItem('pl_guia_ok'))guia=`<div class="pl-guia">
+    <div class="pl-guia-t">¿Cómo funciona?</div>
+    <ol><li><b>Arrastra</b> un bloque de la izquierda a la hora que quieras (en el móvil: tócalo y luego toca la hora). Empieza por los <b style="color:var(--red)">urgentes</b>.</li>
+    <li>Cuando empieces, dale a <b>▶ Play</b> en la barra de arriba. Al acabar el tiempo te avisa y tienes <b>15 min de descanso</b>.</li>
+    <li>Al terminar, apunta <b>llamadas, conectadas y demos</b> que sacaste. Los bloques con una <b>M</b> te los ha puesto tu manager.</li></ol>
+    <button class="pl-link-btn" onclick="try{localStorage.setItem('pl_guia_ok','1')}catch(e){};renderPlanCal()">Entendido</button></div>`;}catch(e){}
+  root.innerHTML=guia+`<div class="pl-layout"><aside class="pl-palette">${pal}</aside><div class="pl-cal">${head}<div class="pl-scroll">${grid}</div>
     <div class="pl-hint">Arrastra un bloque para moverlo · tira del borde de abajo para cambiar su duración · haz clic para verlo, darle a play o borrarlo.</div></div></div>`;
   root.onpointerdown=plPointerDown;
 }
@@ -8420,6 +8464,7 @@ function plOpenBloque(id){
     <div class="pl-det-strip" style="background:${b.color}"></div>
     <div class="pl-det-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
     <div class="pl-det-m"><span>📅 ${plDiaLargo(b.fecha)} · ${plRango(b)} (${plDur(b.duracion_min)})</span>${plPrioPill(b.prioridad)}${plEstPill(st)}</div>
+    ${plPorManager(b)?`<div class="form-hint" style="margin:-4px 0 10px;">📌 ${plIsMgr()?`Puesto por ti · ${b.visto_at?`👀 lo vio el ${new Date(b.visto_at).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}`:'<b style="color:var(--red)">aún no lo ha visto</b>'}`:'Te lo ha puesto tu manager'}</div>`:''}
     ${p&&p.descripcion?`<div class="pl-det-desc">${plEsc(p.descripcion)}</div>`:''}
     ${w>0?`<div class="form-hint" style="margin-bottom:10px;">⏱ Trabajado: <b>${plDurSeg(w)}</b> de ${plDur(b.duracion_min)}${b.completed_at?` · terminado a las ${new Date(b.completed_at).toTimeString().slice(0,5)}`:''}</div>`:''}
     ${acc?`<div class="pl-det-actions">${acc}</div>`:''}
@@ -8428,7 +8473,8 @@ function plOpenBloque(id){
       <div class="form-group"><label class="form-label">Empieza</label><select class="form-select" id="pl-e-hora">${plOpcionesHora(plMin(b.hora_inicio))}</select></div>
       <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-e-dur">${plOpcionesDur(b.duracion_min)}</select></div>
     </div>`:''}
-    <div class="form-group"><label class="form-label">Notas ${plIsMgr()?'del SDR':'(qué has sacado: llamadas, demos…)'}</label><textarea class="form-textarea" id="pl-e-notas" maxlength="500" ${plIsMgr()?'readonly':''}>${plEsc(b.notas||'')}</textarea></div>
+    ${b.estado==='completado'||b.estado==='pausado'||b.estado==='en_curso'||plNum(b.res_llamadas)+plNum(b.res_demos)>0?plResInputs(b,'pl-e',plIsMgr()):''}
+    <div class="form-group"><label class="form-label">Notas ${plIsMgr()?'del SDR':'(cómo ha ido, algo a destacar…)'}</label><textarea class="form-textarea" id="pl-e-notas" maxlength="500" ${plIsMgr()?'readonly':''}>${plEsc(b.notas||'')}</textarea></div>
     <div class="modal-actions" style="flex-wrap:wrap;">
       <button class="btn-primary" onclick="plGuardarBloque(${b.id})">Guardar</button>
       ${editable?`<button class="btn-primary btn-soft" onclick="plCopiarDias(${b.id})" title="Mismo bloque, a la misma hora, de lunes a viernes">⧉ Repetir toda la semana</button>`:''}
@@ -8440,6 +8486,7 @@ async function plGuardarBloque(id){
   const c={};
   const notas=document.getElementById('pl-e-notas').value.trim()||null;
   if(!plIsMgr()&&notas!==(b.notas||null))c.notas=notas;
+  if(!plIsMgr())Object.assign(c,plResLeer('pl-e',b));
   const h=document.getElementById('pl-e-hora'),du=document.getElementById('pl-e-dur');
   if(h&&du){
     const ini=+h.value,dur=Math.min(+du.value,PL_H_FIN*60-ini);
@@ -8540,14 +8587,32 @@ async function plFinish(id,auto){
       <div class="pl-det-t" style="margin-top:4px;">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
       <p style="font-size:14px;color:var(--muted);margin:8px 0 14px;">${msg} Levántate, bebe agua, estira.</p>
       ${sig?`<div class="pl-det-desc" style="text-align:left;">Siguiente: <b>${sig.emoji?plEsc(sig.emoji)+' ':''}${plEsc(sig.titulo)}</b> a las <b>${plHora(plMin(sig.hora_inicio))}</b></div>`:'<div class="pl-det-desc">No tienes más bloques planificados hoy.</div>'}
-      <div class="form-group" style="text-align:left;"><label class="form-label">¿Qué has sacado de este bloque? (opcional)</label><textarea class="form-textarea" id="pl-fin-notas" maxlength="500" placeholder="Ej.: 45 llamadas, 12 conectadas, 2 demos">${plEsc(b.notas||'')}</textarea></div>
+      <div style="text-align:left;">${plResInputs(b,'pl-fin',false,'¿Qué has sacado de este bloque?')}</div>
+      <div class="form-group" style="text-align:left;"><label class="form-label">Notas (opcional)</label><textarea class="form-textarea" id="pl-fin-notas" maxlength="500" placeholder="Cómo ha ido, algo a destacar…">${plEsc(b.notas||'')}</textarea></div>
       <button class="btn-primary" onclick="plGuardarNotaFin(${b.id})">Vale</button>
     </div>`);
 }
 async function plGuardarNotaFin(id){
   const b=plBloques.find(x=>x.id===id);const n=(document.getElementById('pl-fin-notas').value||'').trim()||null;
+  const c=b?plResLeer('pl-fin',b):{};
   plCloseModal();
-  if(b&&n!==(b.notas||null))await plPatch(b,{notas:n});
+  if(b&&n!==(b.notas||null))c.notas=n;
+  if(b&&Object.keys(c).length){await plPatch(b,c);showToast('✓ Resultados guardados');}
+}
+// Resultados de un bloque (llamadas / conectadas / demos)
+function plResInputs(b,pre,soloLectura,label){
+  const f=(k,t,ph)=>`<div class="form-group" style="margin-bottom:0;"><label class="form-label">${t}</label><input class="form-input" type="number" min="0" max="2000" inputmode="numeric" id="${pre}-${k}" value="${b['res_'+k]??''}" placeholder="${ph}" ${soloLectura?'readonly':''}/></div>`;
+  return`<div class="form-group"><label class="form-label" style="font-weight:700;">${label||'Resultados del bloque'}</label>
+    <div class="pl-res-grid">${f('llamadas','📞 Llamadas','0')}${f('conectadas','🗣️ Conectadas','0')}${f('demos','🎯 Demos','0')}</div></div>`;
+}
+function plResLeer(pre,b){
+  const c={};
+  ['llamadas','conectadas','demos'].forEach(k=>{
+    const el=document.getElementById(`${pre}-${k}`);if(!el)return;
+    const v=el.value===''?null:Math.max(0,Math.min(k==='demos'?200:2000,parseInt(el.value)||0));
+    if(v!==(b['res_'+k]??null))c['res_'+k]=v;
+  });
+  return c;
 }
 async function plSkip(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'saltado',corriendo_desde:null}))plCloseModal();}
 async function plReset(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'planificado',trabajado_seg:0,corriendo_desde:null,started_at:null,completed_at:null,aviso_fin_at:null}))plCloseModal();}
@@ -8607,13 +8672,38 @@ function plRenderFocus(){
       <div class="pl-focus-info"><div class="pl-focus-lbl">Siguiente · ${plRango(b)} · en ${plDur(Math.max(1,falta))}</div><div class="pl-focus-t">${tit}</div></div>
       <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Empezar ya</button></div>`;
   }else if(a.tipo==='done'){
-    html=`<div class="pl-focus-ico">🏁</div><div class="pl-focus-info"><div class="pl-focus-lbl">Hoy</div><div class="pl-focus-t">${a.hechos} de ${a.total} bloques hechos. No queda nada más planificado.</div></div>`;
+    html=`<div class="pl-focus-ico">${a.hechos<a.total?'📋':'🏁'}</div><div class="pl-focus-info"><div class="pl-focus-lbl">Hoy</div><div class="pl-focus-t">${a.hechos<a.total?`${a.hechos} de ${a.total} bloques hechos. No queda nada más planificado para hoy.`:`¡Has hecho los ${a.total} bloques de hoy! 🎉`}</div></div>`;
   }else{
     html=`<div class="pl-focus-ico">🗓️</div><div class="pl-focus-info"><div class="pl-focus-lbl">Hoy</div><div class="pl-focus-t">No tienes nada planificado para hoy.</div></div>
       <div class="pl-focus-actions"><button class="pl-btn" onclick="showPanel('planificacion')">Planificar mi día →</button></div>`;
   }
+  // Avisos del manager: mensajes sin leer y bloques que te ha puesto y aún no has visto
+  let avisos='';
+  plMensajes.filter(m=>!m.leida_at).forEach(m=>{
+    avisos+=`<div class="pl-focus-notice"><span>💬 <b>Tu manager:</b> ${plEsc(m.texto)}</span><button class="pl-btn" onclick="plLeerMensaje(${m.id})">Entendido</button></div>`;
+  });
+  const sinVer=plBloques.filter(b=>b.sdr_id===currentUser.id&&plPorManager(b)&&!b.visto_at&&b.fecha>=todayStr());
+  if(sinVer.length&&currentPanel!=='planificacion')avisos+=`<div class="pl-focus-notice"><span>📌 Tu manager te ha planificado <b>${sinVer.length} bloque${sinVer.length>1?'s':''}</b></span><button class="pl-btn play" onclick="showPanel('planificacion')">Ver mi planificación</button></div>`;
   el.className='pl-focus'+(cls?' '+cls:'');
-  el.innerHTML=html+(urgTxt?`<div class="pl-focus-actions">${urgTxt}</div>`:'');
+  el.innerHTML=avisos+html+(urgTxt?`<div class="pl-focus-actions">${urgTxt}</div>`:'');
+}
+async function plLeerMensaje(id){
+  const m=plMensajes.find(x=>x.id===id);if(!m)return;
+  m.leida_at=new Date().toISOString();plRenderFocus();
+  try{await sb(`planificacion_mensajes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({leida_at:m.leida_at})});}
+  catch(e){console.error(e);m.leida_at=null;plRenderFocus();showToast('❌ No se pudo marcar como leído');}
+}
+// Al abrir su planificación, los bloques que le puso el manager quedan como vistos (y se resaltan esta vez)
+async function plMarcarVistos(){
+  if(plIsMgr())return;
+  const sinVer=plBloques.filter(b=>b.sdr_id===currentUser.id&&plPorManager(b)&&!b.visto_at);
+  if(!sinVer.length)return;
+  plNuevos=new Set(sinVer.map(b=>b.id));
+  const ahora=new Date().toISOString();
+  sinVer.forEach(b=>b.visto_at=ahora);
+  try{await sb(`planificacion_bloques?id=in.(${sinVer.map(b=>b.id).join(',')})`,{method:'PATCH',body:JSON.stringify({visto_at:ahora})});}
+  catch(e){console.error(e);sinVer.forEach(b=>b.visto_at=null);}
+  showToast(`📌 Tu manager te ha planificado ${sinVer.length} bloque${sinVer.length>1?'s':''} (resaltados)`);
 }
 
 // ── Avisos dentro de la app (notificación del navegador + sonido + aviso) ──
@@ -8674,7 +8764,9 @@ async function openMgrPlan(){
     try{plMgrSdrs=await sb('sdr_users?rol=eq.sdr&activo=eq.true&select=id,nombre,es_prueba&order=nombre.asc')||[];}catch(e2){plMgrSdrs=[];}
   }
   if(!plMgrSdr||!plMgrSdrs.some(s=>s.id===plMgrSdr))plMgrSdr=(plMgrSdrs.find(s=>!s.es_prueba)||plMgrSdrs[0]||{}).id||null;
+  plMet30=null;
   await loadPlanificacion();renderPlanMgr();
+  if(plMetPeriodo==='30')plSetMetPeriodo('30');
   if(!plMgrTimer)plMgrTimer=setInterval(()=>{
     const tab=document.getElementById('mgrtab-planificacion');
     if(!currentUser||!plIsMgr()||!tab||!tab.classList.contains('active')||plDrag)return;
@@ -8682,12 +8774,108 @@ async function openMgrPlan(){
     loadPlanificacion().then(renderPlanMgr);
   },30000);
 }
+function plMgrVerSdr(id){
+  plMgrSdr=id;plArmed=null;renderPlanMgr();
+  document.getElementById('mgr-plan-cal').scrollIntoView({behavior:'smooth',block:'start'});
+}
+// Recordatorio del manager → lo ve el SDR arriba en el Hub hasta que le da a "Entendido"
+function plOpenRecordar(id){
+  const s=plMgrSdrs.find(x=>x.id===id);if(!s)return;
+  const n=s.nombre.split(' ')[0],hoy=todayStr();
+  const a=plAhora(id),semana=plBloques.filter(x=>x.sdr_id===id&&plWeek(0).includes(x.fecha)).length;
+  const sinVer=plBloques.filter(x=>x.sdr_id===id&&plPorManager(x)&&!x.visto_at&&x.fecha>=hoy).length;
+  const txt=!semana?`${n}, aún no tienes nada planificado esta semana. Entra en "Mi planificación" y organiza tus bloques, empezando por los urgentes.`
+    :sinVer?`${n}, te he dejado ${sinVer} bloque${sinVer>1?'s':''} en tu planificación. Échale${sinVer>1?'s':''} un vistazo y dale a ▶ cuando empieces.`
+    :a.tipo==='late'?`${n}, ahora te toca "${a.b.titulo}". Dale a ▶ Play cuando empieces.`
+    :a.tipo==='none'?`${n}, hoy no tienes nada planificado. Entra en "Mi planificación" y organiza el día.`
+    :`${n}, recuerda revisar tu planificación y darle a ▶ en cada bloque.`;
+  plModal(`📣 Recordar a ${s.nombre}`,`
+    <p class="form-hint" style="margin:-6px 0 12px;">Le aparece arriba del todo en el Hub hasta que le da a "Entendido". Aquí verás si lo ha leído.</p>
+    <div class="form-group"><textarea class="form-textarea" id="pl-r-txt" maxlength="500" style="min-height:100px;">${plEsc(txt)}</textarea></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="plEnviarRecordar(${id})">Enviar recordatorio</button></div>`);
+}
+async function plEnviarRecordar(id){
+  const texto=document.getElementById('pl-r-txt').value.trim();
+  if(!texto){showToast('⚠️ Escribe el mensaje');return;}
+  try{
+    const r=await sb('planificacion_mensajes',{method:'POST',body:JSON.stringify({sdr_id:id,autor_id:currentUser.id,texto})});
+    plMensajes.unshift(...(r||[]));plCloseModal();renderPlanLive();
+    showToast(`✓ Recordatorio enviado a ${plNombre(id)}`);
+  }catch(e){console.error(e);showToast('❌ No se pudo enviar (¿falta la migración?)');}
+}
+// Copiar la semana que estás viendo de un SDR a otros
+function plOpenCopiarSdr(){
+  const otros=plMgrSdrs.filter(s=>s.id!==plMgrSdr);
+  plModal(`Copiar la semana de ${plNombre(plMgrSdr)}`,`
+    <p class="form-hint" style="margin:-6px 0 12px;">Les pone los mismos bloques, mismo día y hora. Si alguien ya tiene algo a esa hora, ese bloque se salta.</p>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:700;margin-bottom:10px;cursor:pointer;"><input type="checkbox" onchange="document.querySelectorAll('.pl-cp-sdr').forEach(c=>c.checked=this.checked)" style="width:18px;height:18px;"/> Todo el equipo</label>
+    ${otros.map(s=>`<label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" class="pl-cp-sdr" value="${s.id}" style="width:18px;height:18px;"/> ${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</label>`).join('')}
+    <div class="modal-actions" style="margin-top:14px;"><button class="btn-primary" onclick="plCopiarASdrs()">Copiar</button></div>`);
+}
+async function plCopiarASdrs(){
+  const ids=[...document.querySelectorAll('.pl-cp-sdr:checked')].map(c=>+c.value);
+  if(!ids.length){showToast('⚠️ Elige al menos un SDR');return;}
+  const dias=plWeek(),hoy=todayStr();
+  const origen=plBloques.filter(b=>b.sdr_id===plMgrSdr&&dias.includes(b.fecha)&&b.fecha>=hoy);
+  const rows=[];
+  ids.forEach(id=>origen.forEach(b=>{
+    const ini=plMin(b.hora_inicio);
+    if(plSolapa(id,b.fecha,ini,b.duracion_min)||rows.some(r=>r.sdr_id===id&&r.fecha===b.fecha&&ini<plMin(r.hora_inicio)+r.duracion_min&&plMin(r.hora_inicio)<ini+b.duracion_min))return;
+    rows.push({sdr_id:id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id});
+  }));
+  if(!rows.length){showToast('No había huecos libres (o no quedan días por delante esta semana)');return;}
+  plCloseModal();
+  const r=await plInsert(rows);
+  if(r)showToast(`✓ ${r.length} bloques copiados a ${ids.length} SDR${ids.length>1?'s':''}`);
+}
+// Resultados por tipo de bloque: qué bloque saca más demos por hora
+async function plSetMetPeriodo(p){
+  plMetPeriodo=p;
+  if(p==='30'&&!plMet30){
+    const d=new Date(Date.now()-30*864e5);
+    try{plMet30=await sbAll(`planificacion_bloques?estado=eq.completado&fecha=gte.${localDateStr(d)}&select=sdr_id,plantilla_id,titulo,emoji,color,trabajado_seg,duracion_min,res_llamadas,res_conectadas,res_demos`)||[];}
+    catch(e){console.error(e);plMet30=[];}
+  }
+  renderPlanMetricas();
+}
+function renderPlanMetricas(){
+  const el=document.getElementById('pl-metricas');if(!el)return;
+  if(plError){el.innerHTML='';return;}
+  const dias=plWeek();
+  let base=plMetPeriodo==='30'?(plMet30||[]):plBloques.filter(b=>dias.includes(b.fecha)&&b.estado==='completado');
+  if(plMetSdr)base=base.filter(b=>b.sdr_id===+plMetSdr);
+  const grupos={};
+  base.forEach(b=>{
+    const k=b.plantilla_id?'p'+b.plantilla_id:'t'+b.titulo.toLowerCase();
+    const g=grupos[k]||(grupos[k]={titulo:b.titulo,emoji:b.emoji,color:b.color,n:0,seg:0,ll:0,co:0,de:0,conRes:0,sdrs:new Set()});
+    g.n++;g.seg+=b.trabajado_seg||b.duracion_min*60;g.ll+=plNum(b.res_llamadas);g.co+=plNum(b.res_conectadas);g.de+=plNum(b.res_demos);g.sdrs.add(b.sdr_id);
+    if(b.res_llamadas!=null||b.res_demos!=null||b.res_conectadas!=null)g.conRes++;
+  });
+  const filas=Object.values(grupos).sort((a,b)=>b.de/Math.max(1,b.seg)-a.de/Math.max(1,a.seg)||b.n-a.n);
+  const sel=`<div class="pl-met-ctrl">
+    <div class="canal-filter-wrap"><button class="canal-filter-btn${plMetPeriodo==='semana'?' active':''}" onclick="plSetMetPeriodo('semana')">Semana del calendario</button><button class="canal-filter-btn${plMetPeriodo==='30'?' active':''}" onclick="plSetMetPeriodo('30')">Últimos 30 días</button></div>
+    <select class="form-select" style="width:auto;padding:6px 28px 6px 12px;font-size:12px;" onchange="plMetSdr=this.value;renderPlanMetricas()"><option value="">Todo el equipo</option>${plMgrSdrs.map(s=>`<option value="${s.id}"${String(s.id)===plMetSdr?' selected':''}>${plEsc(s.nombre)}</option>`).join('')}</select></div>`;
+  if(!filas.length){el.innerHTML=sel+'<div class="home-empty">Aún no hay bloques terminados en este periodo. Cuando los SDR terminen bloques y apunten sus resultados, aquí verás qué funciona mejor.</div>';return;}
+  const tot=filas.reduce((t,f)=>({n:t.n+f.n,seg:t.seg+f.seg,ll:t.ll+f.ll,co:t.co+f.co,de:t.de+f.de,conRes:t.conRes+f.conRes}),{n:0,seg:0,ll:0,co:0,de:0,conRes:0});
+  const fila=(f,total)=>{
+    const h=f.seg/3600;
+    return`<tr${total?' class="row-total"':''}><td>${total?'Total':`<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${f.color};margin-right:6px;"></span>${f.emoji?plEsc(f.emoji)+' ':''}${plEsc(f.titulo)}`}</td>
+      <td>${f.n}${total?'':` <span class="mini-ratio">(${f.sdrs.size} SDR)</span>`}</td><td>${plDurSeg(f.seg)}</td>
+      <td>${f.ll||'—'}</td><td>${f.co||'—'}${f.ll?` <span class="mini-ratio">${Math.round(f.co/f.ll*100)}%</span>`:''}</td>
+      <td class="num" style="color:var(--green)">${f.de||'—'}</td>
+      <td>${h>0&&f.de?(f.de/h).toFixed(2):'—'}</td><td>${f.co?Math.round(f.de/f.co*100)+'%':'—'}</td>
+      <td class="mini-ratio">${f.conRes}/${f.n}</td></tr>`;
+  };
+  el.innerHTML=sel+`<div class="mgr-table-wrap"><table class="mgr-table"><thead><tr><th>Bloque</th><th>Veces hecho</th><th>Horas</th><th>Llamadas</th><th>Conectadas</th><th>Demos</th><th>Demos / hora</th><th>Demo / conectada</th><th>Con resultados</th></tr></thead><tbody>
+    ${filas.map(f=>fila(f)).join('')}${filas.length>1?fila(tot,true):''}</tbody></table></div>
+    <div class="form-hint">Ordenado por demos por hora. "Con resultados" = cuántos de esos bloques tienen apuntado lo que sacaron.</div>`;
+}
 function plNombre(id){const s=plMgrSdrs.find(x=>x.id===id);return s?s.nombre:'—';}
 function renderPlanMgr(){
   if(!plIsMgr())return;
   const sel=document.getElementById('pl-sdr-selector');
   if(sel)sel.innerHTML=plMgrSdrs.map(s=>`<button class="mgr-sdr-chip${s.id===plMgrSdr?' active':''}" onclick="plMgrSdr=${s.id};plArmed=null;renderPlanMgr()">${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</button>`).join('');
-  renderPlanLive();renderPlanPlantillas();renderPlanCal();renderPlanCumplimiento();renderPlanEmails();
+  renderPlanLive();renderPlanPlantillas();renderPlanCal();renderPlanCumplimiento();renderPlanMetricas();renderPlanEmails();
 }
 function renderPlanLive(){
   const el=document.getElementById('pl-live');if(!el)return;
@@ -8706,11 +8894,21 @@ function renderPlanLive(){
     }else if(a.tipo==='rest'){cls='rest';what=`☕ Descanso tras ${tit}`;extra=`<div class="pl-live-sub">Quedan ${Math.max(1,Math.ceil((a.hasta-Date.now())/60000))} min${a.sig?` · luego ${plEsc(a.sig.titulo)}`:''}</div>`;}
     else if(a.tipo==='late'){cls='late';what=`⚠️ Debería estar en ${tit}`;extra=`<div class="pl-live-sub">${plRango(b)} · aún no le ha dado a play</div>`;}
     else if(a.tipo==='next')what=`Siguiente: ${tit} <span style="color:var(--muted)">a las ${plHora(plMin(b.hora_inicio))}</span>`;
-    else if(a.tipo==='done')what='🏁 Ha terminado lo planificado hoy';
+    else if(a.tipo==='done'&&a.hechos<a.total){cls='late';what=`⚠️ ${a.total-a.hechos} bloque${a.total-a.hechos>1?'s':''} de hoy sin hacer`;}
+    else if(a.tipo==='done')what='🏁 Ha hecho todo lo planificado hoy';
     else what='<span style="color:var(--muted)">Sin nada planificado hoy</span>';
-    return`<div class="pl-live-card ${cls}" onclick="plMgrSdr=${s.id};renderPlanMgr();document.getElementById('mgr-plan-cal').scrollIntoView({behavior:'smooth',block:'start'})">
+    const semana=plBloques.filter(x=>x.sdr_id===s.id&&plWeek(0).includes(x.fecha)).length;
+    const sinVer=plBloques.filter(x=>x.sdr_id===s.id&&plPorManager(x)&&!x.visto_at&&x.fecha>=hoy).length;
+    const ult=plMensajes.find(m=>m.sdr_id===s.id);
+    const alertas=[];
+    if(!semana)alertas.push('<span class="pl-st bad">Semana sin planificar</span>');
+    if(sinVer)alertas.push(`<span class="pl-st pause" title="Bloques que le has puesto y aún no ha visto">📌 ${sinVer} sin ver</span>`);
+    if(ult)alertas.push(`<span class="pl-st ${ult.leida_at?'ok':''}" title="${plEsc(ult.texto)}">📣 ${new Date(ult.created_at).toLocaleString('es-ES',{weekday:'short',hour:'2-digit',minute:'2-digit'})} · ${ult.leida_at?'leído ✓':'sin leer'}</span>`);
+    return`<div class="pl-live-card ${cls}">
       <div class="pl-live-name"><span>${plEsc(s.nombre)}${s.es_prueba?' 🧪':''}</span><span class="pl-st">${hecho}/${deHoy.length} · ${plan?plDur(plan):'0 h'}</span></div>
-      <div class="pl-live-what">${what}</div>${extra}</div>`;
+      <div class="pl-live-what">${what}</div>${extra}
+      ${alertas.length?`<div class="pl-live-tags">${alertas.join('')}</div>`:''}
+      <div class="pl-live-actions"><button class="pl-link-btn" onclick="plMgrVerSdr(${s.id})">🗓️ Planificar</button><button class="pl-link-btn" onclick="plOpenRecordar(${s.id})">📣 Recordar</button></div></div>`;
   }).join('')}</div>`;
   const upd=document.getElementById('pl-live-upd');
   if(upd)upd.textContent=`Qué está haciendo cada SDR ahora mismo · actualizado a las ${new Date().toTimeString().slice(0,5)}`;
@@ -8785,14 +8983,14 @@ function renderPlanCumplimiento(){
     const hechos=pasados.filter(b=>b.estado==='completado');
     const pct=pasados.length?Math.round(hechos.length/pasados.length*100):null;
     const trab=sem.reduce((t,b)=>t+plWorked(b),0);
-    return{s,plan:sem.reduce((t,b)=>t+b.duracion_min,0),n:sem.length,pasados:pasados.length,hechos:hechos.length,no:pasados.length-hechos.length,pct,trab,urg:plUrgentesSinPlanificar(s.id).length};
+    return{s,plan:sem.reduce((t,b)=>t+b.duracion_min,0),n:sem.length,pasados:pasados.length,hechos:hechos.length,no:pasados.length-hechos.length,pct,trab,urg:plUrgentesSinPlanificar(s.id).length,demos:sem.reduce((t,b)=>t+plNum(b.res_demos),0)};
   });
-  el.innerHTML=`<table class="mgr-table"><thead><tr><th>SDR</th><th>Planificado</th><th>Bloques</th><th>Ya tocaban</th><th>Hechos</th><th>No hechos</th><th>Cumplimiento</th><th>Tiempo con play</th><th>Urgentes sin planificar</th></tr></thead><tbody>
-    ${filas.map(f=>`<tr style="cursor:pointer" onclick="plMgrSdr=${f.s.id};renderPlanMgr();document.getElementById('mgr-plan-cal').scrollIntoView({behavior:'smooth',block:'start'})">
+  el.innerHTML=`<table class="mgr-table"><thead><tr><th>SDR</th><th>Planificado</th><th>Bloques</th><th>Ya tocaban</th><th>Hechos</th><th>No hechos</th><th>Cumplimiento</th><th>Tiempo con play</th><th>Demos</th><th>Urgentes sin planificar</th></tr></thead><tbody>
+    ${filas.map(f=>`<tr style="cursor:pointer" onclick="plMgrVerSdr(${f.s.id})">
       <td>${plEsc(f.s.nombre)}${f.s.es_prueba?' 🧪':''}</td><td>${f.plan?plDur(f.plan):'—'}</td><td>${f.n}</td><td>${f.pasados}</td>
       <td style="color:var(--green);font-weight:700">${f.hechos}</td><td style="color:${f.no?'var(--red)':'inherit'};font-weight:700">${f.no}</td>
       <td>${f.pct==null?'—':`<span class="pl-pct ${f.pct>=80?'ok':f.pct>=50?'mid':'bad'}">${f.pct}%</span>`}</td>
-      <td>${f.trab?plDurSeg(f.trab):'—'}</td>
+      <td>${f.trab?plDurSeg(f.trab):'—'}</td><td class="num">${f.demos||'—'}</td>
       <td>${f.urg?`<span class="pl-st bad">🚨 ${f.urg}</span>`:'<span class="pl-st ok">0</span>'}</td></tr>`).join('')}
   </tbody></table><div class="form-hint">Semana que se ve en el calendario de arriba (cámbiala con sus flechas).</div>`;
 }
