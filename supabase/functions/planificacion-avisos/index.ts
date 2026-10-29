@@ -1,9 +1,10 @@
 // ════════════════════════════════════════════════════════════════════
 // SDR Hub · Avisos por email de la planificación
 //
-// La llama pg_cron cada minuto (ver migración 20261029_planificacion.sql).
-// Pide a planificacion_avisos_claim() los avisos pendientes (ya quedan
-// marcados como enviados) y los manda por email con Resend.
+// La llama pg_cron cada minuto (ver migración 20261029_planificacion.sql)
+// con el secreto del Vault en la cabecera x-cron-secret. Con él pide a
+// planificacion_avisos_claim() los avisos pendientes (ya quedan marcados
+// como enviados) y los manda por email con Resend.
 //
 // Secretos de la función (Edge Functions → Secrets):
 //   RESEND_API_KEY   clave de https://resend.com
@@ -118,10 +119,10 @@ async function enviar(to: string, subject: string, html: string) {
 }
 
 Deno.serve(async (req) => {
-  // Solo pg_cron (con la service_role) puede disparar los envíos
-  if (req.headers.get("Authorization") !== `Bearer ${SERVICE_KEY}`) {
-    return new Response("forbidden", { status: 403 });
-  }
+  // El secreto lo comprueba la base de datos: sin él, el claim falla
+  const secret = req.headers.get("x-cron-secret");
+  if (!secret) return new Response("forbidden", { status: 403 });
+  // Sin Resend no se reclama nada, para no marcar avisos que no se van a enviar
   if (!RESEND_API_KEY) return new Response("Falta RESEND_API_KEY", { status: 500 });
 
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/planificacion_avisos_claim`, {
@@ -131,8 +132,9 @@ Deno.serve(async (req) => {
       Authorization: `Bearer ${SERVICE_KEY}`,
       "Content-Type": "application/json",
     },
-    body: "{}",
+    body: JSON.stringify({ p_secret: secret }),
   });
+  if (r.status === 401 || r.status === 403) return new Response("forbidden", { status: 403 });
   if (!r.ok) return new Response(`claim ${r.status}: ${await r.text()}`, { status: 500 });
   const avisos: Aviso[] = await r.json();
 

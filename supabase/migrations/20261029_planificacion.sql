@@ -15,8 +15,9 @@
 --   · sdr_users.email: a dónde se mandan los avisos por email.
 --
 -- Avisos por email (Edge Function "planificacion-avisos", ver
--- supabase/functions/planificacion-avisos): cada minuto pide a
--- planificacion_avisos_claim() los avisos pendientes y los envía:
+-- supabase/functions/planificacion-avisos): pg_cron la llama cada minuto
+-- con un secreto guardado en el Vault; ella se lo pasa a
+-- planificacion_avisos_claim(), que devuelve los avisos pendientes:
 --   · inicio : el bloque empieza ahora y aún no le han dado a play.
 --   · fin    : el tiempo del bloque se ha cumplido → 15 min de descanso.
 --   · urgente: el manager ha creado un bloque urgente para planificar.
@@ -86,8 +87,9 @@ create policy bloques_propio_o_manager on public.planificacion_bloques for all t
 -- ── Avisos por email ──
 -- Devuelve los avisos que toca mandar y los marca como enviados en la misma
 -- transacción, para que dos ejecuciones seguidas no manden el mismo email.
--- Solo la puede llamar la Edge Function (service_role).
-create or replace function public.planificacion_avisos_claim()
+-- Solo la puede llamar la Edge Function (service_role) y además exige el
+-- secreto 'planificacion_cron' del Vault, que únicamente conoce pg_cron.
+create or replace function public.planificacion_avisos_claim(p_secret text)
 returns table(tipo text, bloque_id bigint, plantilla_id bigint, sdr_id bigint, nombre text, email text,
               titulo text, emoji text, prioridad text, fecha date, hora_inicio time, duracion_min int,
               descripcion text, fecha_limite date, siguiente_titulo text, siguiente_hora time)
@@ -97,6 +99,11 @@ declare
   ahora timestamptz := now();
   hoy date := (now() at time zone 'Europe/Madrid')::date;
 begin
+  if p_secret is null or p_secret is distinct from
+     (select decrypted_secret from vault.decrypted_secrets where name = 'planificacion_cron') then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+
   -- inicio: entre la hora de inicio y 10 min después, sin haberle dado a play
   return query
   with c as (
@@ -146,23 +153,23 @@ begin
     and (c.sdr_id is null or c.sdr_id = u.id);
 end $$;
 
-revoke all on function public.planificacion_avisos_claim() from public, anon, authenticated;
-grant execute on function public.planificacion_avisos_claim() to service_role;
+revoke all on function public.planificacion_avisos_claim(text) from public, anon, authenticated;
+grant execute on function public.planificacion_avisos_claim(text) to service_role;
 
 commit;
 
--- ════════════════════════════════════════════════════════════════════
--- Programar la Edge Function cada minuto (ejecutar una vez, a mano, en el
--- SQL editor de Supabase después de desplegar la función). Necesita las
--- extensiones pg_cron y pg_net activadas (Database → Extensions).
--- Cambia <SERVICE_ROLE_KEY> por la clave service_role del proyecto
--- (Settings → API). No la subas nunca al repositorio.
---
---   select cron.schedule('planificacion-avisos', '* * * * *', $$
---     select net.http_post(
---       url := 'https://ilzntryzijdfnntwuthp.supabase.co/functions/v1/planificacion-avisos',
---       headers := jsonb_build_object('Content-Type','application/json',
---                                     'Authorization','Bearer <SERVICE_ROLE_KEY>'),
---       body := '{}'::jsonb)
---   $$);
--- ════════════════════════════════════════════════════════════════════
+-- ── Llamar a la Edge Function cada minuto ──
+create extension if not exists pg_net with schema extensions;
+create extension if not exists pg_cron with schema pg_catalog;
+
+select vault.create_secret(encode(extensions.gen_random_bytes(24), 'hex'), 'planificacion_cron',
+                           'Secreto con el que pg_cron llama a la función planificacion-avisos')
+where not exists (select 1 from vault.secrets where name = 'planificacion_cron');
+
+select cron.schedule('planificacion-avisos', '* * * * *', $cron$
+  select net.http_post(
+    url := 'https://ilzntryzijdfnntwuthp.supabase.co/functions/v1/planificacion-avisos',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret',
+      (select decrypted_secret from vault.decrypted_secrets where name = 'planificacion_cron')),
+    body := '{}'::jsonb)
+$cron$);
