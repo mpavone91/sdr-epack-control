@@ -489,6 +489,21 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .li:hover{border-color:var(--lime);}
 .li .meta{margin-left:auto;font-size:11.5px;color:var(--ink-3);white-space:nowrap;}
 .li .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fq{display:flex;gap:6px;flex-wrap:wrap;}
+.alertbox.sf-tip{background:var(--amber-soft);border:1px solid rgba(242,182,50,.5);color:#ffe3a3;}
+.sf-nudge{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:95;width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.45);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;opacity:0;transform:translateY(16px);pointer-events:none;transition:all .25s;}
+.sf-nudge.show{opacity:1;transform:none;pointer-events:auto;}
+.sf-nudge-ico{font-size:22px;line-height:1;}
+.sf-nudge-t{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sf-nudge-s{font-size:12.5px;color:var(--ink-2);margin:3px 0 9px;line-height:1.45;}
+.sf-nudge .btn{text-decoration:none;}
+@media (max-width:600px){.sf-nudge{right:16px;left:16px;width:auto;}}
+.rt-box{border-color:rgba(242,182,50,.45);}
+.rt-li{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--ink);font-size:12px;text-align:left;width:100%;}
+.rt-li:hover{border-color:var(--amber);}
+.rt-li .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rt-li .meta{margin-left:auto;color:var(--ink-3);font-size:11px;white-space:nowrap;}
+.rt-more{background:none;border:none;color:var(--amber);font-size:12px;font-weight:600;text-align:left;padding:0;}
 .back{align-self:flex-start;background:none;border:none;color:var(--ink-2);font-size:12.5px;padding:0;}
 .back:hover{color:var(--lime);}
 .note-demo{font-size:11.5px;color:var(--amber);}
@@ -1417,6 +1432,12 @@ function inspectorQuote(g){
   if((g==='C'||g==='D')&&peor[1]>0&&quoteIdx%2===1){
     pool=QUOTES_ZONA[peor[0]].filter(q=>!q.includes('rata')||Z.vertedero.length>=10);
   }
+  // De vez en cuando se acuerda de una oportunidad interesada que lleva meses sin tocar
+  if(quoteIdx%3===2&&!managerMode){
+    const rt=retomarElegidas();
+    if(rt.length){const d=rt[Math.floor(quoteIdx/3)%rt.length],n=shortName(d);
+      return`¿Y ${n.length>24?n.slice(0,23)+'…':n}? Interesado hace ${sinTocarMeses(d)} meses… ¿le llamas?`;}
+  }
   const q=pool[Math.floor(quoteIdx/2)%pool.length];
   return q;
 }
@@ -1671,6 +1692,59 @@ function extraFor(a,d){
   if(resolves&&place==='vertedero'){x+=10;why.push('fuera del friegue');}
   return{x,why};
 }
+// "Llámame en 5 meses": suma meses y, si cae en fin de semana, pasa al lunes
+function addMonthsDs(n){
+  const d=new Date(),dia=d.getDate();
+  d.setDate(1);d.setMonth(d.getMonth()+n);
+  d.setDate(Math.min(dia,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  return ds(d);
+}
+function segHint(f){
+  if(!f)return'Elige una fecha.';
+  const n=daysBetween(today(),f);
+  return`Te la sacamos de la cámara hasta el <b>${fmt(f)}</b> (${n<60?`dentro de ${n} día${n===1?'':'s'}`:`dentro de unos ${Math.round(n/30.4)} meses`}). Ese día vuelve para que le llames.`;
+}
+// Oportunidades para retomar: interesados (o necesita seguimiento) sin tocar 2+ meses.
+// 3–5 al azar, fijas durante el día (cambian con 🔀).
+const RETOMAR_DIAS=60;
+let retomarSalt=0;
+function retomarCandidatas(){
+  const t=today();
+  return demos.filter(d=>{
+    if(d.estado!=='ejecutada'||!['interesado','necesita_seguimiento'].includes(d.outcome))return false;
+    if(ageDays(d)<RETOMAR_DIAS)return false;
+    const ap=d.seguimiento_aplazado_hasta;
+    return!(ap&&(ap>t||daysBetween(ap,t)<RETOMAR_DIAS));
+  });
+}
+function strHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0)/4294967296;}
+function retomarElegidas(max=5){
+  const sem=today()+':'+retomarSalt;
+  return retomarCandidatas().map(d=>({d,k:strHash(sem+':'+d.id)/(d.outcome==='interesado'?2:1)}))
+    .sort((a,b)=>a.k-b.k).slice(0,max).map(x=>x.d);
+}
+function sinTocarMeses(d){
+  const ult=d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>(d.fecha||'')?d.seguimiento_aplazado_hasta:d.fecha;
+  return Math.max(2,Math.round(daysBetween(ult,today())/30.4));
+}
+function retomarListHTML(lista){
+  return`<div class="list">${lista.map(d=>`<button class="li" data-id="${d.id}"><span class="sw" style="background:${d.outcome==='interesado'?'var(--lime)':'var(--blue)'}"></span><span class="nm">${esc(shortName(d))}</span><span class="meta">${d.outcome==='interesado'?'interesado':'seguimiento'} · ~${sinTocarMeses(d)} meses</span></button>`).join('')}</div>`;
+}
+// Recordatorio de dejar rastro en Salesforce al tocar un seguimiento antiguo
+function sfNudge(d,texto){
+  if(managerMode)return;
+  let el=document.getElementById('sf-nudge');
+  if(!el){el=document.createElement('div');el.id='sf-nudge';el.className='sf-nudge';document.body.appendChild(el);
+    el.addEventListener('click',e=>{if(e.target.closest('[data-close]'))el.classList.remove('show');});}
+  const href=d?sfHref(d):null;
+  el.innerHTML=`<div class="sf-nudge-ico">📝</div><div style="flex:1;min-width:0">
+    <div class="sf-nudge-t">No olvides Salesforce${d?' · '+esc(shortName(d)):''}</div>
+    <div class="sf-nudge-s">${esc(texto)}</div>
+    <div class="row-inp">${href?`<a class="btn primary" href="${esc(href)}" target="_blank" rel="noopener" data-close>Abrir oportunidad ↗</a>`:''}<button class="btn" data-close>Hecho</button></div></div>`;
+  el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),15000);
+}
 function xpPreview(a,d){return demoXP({...d,...patchFor(a,d)})-demoXP(d)+extraFor(a,d).x;}
 const xpLbl=(a,d)=>{const x=xpPreview(a,d);return x?`+${x} XP`:'';};
 
@@ -1711,6 +1785,17 @@ function demoSheet(d,view='main'){
       <div class="row-inp"><input type="date" class="inp" id="inp-firma" value="${today()}" max="${today()}"><button class="btn primary" data-act="do-ganado">Servir en sala ${xpLbl('ganado',d)?'· '+xpLbl('ganado',d):''}</button></div>`;
     return h;
   }
+  if(view==='fecha'){
+    const val=d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today()?d.seguimiento_aplazado_hasta:ds(addDays(7));
+    h+=`<button class="back" data-act="back">← Volver</button><div class="act-title">¿CUÁNDO LE VUELVES A LLAMAR?</div>
+      <div class="msg">Para los «llámame en 5 meses»: elige el día exacto y no tendrás que ir aplazándolo mes a mes.</div>
+      <div class="fq">${[[1,'+1 mes'],[2,'+2 meses'],[3,'+3 meses'],[4,'+4 meses'],[5,'+5 meses'],[6,'+6 meses']].map(q=>`<button class="btn" data-act="fq:${q[0]}">${q[1]}</button>`).join('')}</div>
+      <div class="row-inp"><input type="date" class="inp" id="inp-seg" value="${val}" min="${ds(addDays(1))}"></div>
+      <div class="msg" id="seg-hint">${segHint(val)}</div>
+      <div class="alertbox sf-tip">📝 Apúntalo también en Salesforce: una <b>tarea</b> para ese día o una <b>nota</b> en la oportunidad.</div>
+      <button class="btn primary" data-act="do-fecha" style="padding:10px;">Guardar hasta esa fecha ${xpLbl('aplazar',d)?'· '+xpLbl('aplazar',d):''}</button>`;
+    return h;
+  }
   if(view==='reagendar'){
     const def=ds(addDays(new Date().getDay()===5?3:1));
     const val=(d.fecha&&d.fecha>today()&&zone!=='canceladas'&&zone!=='marcar')?d.fecha:def;
@@ -1748,13 +1833,18 @@ function demoSheet(d,view='main'){
        act('perdido','Cerrado perdido','Al cubo, con motivo',xpLbl('perdido',d),'bad','var(--red)')+
        act('aplazar:7','Sigue con interés · recordar en 7 días','Sale de la cámara hasta entonces',xpLbl('aplazar',d),'','var(--blue)')+
        act('aplazar:14','Recordar en 14 días','',xpLbl('aplazar',d),'','var(--blue)')+
-       act('aplazar:30','Recordar en 30 días','',xpLbl('aplazar',d),'','var(--blue)')+`</div>`;
+       act('fecha','Recordar en una fecha concreta','«Llámame en 5 meses»: eliges el día exacto',xpLbl('aplazar',d),'','var(--frost)')+`</div>`;
   }else if(zone==='canceladas'){
     h+=`<div class="acts">`+
        act('reagendar','Rescatar: reagendar','Vuelve al rail',xpLbl('reagendar',d),'good','var(--lime)')+
        act('descartar','Tirar al cubo','Descartada. Se puede recuperar.',xpLbl('descartar',d),'bad','var(--red)')+`</div>`;
   }else if(zone==='papelera'&&d.estado==='cancelada'&&d.descartada){
     h+=`<div class="acts">`+act('recuperar','Recuperar a platos devueltos','Vuelve a estar pendiente de reagendar','','warn','var(--amber)')+`</div>`;
+  }else if(zone==='reposo'&&d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)){
+    h+=`<div class="acts">`+
+       act('fecha',d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today()?'Cambiar la fecha del seguimiento':'Seguimiento en una fecha concreta','«Llámame en 5 meses»: eliges el día exacto','','','var(--frost)')+
+       act('ganado','Cerrado ganado','Se sirve en el comedor',xpLbl('ganado',d),'good','var(--gold)')+
+       act('perdido','Cerrado perdido','Al cubo, con motivo',xpLbl('perdido',d),'bad','var(--red)')+`</div>`;
   }else if(zone==='ventas'){
     h+=`<div style="font-size:13px;color:var(--ink-2)">Mesa servida. Nada que hacer.</div>`;
   }else{
@@ -1848,10 +1938,20 @@ function openInspector(){
     <div class="alertbox ${g.g==='D'?'wait':'rot'}">${g.g==='D'?'<b>El inspector no se va</b> hasta que la cocina llegue al menos a una C (40 puntos).':g.g==='A'?'<b>Cocina impecable.</b> El inspector solo ha pasado a felicitarte.':'<b>El inspector está en la puerta.</b> Si bajas de 40 entra a pasear por tu cocina.'}</div>
     <div class="act-title">SANCIÓN PROPUESTA</div><div class="msg">${SANCION[g.g]}</div>
     <div class="act-title">LO QUE HA APUNTADO</div>
-    <div class="list">${todo.map(t=>`<button class="li" data-zone="${t[0]}"><span class="nm">${esc(t[1])}</span><span class="meta">${t[2]}</span></button>`).join('')}</div>`);
+    ${todo.length?`<div class="list">${todo.map(t=>`<button class="li" data-zone="${t[0]}"><span class="nm">${esc(t[1])}</span><span class="meta">${t[2]}</span></button>`).join('')}</div>`:'<div class="msg">Nada. Todo en orden.</div>'}
+    ${retomarInspectorHTML()}`);
+}
+function retomarInspectorHTML(){
+  const rt=retomarElegidas(),total=retomarCandidatas().length;
+  if(!rt.length)return'';
+  return`<div class="act-title">PARA RETOMAR <span style="color:var(--ink-3);font-size:12px">${total>rt.length?`${rt.length} de ${total}`:''}</span></div>
+    <div class="msg">«Estas las marcaste como <b>interesadas</b> y llevan 2+ meses sin tocar… ¿les llamas?» Si te dan fecha, guárdala con <b>Recordar en una fecha concreta</b> y apúntalo en Salesforce.</div>
+    ${retomarListHTML(rt)}
+    ${total>rt.length?'<button class="back" data-retomar-otras>🔀 Enséñame otras</button>':''}`;
 }
 
 drBody.addEventListener('click',async e=>{
+  if(e.target.closest('[data-retomar-otras]')){retomarSalt++;if(drawerCtx&&drawerCtx.zone==='inspector')openInspector();renderSide();return;}
   const li=e.target.closest('.li');
   if(li){
     if(li.dataset.zone){openZoneList(li.dataset.zone);return;}
@@ -1862,7 +1962,8 @@ drBody.addEventListener('click',async e=>{
   const a=b.dataset.act;
   const show=v=>{drBody.innerHTML=demoSheet(d,v);};
   if(a==='back')return show('main');
-  if(['perdido','cancelar','ganado','reagendar'].includes(a))return show(a);
+  if(['perdido','cancelar','ganado','reagendar','fecha'].includes(a))return show(a);
+  if(a.startsWith('fq:')){const f=addMonthsDs(+a.slice(3)),i=document.getElementById('inp-seg');if(i){i.value=f;document.getElementById('seg-hint').innerHTML=segHint(f);}return;}
   if(a==='editar'){openDemoForm(d);return;}
   const wasZone=d._zone,wasPlace=placeOf(d);
   const at=drawerCtx.el&&world.contains(drawerCtx.el)?worldPos(drawerCtx.el):null;
@@ -1880,6 +1981,10 @@ drBody.addEventListener('click',async e=>{
     else{patch={estado:'cancelada',motivo:m};key='cancelar';text=`Devuelta (cancelada): ${nm}`;}
   }else if(a.startsWith('aplazar:')){
     const n=+a.split(':')[1];patch={seguimiento_aplazado_hasta:ds(addDays(n))};key='aplazar';text=`Seguimiento aplazado ${n} días: ${nm}`;
+  }else if(a==='do-fecha'){
+    const f=document.getElementById('inp-seg').value;
+    if(!f||f<=today()){toast('Elige una fecha a partir de mañana','warn');return;}
+    patch={seguimiento_aplazado_hasta:f};key='aplazar';text=`Seguimiento el ${fmt(f)}: ${nm}`;
   }else if(a==='do-reagendar'){
     const f=document.getElementById('inp-fecha').value,hr=document.getElementById('inp-hora').value;
     if(!f){toast('Elige una fecha','warn');return;}
@@ -1920,7 +2025,12 @@ drBody.addEventListener('click',async e=>{
   saveGame();renderDash();
   popXP(at,gain,gain>=100);
   toast(gain?`${text} · +${gain} XP`:text);
+  const antiguo=wasZone==='seguimiento'||(wasZone==='reposo'&&ageDays(d)>=7);
+  if(antiguo&&key==='aplazar')setTimeout(()=>sfNudge(d,patch.seguimiento_aplazado_hasta?`Crea una tarea en Salesforce para el ${fmt(patch.seguimiento_aplazado_hasta)} o deja una nota en la oportunidad con lo que has hablado.`:'Deja una nota en la oportunidad con lo que has hablado.'),900);
+  else if(antiguo&&(key==='ganado'||key==='perdido'))setTimeout(()=>sfNudge(d,key==='ganado'?'Comprueba que la oportunidad está actualizada en Salesforce y deja una nota del cierre.':'Cierra también la oportunidad en Salesforce o deja una nota con el motivo.'),900);
 });
+
+drBody.addEventListener('input',e=>{if(e.target.id==='inp-seg'){const h=document.getElementById('seg-hint');if(h)h.innerHTML=segHint(e.target.value);}});
 
 // Clicks en el mundo
 world.addEventListener('click',e=>{
@@ -2021,6 +2131,11 @@ function renderSide(){
         <button data-zone="canceladas">Devueltos <b class="num">${Z.canceladas.length}</b></button>
       </div>
     </div>
+    ${(()=>{const rt=managerMode?[]:retomarElegidas(3);return rt.length?`<div class="sbox rt-box">
+      <h4>🔥 PARA RETOMAR <span class="aux">${retomarCandidatas().length} interesados 2+ meses</span></h4>
+      <div class="snext" style="font-size:12px">Llevan meses sin tocar. ¿Les llamas hoy?</div>
+      ${rt.map(d=>`<button class="rt-li" data-rid="${d.id}"><span class="nm">${esc(shortName(d))}</span><span class="meta">~${sinTocarMeses(d)} m</span></button>`).join('')}
+      <button class="rt-more" data-retomar>Ver en el inspector →</button></div>`:'';})()}
     <div class="sbox">
       <h4>OBJETIVO DEL MES <span class="aux">${s.wd.left} días hábiles</span></h4>
       <div class="srow"><span class="k">Agendadas · ${pace(s.agendadas,s.objDemos)}</span><span class="v num">${s.agendadas}${s.objDemos?` <small>/ ${s.objDemos}</small>`:''}</span>
@@ -2047,6 +2162,8 @@ function renderSide(){
 }
 document.getElementById('side').addEventListener('click',e=>{
   if(e.target.closest('#side-new')){openDemoForm();return;}
+  const r=e.target.closest('[data-rid]');if(r){openDemo(r.dataset.rid,world.querySelector(`.it[data-id="${r.dataset.rid}"]`));return;}
+  if(e.target.closest('[data-retomar]')){openInspector();return;}
   const z=e.target.closest('[data-zone]');if(z)openZoneList(z.dataset.zone);
 });
 

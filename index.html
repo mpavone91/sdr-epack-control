@@ -186,6 +186,36 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .btn-save{flex:2;padding:12px;background:var(--lime);color:var(--teal-dark);border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
 .btn-save:hover{background:var(--lime-dark);}
 
+/* Seguimiento en fecha concreta */
+.aplazar-intro{font-size:13px;color:var(--teal-dark);background:var(--blue-soft);border-radius:9px;padding:10px 14px;margin-bottom:12px;line-height:1.45;}
+.aplazar-meses{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13px;color:var(--muted);font-weight:600;}
+.aplazar-meses .form-input{width:72px;padding:7px 10px;}
+.aplazar-o{margin-left:4px;font-weight:500;}
+.sf-reminder-inline{font-size:12.5px;color:#7a5a00;background:var(--amber-soft);border-radius:9px;padding:9px 12px;margin:4px 0 14px;line-height:1.45;}
+/* Recordatorio de Salesforce */
+.sf-nudge{position:fixed;left:24px;bottom:24px;z-index:210;width:min(380px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:13px;box-shadow:0 12px 32px rgba(0,0,0,0.18);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;transform:translateY(20px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+.sf-nudge.show{transform:none;opacity:1;pointer-events:auto;}
+.sf-nudge-ico{font-size:22px;line-height:1;}
+.sf-nudge-body{flex:1;min-width:0;}
+.sf-nudge-t{font-size:13.5px;font-weight:700;color:var(--teal-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sf-nudge-s{font-size:12.5px;color:var(--muted);margin:3px 0 8px;line-height:1.4;}
+.sf-nudge-a{display:flex;gap:6px;flex-wrap:wrap;}
+.sf-nudge-btn{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;border-radius:8px;padding:6px 11px;border:1px solid var(--teal-dark);background:var(--teal-dark);color:#fff;cursor:pointer;text-decoration:none;}
+.sf-nudge-btn.ghost{background:none;color:var(--teal-dark);border-color:var(--border);}
+.sf-nudge-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;}
+@media (max-width:600px){.sf-nudge{left:16px;bottom:16px;}}
+/* Para retomar */
+.rt-card{border-color:#f0d58a;background:linear-gradient(180deg,#fffaf0,var(--surface) 70px);}
+.rt-item{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--border);flex-wrap:wrap;}
+.rt-item:first-child{border-top:none;}
+.rt-body{flex:1;min-width:220px;}
+.rt-name{font-size:14px;font-weight:700;color:var(--teal-dark);}
+.rt-name a{color:inherit;}
+.rt-meta{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:3px;align-items:center;}
+.rt-tag{font-weight:700;border-radius:6px;padding:1px 7px;font-size:11px;}
+.rt-tag.interesado{background:#e8f6ec;color:var(--green);}
+.rt-tag.necesita_seguimiento{background:var(--amber-soft);color:var(--amber);}
+.rt-actions{display:flex;gap:6px;flex-wrap:wrap;}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--teal-dark);color:white;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:500;z-index:200;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.2);border-left:3px solid var(--lime);}
 
 /* ── HORA DROPDOWN ── */
@@ -1053,7 +1083,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pl-dh.today b{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--lime);}
 .pl-times{position:relative;}
 .pl-time{position:absolute;right:6px;font-size:10.5px;font-weight:600;color:var(--muted);transform:translateY(-50%);}
-.pl-day-body{position:relative;border-left:1px solid var(--border);background-image:linear-gradient(to bottom,var(--border) 1px,transparent 1px),linear-gradient(to bottom,#f1f4f3 1px,transparent 1px);background-size:100% 48px,100% 24px;cursor:copy;}
+.pl-day-body{position:relative;border-left:1px solid var(--border);background-image:linear-gradient(to bottom,var(--border) 1px,transparent 1px),linear-gradient(to bottom,#f1f4f3 1px,transparent 1px);background-size:100% 64px,100% 32px;cursor:copy;}
 .pl-day-body.today{background-color:#fbfef6;}
 .pl-day-body.festivo{background-color:#f6f6f6;cursor:not-allowed;}
 .pl-festivo-tag{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:var(--muted);}
@@ -1064,9 +1094,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pl-block.dragging{opacity:0.35;}
 .pl-block-t{font-size:12px;font-weight:700;color:var(--teal-dark);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pl-block-h{font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pl-block.short{padding-top:1px;padding-bottom:1px;}
-.pl-block.short .pl-block-t{font-size:11px;}
-.pl-block.short .pl-block-h{display:none;}
+/* 15 min: una sola línea (título + hora) · 30 min: dos líneas apretadas */
+.pl-block.short{padding:0 6px 0 5px;border-radius:5px;border-left-width:3px;display:flex;align-items:center;}
+.pl-block.short .pl-block-t{font-size:10.5px;line-height:13px;flex:1;min-width:0;display:flex;gap:5px;align-items:baseline;}
+.pl-block-tt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pl-block.short.st-completado .pl-block-t::before{flex:none;}
+.pl-block-hi{flex:none;font-size:9.5px;font-weight:700;color:var(--muted);margin-left:auto;}
+.pl-block.short .pl-resize{height:4px;}
+.pl-block.short .pl-mgr-tag{top:0;height:13px;line-height:13px;min-width:13px;font-size:8.5px;}
+.pl-block.short:has(.pl-mgr-tag) .pl-block-t{padding-right:14px;}
+.pl-block.mid{padding:1px 7px;}
+.pl-block.mid .pl-block-t,.pl-block.mid .pl-block-h{line-height:1.2;}
 .pl-block-bar{position:absolute;left:0;bottom:0;height:3px;background:var(--c);}
 .pl-block.st-completado{background:color-mix(in srgb,var(--c) 7%,white);}
 .pl-block.st-completado .pl-block-t::before{content:'✓ ';color:var(--green);}
@@ -1075,7 +1113,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pl-block.st-pausado{box-shadow:0 0 0 2px var(--amber);}
 .pl-block.st-perdido,.pl-block.st-saltado{background:repeating-linear-gradient(135deg,#fff,#fff 6px,#fbeeee 6px,#fbeeee 12px);border-color:#f3c2c2;}
 .pl-block.st-perdido .pl-block-h,.pl-block.st-saltado .pl-block-h{color:var(--red);}
-.pl-block.st-ahora{box-shadow:0 0 0 2px var(--blue);}
+.pl-block.st-ahora{box-shadow:0 0 0 2px var(--red);animation:plAhora 1.6s ease-in-out infinite;}
+@keyframes plAhora{50%{box-shadow:0 0 0 4px rgba(226,61,61,0.35);}}
+/* Aviso flotante: el bloque ya empezó y no le han dado a Play */
+.pl-late{position:fixed;top:72px;left:50%;transform:translate(-50%,-20px);opacity:0;pointer-events:none;z-index:300;width:min(520px,calc(100vw - 32px));background:var(--surface);border:1px solid #f3c2c2;border-left:5px solid var(--red);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,0.22);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:opacity .2s,transform .2s;}
+.pl-late.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;animation:plLateShake .5s ease-in-out 2;}
+@keyframes plLateShake{25%{margin-left:-6px}75%{margin-left:6px}}
+.pl-late-ico{font-size:26px;line-height:1;}
+.pl-late-body{flex:1;min-width:0;}
+.pl-late-lbl{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--red);}
+.pl-late-t{font-size:15px;font-weight:700;color:var(--teal-dark);margin:2px 0 4px;}
+.pl-late-s{font-size:12.5px;color:var(--muted);margin-bottom:10px;}
+.pl-late-a{display:flex;gap:8px;flex-wrap:wrap;}
 .pl-block.locked{cursor:pointer;}
 .pl-resize{position:absolute;left:0;right:0;bottom:0;height:8px;cursor:ns-resize;}
 .pl-resize::after{content:'';position:absolute;left:50%;bottom:2px;width:22px;height:3px;margin-left:-11px;border-radius:3px;background:color-mix(in srgb,var(--c) 55%,white);opacity:0;transition:opacity 0.12s;}
@@ -1284,6 +1333,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
           </div>
           <div class="home-card-sub">Adelántate: confirma y escribe por WhatsApp a las demos de los próximos días. Usa las flechas para cambiar de día.</div>
           <div id="home-manana"></div>
+        </div>
+
+        <div class="home-card rt-card" id="home-retomar-card" style="display:none;">
+          <div class="home-card-head">
+            <div class="home-card-title">🔥 Para retomar</div>
+            <div class="home-day-nav">
+              <span class="home-card-count" id="home-retomar-count"></span>
+              <button class="home-day-btn" onclick="retomarOtras()" title="Enséñame otras">🔀</button>
+            </div>
+          </div>
+          <div class="home-card-sub">Estas las marcaste como interesadas y llevan 2+ meses sin tocar. ¿Les llamas hoy? Cuando lo hagas, deja una tarea o nota en Salesforce.</div>
+          <div id="home-retomar"></div>
         </div>
 
         <div class="home-card">
@@ -2186,24 +2247,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="modal-overlay" id="aplazar-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-head">
-      <div class="modal-title">⏰ Programar seguimiento</div>
+      <div class="modal-title">📅 Seguimiento en una fecha concreta</div>
       <button class="modal-close" onclick="closeAplazarModal()">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="aplazar-demo-id"/>
+      <div id="aplazar-intro" class="aplazar-intro" style="display:none;"></div>
       <div id="aplazar-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
       <div class="form-group">
-        <label class="form-label">¿Cuándo quieres que te lo recuerde?</label>
-        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+        <label class="form-label">¿Cuándo le vuelves a llamar?</label>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
           <button type="button" class="quick-date-btn" onclick="setAplazarQuick(7)">+1 semana</button>
           <button type="button" class="quick-date-btn" onclick="setAplazarQuick(14)">+2 semanas</button>
-          <button type="button" class="quick-date-btn" onclick="setAplazarQuick(30)">+1 mes</button>
+          <button type="button" class="quick-date-btn" onclick="setAplazarMeses(1)">+1 mes</button>
+          <button type="button" class="quick-date-btn" onclick="setAplazarMeses(2)">+2 meses</button>
+          <button type="button" class="quick-date-btn" onclick="setAplazarMeses(3)">+3 meses</button>
+          <button type="button" class="quick-date-btn" onclick="setAplazarMeses(6)">+6 meses</button>
         </div>
-        <input class="form-input" type="date" id="aplazar-fecha"/>
-        <div class="form-hint">El seguimiento reaparecerá en la pestaña "Follow up" en la fecha que elijas.</div>
+        <div class="aplazar-meses">
+          <span>En</span><input class="form-input" type="number" id="aplazar-n-meses" min="1" max="24" placeholder="nº" oninput="if(this.value)setAplazarMeses(+this.value,true)"/><span>meses</span>
+          <span class="aplazar-o">o elige el día exacto:</span>
+        </div>
+        <input class="form-input" type="date" id="aplazar-fecha" oninput="updateAplazarHint()"/>
+        <div class="form-hint" id="aplazar-hint">Hasta esa fecha sale de tus Follow-ups; ese día vuelve a aparecer para que le llames.</div>
       </div>
+      <div class="sf-reminder-inline">📝 Apúntalo también en Salesforce: crea una <b>tarea</b> para esa fecha o deja una <b>nota</b> en la oportunidad con lo que te dijo.</div>
       <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeAplazarModal()">Cancelar</button>
+        <button class="btn-cancel" id="aplazar-cancel" onclick="closeAplazarModal()">Cancelar</button>
         <button class="btn-save" onclick="confirmAplazar()">⏰ Programar recordatorio</button>
       </div>
     </div>
@@ -5226,6 +5296,7 @@ function closeMotivoModal(){document.getElementById('motivo-modal').classList.re
 async function applyMotivo(motivo){
   if(!motivoModalCtx)return;
   const{id,ids,estado,outcome}=motivoModalCtx;
+  const antes=id?demos.find(d=>d.id===id):null,antigua=outcome==='cerrado_perdido'&&esSeguimientoAntiguo(antes);
   const patch={motivo:motivo||null};
   if(estado!==undefined)patch.estado=estado;
   if(outcome!==undefined)patch.outcome=outcome;
@@ -5236,6 +5307,7 @@ async function applyMotivo(motivo){
     if(ids)clearPendSel();
     closeMotivoModal();
     await loadDemos();
+    if(antigua)sfNudge(antes,'Cierra también la oportunidad en Salesforce o deja una nota con el motivo.');
   }catch(e){showToast('❌ Error');console.error(e);}
 }
 
@@ -5435,6 +5507,7 @@ async function snoozeFollow(id,days){
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
     showToast('⏰ Te lo recordamos el '+fmtDate(fecha));
     await loadDemos();
+    sfNudge(demos.find(x=>x.id===id),`Deja una nota en la oportunidad (o una tarea para el ${fmtDate(fecha)}) con lo que has hablado.`);
   }catch(e){showToast('❌ Error');console.error(e);}
 }
 
@@ -5499,6 +5572,7 @@ function renderHome(){
   renderHomeKpis();
   renderHomeAgenda();
   renderHomeManana();
+  renderHomeRetomar();
   updatePendBadge();
 }
 function renderHomeKpis(){
@@ -5726,7 +5800,8 @@ function bulkMotivo(tipo){
 }
 function bulkSnooze(days){
   const d=new Date();d.setDate(d.getDate()+days);
-  bulkPatch({seguimiento_aplazado_hasta:localDateStr(d)},'follow-ups pospuestos al '+fmtDate(localDateStr(d)));
+  bulkPatch({seguimiento_aplazado_hasta:localDateStr(d)},'follow-ups pospuestos al '+fmtDate(localDateStr(d)))
+    .then(()=>sfNudge(null,'Actualiza esas oportunidades en Salesforce: una tarea o una nota en cada una con el siguiente paso.'));
 }
 function bulkDescartar(){
   const n=pendSel.size;
@@ -5825,7 +5900,7 @@ function pendCardHtml(d,q){
         <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'perdida',outcome:'cerrado_perdido'})">💔 Perdida</button>
         <button class="pd-btn" onclick="snoozeFollow(${d.id},3)" title="Recordármelo en 3 días">⏰ +3 días</button>
         <button class="pd-btn" onclick="snoozeFollow(${d.id},7)" title="Recordármelo en una semana">⏰ +1 sem</button>
-        <button class="pd-btn ghost" onclick="openAplazarModal(${d.id})" title="Elegir fecha">📅</button>
+        <button class="pd-btn ghost" onclick="openAplazarModal(${d.id})" title="Elige el día exacto (p. ej. 'llámame en 5 meses')">📅 Fecha concreta</button>
       </div>`;
   }else{
     when=`<div class="pd-when">${fmtDate(d.fecha)}<small>${d.motivo?escHtml(motivoLabel(d.motivo)):'Cancelada'}</small></div>`;
@@ -5939,27 +6014,133 @@ async function descartarDemo(id){
 
 // Aplazar seguimiento: abre modal con calendario para elegir fecha concreta
 function aplazarSeguimiento(id){openAplazarModal(id);}
-function openAplazarModal(id){
+// intro: texto opcional arriba (p. ej. justo después de marcar "Interesado")
+function openAplazarModal(id,intro){
   const demo=demos.find(d=>d.id===id);
   document.getElementById('aplazar-demo-id').value=id;
   document.getElementById('aplazar-demo-name').textContent='📞 '+(demo?.sf_nombre||'Sin nombre');
-  // Por defecto +1 semana
-  const d=new Date();d.setDate(d.getDate()+7);
-  document.getElementById('aplazar-fecha').value=localDateStr(d);
+  const introEl=document.getElementById('aplazar-intro');
+  introEl.style.display=intro?'':'none';introEl.textContent=intro||'';
+  document.getElementById('aplazar-cancel').textContent=intro?'Ahora no':'Cancelar';
+  document.getElementById('aplazar-n-meses').value='';
+  // Si ya tenía una fecha futura, la enseñamos; si no, +1 semana
+  const f=document.getElementById('aplazar-fecha');
+  f.min=localDateStr(new Date(Date.now()+86400000));
+  if(demo&&demo.seguimiento_aplazado_hasta&&demo.seguimiento_aplazado_hasta>todayStr())f.value=demo.seguimiento_aplazado_hasta;
+  else{const d=new Date();d.setDate(d.getDate()+7);f.value=localDateStr(d);}
+  updateAplazarHint();
   document.getElementById('aplazar-modal').classList.add('active');
 }
 function closeAplazarModal(){document.getElementById('aplazar-modal').classList.remove('active');}
-function setAplazarQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('aplazar-fecha').value=localDateStr(d);}
+function setAplazarQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('aplazar-fecha').value=localDateStr(d);document.getElementById('aplazar-n-meses').value='';updateAplazarHint();}
+function addMonthsStr(n){
+  const d=new Date();const dia=d.getDate();
+  d.setDate(1);d.setMonth(d.getMonth()+n);
+  d.setDate(Math.min(dia,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  // Si cae en fin de semana, al lunes siguiente
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  return localDateStr(d);
+}
+function setAplazarMeses(n,fromInput){
+  n=Math.max(1,Math.min(24,Math.round(n)||0));if(!n)return;
+  document.getElementById('aplazar-fecha').value=addMonthsStr(n);
+  if(!fromInput)document.getElementById('aplazar-n-meses').value='';
+  updateAplazarHint();
+}
+function updateAplazarHint(){
+  const f=document.getElementById('aplazar-fecha').value,el=document.getElementById('aplazar-hint');
+  if(!el)return;
+  if(!f){el.textContent='Elige una fecha.';return;}
+  const n=-diasDesde(f);
+  const cuando=n<=0?'hoy':n<60?`dentro de ${n} día${n===1?'':'s'}`:`dentro de unos ${Math.round(n/30.4)} meses`;
+  el.innerHTML=`Te lo recordamos el <b>${fmtDate(f)}</b> (${cuando}). Hasta entonces sale de tus Follow-ups.`;
+}
 async function confirmAplazar(){
-  const id=document.getElementById('aplazar-demo-id').value;
+  const id=Number(document.getElementById('aplazar-demo-id').value);
   const fecha=document.getElementById('aplazar-fecha').value;
   if(!fecha){showToast('⚠️ Selecciona una fecha');return;}
+  if(fecha<=todayStr()){showToast('⚠️ Elige una fecha a partir de mañana');return;}
   try{
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
-    showToast('✓ Recordatorio programado para '+fmtDate(fecha));
+    showToast('✓ Seguimiento programado para el '+fmtDate(fecha));
     closeAplazarModal();
     await loadDemos();
+    sfNudge(demos.find(d=>d.id===id),`Crea una tarea en Salesforce para el ${fmtDate(fecha)} o deja una nota en la oportunidad con lo que te dijo.`);
   }catch(e){showToast('❌ Error');console.error(e);}
+}
+
+// ── Recordatorio de Salesforce ──
+// Cuando se toca un seguimiento antiguo (aplazar, firmar, perder, retomar…) recordamos
+// dejar rastro en Salesforce: una tarea o una nota en la oportunidad.
+function esSeguimientoAntiguo(d){
+  return!!d&&d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&diasDesde(d.fecha)>=7;
+}
+function sfNudge(d,texto){
+  if(!currentUser||currentUser.rol!=='sdr')return;
+  let el=document.getElementById('sf-nudge');
+  if(!el){el=document.createElement('div');el.id='sf-nudge';el.className='sf-nudge';document.body.appendChild(el);}
+  const href=d?sfHref(d):null;
+  el.innerHTML=`<div class="sf-nudge-ico">📝</div>
+    <div class="sf-nudge-body"><div class="sf-nudge-t">No olvides Salesforce${d?' · '+escHtml(d.sf_nombre||''):''}</div>
+    <div class="sf-nudge-s">${escHtml(texto||'Crea una tarea o deja una nota en la oportunidad para que quede registrado.')}</div>
+    <div class="sf-nudge-a">${href?`<a class="sf-nudge-btn" href="${escHtml(href)}" target="_blank" rel="noopener" onclick="closeSfNudge()">Abrir oportunidad ↗</a>`:''}<button class="sf-nudge-btn ghost" onclick="closeSfNudge()">Hecho</button></div></div>
+    <button class="sf-nudge-x" onclick="closeSfNudge()" title="Cerrar">✕</button>`;
+  el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(closeSfNudge,15000);
+}
+function closeSfNudge(){const el=document.getElementById('sf-nudge');if(el)el.classList.remove('show');}
+
+// ── Oportunidades para retomar ──
+// Interesados (o necesita seguimiento) sin tocar hace 2+ meses: la demo fue hace 60+ días
+// y no hay recordatorio reciente ni futuro. Elegimos 3–5 al azar, fijas durante el día.
+const RETOMAR_DIAS=60;
+function retomarCandidatas(lista){
+  const hoy=todayStr();
+  return lista.filter(d=>{
+    if(d.estado!=='ejecutada'||!['interesado','necesita_seguimiento'].includes(d.outcome))return false;
+    if(diasDesde(d.fecha)<RETOMAR_DIAS)return false;
+    const ap=d.seguimiento_aplazado_hasta;
+    if(ap&&(ap>hoy||diasDesde(ap)<RETOMAR_DIAS))return false;
+    return true;
+  });
+}
+let retomarSalt=0;
+function retomarHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0)/4294967296;}
+function retomarElegidas(lista,max=5){
+  const c=retomarCandidatas(lista);
+  const semilla=todayStr()+':'+retomarSalt;
+  // Los "interesado" pesan el doble que "necesita seguimiento"
+  return c.map(d=>({d,k:retomarHash(semilla+':'+d.id)/(d.outcome==='interesado'?2:1)}))
+    .sort((a,b)=>a.k-b.k).slice(0,max).map(x=>x.d);
+}
+function retomarOtras(){retomarSalt++;renderHomeRetomar();}
+function renderHomeRetomar(){
+  const card=document.getElementById('home-retomar-card'),el=document.getElementById('home-retomar');
+  if(!card||!el)return;
+  const total=retomarCandidatas(demos).length;
+  const lista=retomarElegidas(demos);
+  card.style.display=lista.length?'':'none';
+  if(!lista.length)return;
+  document.getElementById('home-retomar-count').textContent=total>lista.length?`${lista.length} de ${total}`:'';
+  el.innerHTML=lista.map(d=>{
+    const ult=d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>d.fecha?d.seguimiento_aplazado_hasta:d.fecha;
+    const meses=Math.max(2,Math.round(diasDesde(ult)/30.4));
+    return`<div class="rt-item">
+      <div class="rt-body"><div class="rt-name">${demoNameHtml(d)}</div>
+      <div class="rt-meta"><span class="rt-tag ${d.outcome}">${d.outcome==='interesado'?'👍 Interesado':'📞 Necesita seguimiento'}</span><span>Demo ${fmtDate(d.fecha)}</span><span>· sin tocar hace ~${meses} meses</span><span>· 👤 ${escHtml(comercialName(d.comercial_id))}</span></div>
+      ${d.notas?`<div class="ag-note">📝 ${escHtml(d.notas.length>110?d.notas.slice(0,110)+'…':d.notas)}</div>`:''}</div>
+      <div class="rt-actions">
+        <button class="pd-btn" onclick="retomarLlamado(${d.id})" title="Ya le he llamado: programa la siguiente fecha">📞 Le llamo</button>
+        <button class="pd-btn win" onclick="openFirmaModal(${d.id})">🏆 Firmada</button>
+        <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'perdida',outcome:'cerrado_perdido'})">💔 Perdida</button>
+      </div></div>`;
+  }).join('');
+}
+function retomarLlamado(id){
+  const d=demos.find(x=>x.id===id);
+  const href=d?sfHref(d):null;
+  if(href)window.open(href,'_blank','noopener');
+  openAplazarModal(id,'¿Qué te ha dicho? Programa cuándo vuelves a llamarle. Si no hay nada que seguir, márcala como perdida.');
 }
 
 function demosCreatedThisMonth(){
@@ -6393,6 +6574,9 @@ async function applyOutcome(outcome){
       : '✓ Demo marcada como ejecutada');
     outcomeModalId=null;
     await loadDemos();
+    // ¿Te ha dicho cuándo volver a llamar? ("llámame en 5 meses")
+    if(['interesado','necesita_seguimiento'].includes(outcome))
+      openAplazarModal(id,'¿Te ha dicho cuándo volver a llamarle? Pon la fecha y te lo recordamos ese día. Si no, sigue el proceso normal: a los 7 días pasa a tus Follow-ups.');
   }catch(e){showToast('❌ Error');console.error(e);outcomeModalId=null;}
 }
 
@@ -6411,6 +6595,7 @@ async function confirmFirma(){
   const id=document.getElementById('firma-demo-id').value;
   const fecha=document.getElementById('firma-fecha').value;
   if(!fecha){showToast('⚠️ Pon la fecha de la firma');return;}
+  const antes=demos.find(d=>d.id==id),antigua=esSeguimientoAntiguo(antes);
   try{
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({
       estado:'ejecutada',
@@ -6421,6 +6606,7 @@ async function confirmFirma(){
     showToast('🎉 ¡Venta registrada! Firmada el '+fmtDate(fecha));
     closeFirmaModal();
     await loadDemos();
+    if(antigua)sfNudge(antes,'Comprueba que la oportunidad está actualizada en Salesforce y deja una nota del cierre.');
   }catch(e){showToast('❌ Error al registrar la venta');console.error(e);}
 }
 
@@ -6560,7 +6746,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
               <option value="cerrado_ganado">✅ Ganado</option>
               <option value="cerrado_perdido">❌ Perdido</option>
             </select>
-            <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})">⏰ Aplazar</button>
+            <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})">📅 Seguimiento en fecha</button>
           </div>`
         :!searchMode&&currentView==='papelera'
         ?`<span class="badge ${d.estado==='cancelada'?'cancelada-badge':'perdida-badge'}">${d.estado==='cancelada'?'🗑️ Cancelada':'❌ Perdida'}</span>`
@@ -6571,6 +6757,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
             ${d.estado==='reagendada'?'<option value="reagendada" selected>Reagendada</option>':''}
           </select>`}
       <div class="demo-actions">
+        ${d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)?`<button class="icon-btn" onclick="openAplazarModal(${d.id})" title="${d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>todayStr()?'Seguimiento el '+fmtDate(d.seguimiento_aplazado_hasta)+' · cambiar':'Programar seguimiento en una fecha concreta'}">📅</button>`:''}
         <button class="icon-btn" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="Editar">✏️</button>
         <button class="icon-btn" onclick="deleteDemo(${d.id})" title="Eliminar">🗑️</button>
       </div>
@@ -8100,7 +8287,7 @@ async function moveRegla(id,dir){
 // El manager crea bloques (planificacion_plantillas); cada SDR los arrastra a su
 // semana (planificacion_bloques) y los ejecuta con play / pausa / terminar.
 // El tiempo trabajado = trabajado_seg + lo que lleva corriendo desde corriendo_desde.
-const PL_H_INI=8,PL_H_FIN=20,PL_SLOT=15,PL_SLOT_PX=12,PL_DESCANSO_MIN=15;
+const PL_H_INI=8,PL_H_FIN=20,PL_SLOT=15,PL_SLOT_PX=16,PL_DESCANSO_MIN=15;
 const PL_COLORES=['#3b7dd8','#1fa856','#6BB81A','#e8a317','#e23d3d','#8b5cf6','#db2777','#2C4F5B'];
 const PL_DURACIONES=[15,30,45,60,90,120,150,180,240];
 const PL_PRIO_ORDEN={urgente:0,alta:1,normal:2};
@@ -8289,9 +8476,10 @@ function renderPlanCal(){
       const ico=st==='en_curso'?' · ▶':st==='pausado'?' · ⏸':st==='perdido'?' · sin empezar':st==='saltado'?' · no hecho':'';
       const mgr=plPorManager(b);
       const mgrTag=mgr?`<span class="pl-mgr-tag${plIsMgr()&&!b.visto_at?' unseen':''}" title="${plIsMgr()?(b.visto_at?'Lo ha visto':'Aún no lo ha visto'):'Te lo ha puesto tu manager'}">${plIsMgr()?(b.visto_at?'👀':'M'):'M'}</span>`:'';
-      grid+=`<div class="pl-block st-${st}${h<=24?' short':''}${locked?' locked':''}${plNuevos.has(b.id)?' nuevo':''}" data-id="${b.id}" style="--c:${b.color};top:${top}px;height:${h-2}px" title="${plEsc(b.titulo)} · ${plRango(b)}${mgr?' · puesto por el manager':''}">${mgrTag}
-        <div class="pl-block-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
-        <div class="pl-block-h">${plRango(b)}${ico}${b.res_demos?` · 🎯 ${b.res_demos}`:''}</div>
+      const corto=b.duracion_min<=15,medio=!corto&&b.duracion_min<=30;
+      grid+=`<div class="pl-block st-${st}${corto?' short':medio?' mid':''}${locked?' locked':''}${plNuevos.has(b.id)?' nuevo':''}" data-id="${b.id}" style="--c:${b.color};top:${top}px;height:${h-2}px" title="${plEsc(b.titulo)} · ${plRango(b)}${mgr?' · puesto por el manager':''}">${mgrTag}
+        <div class="pl-block-t">${corto?`<span class="pl-block-tt">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</span><span class="pl-block-hi">${plHora(ini)}</span>`:`${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}`}</div>
+        ${corto?'':`<div class="pl-block-h">${plRango(b)}${ico}${b.res_demos?` · 🎯 ${b.res_demos}`:''}</div>`}
         ${w>0&&b.estado!=='completado'?`<div class="pl-block-bar" style="width:${pct}%"></div>`:''}
         ${locked?'':'<div class="pl-resize"></div>'}
       </div>`;
@@ -8747,11 +8935,50 @@ function plTick(){
     plMarcarAvisado('desc-'+a.b.id);
     plNotify('⏱ Fin del descanso',a.sig?`Siguiente: ${a.sig.titulo} a las ${plHora(plMin(a.sig.hora_inicio))}`:'A por lo siguiente');
   }
+  plLateCheck();
   plRenderFocus();
   if(plTicks%60===0&&currentPanel==='planificacion'&&!plDrag)renderPlanCal();
   if(plTicks%180===0&&!plDrag)loadPlanificacion().then(plRenderAll);
 }
 function plEnsureTick(){if(!plTickTimer)plTickTimer=setInterval(plTick,1000);}
+// Aviso cuando un bloque ya ha empezado (1+ min) y el SDR no le ha dado a Play.
+// Se puede posponer 5 min; vuelve a salir hasta que empiece, lo salte o acabe la hora del bloque.
+const PL_LATE_POSPONER_MIN=5;
+let plLatePosp={},plLateId=null;
+function plLateBloque(){
+  const yo=currentUser.id,hoy=todayStr(),nm=plNowMin();
+  if(plBloques.some(b=>b.sdr_id===yo&&b.estado==='en_curso'))return null;
+  if(plAhora(yo).tipo==='rest')return null;
+  const b=plBloques.filter(x=>x.sdr_id===yo&&x.fecha===hoy&&x.estado==='planificado'&&nm>=plMin(x.hora_inicio)+1&&nm<plFin(x)).sort(plSort)[0];
+  if(!b||(plLatePosp[b.id]&&Date.now()<plLatePosp[b.id]))return null;
+  return b;
+}
+function plLateCheck(){
+  const b=plDrag?null:plLateBloque();
+  let el=document.getElementById('pl-late');
+  if(!b){if(el)el.classList.remove('show');plLateId=null;return;}
+  if(!el){el=document.createElement('div');el.id='pl-late';el.className='pl-late';el.setAttribute('role','alert');document.body.appendChild(el);}
+  const hace=plNowMin()-plMin(b.hora_inicio);
+  el.innerHTML=`<div class="pl-late-ico">⏰</div><div class="pl-late-body">
+    <div class="pl-late-lbl">Tu bloque ya ha empezado · ${plRango(b)}</div>
+    <div class="pl-late-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
+    <div class="pl-late-s">Empezó hace ${plDur(Math.max(1,hace))} y aún no le has dado a Play. Dale para que cuente el tiempo.</div>
+    <div class="pl-late-a"><button class="pl-btn play" onclick="plLateAccion('play',${b.id})">▶ Empezar ahora</button>
+      <button class="pl-btn ghost" onclick="plLateAccion('posponer',${b.id})">Recordar en ${PL_LATE_POSPONER_MIN} min</button>
+      <button class="pl-btn ghost" onclick="plLateAccion('saltar',${b.id})">No lo voy a hacer</button></div></div>`;
+  if(plLateId!==b.id){
+    plLateId=b.id;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+    plBeep();
+    try{if('Notification' in window&&Notification.permission==='granted'&&document.hidden){const n=new Notification(`⏰ No has empezado: ${b.titulo}`,{body:`${plRango(b)} · Dale a ▶ Play en el SDR Hub`,tag:'sdr-plan-late'});n.onclick=()=>{window.focus();n.close();};}}catch(e){}
+  }
+}
+async function plLateAccion(acc,id){
+  const el=document.getElementById('pl-late');if(el)el.classList.remove('show');
+  if(acc==='play')await plPlay(id);
+  else if(acc==='posponer'){plLatePosp[id]=Date.now()+PL_LATE_POSPONER_MIN*60000;showToast(`⏰ Te lo vuelvo a recordar en ${PL_LATE_POSPONER_MIN} min`);}
+  else if(acc==='saltar'){if(!confirm('¿Marcar este bloque como no hecho?')){if(el)el.classList.add('show');return;}await plSkip(id);}
+  plLateId=null;plLateCheck();plRenderAll();
+}
 async function plInitSdr(){
   await loadPlanificacion();plRenderAll();plUpdateAvisosBtn();plEnsureTick();
 }
