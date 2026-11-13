@@ -3273,6 +3273,7 @@ function renderMgrMotivos(){
       if(topPerd.m==='no_encaja'||topPerd.m==='sin_urgencia'||topPerd.m==='dificil')recomend=' Suele indicar un tema de <b>cualificación o discurso de valor</b>, más que de precio.';
       else if(topPerd.m==='presupuesto')recomend=' Revisa si se está cualificando bien el presupuesto antes de agendar.';
       else if(topPerd.m==='competidor')recomend=' Puede faltar diferenciación frente a la competencia en la demo.';
+      else if(topPerd.m==='no_contesta')recomend=' Revisa el seguimiento post-demo: cerrar el siguiente paso con fecha antes de colgar ayuda a no perder el contacto.';
       insight=`<div class="motivo-insight">💡 El motivo de pérdida más común es <b>"${topPerd.label}"</b> (${pct}% de las pérdidas).${recomend}${comTxt}</div>`;
     }
   }
@@ -6783,7 +6784,8 @@ const MOTIVOS_PERDIDA=[
   ['no_encaja','No le encaja la herramienta'],
   ['permanencia','No le gusta la permanencia del contrato'],
   ['dificil','Lo ve difícil'],
-  ['sin_urgencia','No ve la urgencia']
+  ['sin_urgencia','No ve la urgencia'],
+  ['no_contesta','No contesta']
 ];
 const MOTIVO_LABELS=Object.fromEntries([...MOTIVOS_CANCELADA,...MOTIVOS_PERDIDA]);
 function motivoLabel(m){return MOTIVO_LABELS[m]||'';}
