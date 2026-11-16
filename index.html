@@ -8737,20 +8737,27 @@ function plOpenBloque(id){
     else if(b.estado==='pausado')acc+=`<button class="pl-btn play" onclick="plPlay(${b.id});plCloseModal()">▶ Reanudar</button><button class="pl-btn done" onclick="plFinish(${b.id});plCloseModal()">✓ Terminar</button>`;
     else if(b.estado==='planificado'||b.estado==='saltado')acc+=`<button class="pl-btn play" onclick="plPlay(${b.id});plCloseModal()">▶ Empezar ahora</button>`;
   }
+  const puedeMarcar=(propio||plIsMgr())&&b.fecha<=hoy;
+  if(puedeMarcar&&(st==='perdido'||st==='ahora'||st==='saltado'))acc+=`<button class="pl-btn done" onclick="plHechoSinPlay(${b.id})" title="Lo hiciste pero se te olvidó darle a Play">✓ Sí lo hice (sin darle a Play)</button>`;
   if(propio&&b.fecha<=hoy&&(st==='perdido'||st==='ahora'))acc+=`<button class="pl-btn ghost" onclick="plSkip(${b.id})">✕ No lo he hecho</button>`;
   if(b.estado==='completado'||b.estado==='saltado')acc+=`<button class="pl-btn ghost" onclick="plReset(${b.id})">↺ Volver a planificado</button>`;
   const editable=b.estado!=='completado'&&b.estado!=='en_curso';
+  const editaDatos=propio||plIsMgr();
   plModal('Bloque',`
     <div class="pl-det-strip" style="background:${b.color}"></div>
     <div class="pl-det-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
     <div class="pl-det-m"><span>📅 ${plDiaLargo(b.fecha)} · ${plRango(b)} (${plDur(b.duracion_min)})</span>${plPrioPill(b.prioridad)}${plEstPill(st)}</div>
     ${plPorManager(b)?`<div class="form-hint" style="margin:-4px 0 10px;">📌 ${plIsMgr()?`Puesto por ti · ${b.visto_at?`👀 lo vio el ${new Date(b.visto_at).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}`:'<b style="color:var(--red)">aún no lo ha visto</b>'}`:'Te lo ha puesto tu manager'}</div>`:''}
+    ${b.sin_play&&b.estado==='completado'?`<div class="form-hint" style="margin:-4px 0 10px;">✓ Marcado como hecho después (no se le dio a Play)</div>`:''}
     ${p&&p.descripcion?`<div class="pl-det-desc">${plEsc(p.descripcion)}</div>`:''}
     ${plEnlace(b)?`<div class="pl-det-actions" style="margin-top:0;">${plEnlaceBtn(b)}</div>`:''}
     ${w>0?`<div class="form-hint" style="margin-bottom:10px;">⏱ Trabajado: <b>${plDurSeg(w)}</b> de ${plDur(b.duracion_min)}${b.completed_at?` · terminado a las ${new Date(b.completed_at).toTimeString().slice(0,5)}`:''}</div>`:''}
     ${acc?`<div class="pl-det-actions">${acc}</div>`:''}
-    ${editable?`<div class="pl-det-sep"></div>
-    <div class="form-row">
+    ${editaDatos||editable?'<div class="pl-det-sep"></div>':''}
+    ${editaDatos?`<div class="form-group"><label class="form-label">Nombre del bloque</label>
+      <div style="display:flex;gap:8px;"><input class="form-input" id="pl-e-emoji" maxlength="4" placeholder="📞" value="${plEsc(b.emoji||'')}" style="width:64px;text-align:center;"/><input class="form-input" id="pl-e-titulo" maxlength="80" value="${plEsc(b.titulo)}"/></div></div>
+    <div class="form-group"><label class="form-label">Color</label>${plSwatches(b.color)}</div>`:''}
+    ${editable?`<div class="form-row">
       <div class="form-group"><label class="form-label">Empieza</label><select class="form-select" id="pl-e-hora">${plOpcionesHora(plMin(b.hora_inicio))}</select></div>
       <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-e-dur">${plOpcionesDur(b.duracion_min)}</select></div>
     </div>
@@ -8769,6 +8776,14 @@ async function plGuardarBloque(id){
   const notas=document.getElementById('pl-e-notas').value.trim()||null;
   if(!plIsMgr()&&notas!==(b.notas||null))c.notas=notas;
   if(!plIsMgr())Object.assign(c,plResLeer('pl-e',b));
+  const tEl=document.getElementById('pl-e-titulo');
+  if(tEl){
+    const titulo=tEl.value.trim();if(!titulo){showToast('⚠️ Ponle un nombre al bloque');return;}
+    const emoji=document.getElementById('pl-e-emoji').value.trim()||null,color=plSwatchSel();
+    if(titulo!==b.titulo)c.titulo=titulo;
+    if(emoji!==(b.emoji||null))c.emoji=emoji;
+    if(color!==b.color)c.color=color;
+  }
   const en=document.getElementById('pl-e-enlace');
   if(en){const u=plLimpiarEnlace(en.value);if(u===false){showToast('⚠️ El enlace no parece válido');return;}if(u!==(b.enlace||null))c.enlace=u;}
   const h=document.getElementById('pl-e-hora'),du=document.getElementById('pl-e-dur');
@@ -8902,7 +8917,26 @@ function plResLeer(pre,b){
   return c;
 }
 async function plSkip(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'saltado',corriendo_desde:null}))plCloseModal();}
-async function plReset(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'planificado',trabajado_seg:0,corriendo_desde:null,started_at:null,completed_at:null,aviso_fin_at:null}))plCloseModal();}
+async function plReset(id){const b=plBloques.find(x=>x.id===id);if(b&&await plPatch(b,{estado:'planificado',trabajado_seg:0,corriendo_desde:null,started_at:null,completed_at:null,aviso_fin_at:null,...(b.sin_play?{sin_play:false}:{})}))plCloseModal();}
+// Lo hizo pero se le olvidó darle a Play: se marca como hecho con el tiempo del bloque
+// (o lo que lleve si aún no ha acabado) y se le piden los resultados.
+async function plHechoSinPlay(id){
+  const b=plBloques.find(x=>x.id===id);if(!b)return;
+  const[y,m,d]=b.fecha.split('-').map(Number);
+  const ini=new Date(y,m-1,d,0,plMin(b.hora_inicio)),fin=new Date(y,m-1,d,0,plFin(b));
+  const hasta=Math.min(Date.now(),fin.getTime());
+  const seg=Math.max(60,Math.round((hasta-ini.getTime())/1000));
+  if(!await plPatch(b,{estado:'completado',sin_play:true,trabajado_seg:Math.min(seg,b.duracion_min*60),corriendo_desde:null,
+    started_at:b.started_at||ini.toISOString(),completed_at:new Date(hasta).toISOString(),aviso_inicio_at:b.aviso_inicio_at||new Date().toISOString(),aviso_fin_at:b.aviso_fin_at||new Date().toISOString()}))return;
+  plMarcarAvisado('ini-'+b.id);plMarcarAvisado('fin-'+b.id);
+  if(plIsMgr()||b.sdr_id!==currentUser.id){plCloseModal();showToast('✓ Marcado como hecho');return;}
+  plModal('✓ Marcado como hecho',`
+    <p class="form-hint" style="margin:-6px 0 12px;">La próxima vez dale a ▶ al empezar para que cuente el tiempo real.</p>
+    <div class="pl-det-t" style="margin-bottom:10px;">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
+    ${plResInputs(b,'pl-fin',false,'¿Qué sacaste de este bloque?')}
+    <div class="form-group"><label class="form-label">Notas (opcional)</label><textarea class="form-textarea" id="pl-fin-notas" maxlength="500" placeholder="Cómo fue, algo a destacar…">${plEsc(b.notas||'')}</textarea></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="plGuardarNotaFin(${b.id})">Guardar</button></div>`);
+}
 
 function plSiguiente(sdrId,now=madridNow()){
   const hoy=todayStr(),nm=now.getHours()*60+now.getMinutes();
@@ -9064,6 +9098,7 @@ function plLateCheck(){
     <div class="pl-late-s">Empezó hace ${plDur(Math.max(1,hace))} y aún no le has dado a Play. Dale para que cuente el tiempo.</div>
     <div class="pl-late-a"><button class="pl-btn play" onclick="plLateAccion('play',${b.id})">▶ Empezar ahora</button>${plEnlaceBtn(b,'Abrir')}
       <button class="pl-btn ghost" onclick="plLateAccion('posponer',${b.id})">Recordar en ${PL_LATE_POSPONER_MIN} min</button>
+      <button class="pl-btn" onclick="plLateAccion('hecho',${b.id})">✓ Ya lo hice</button>
       <button class="pl-btn ghost" onclick="plLateAccion('saltar',${b.id})">No lo voy a hacer</button></div></div>`;
   if(plLateId!==b.id){
     plLateId=b.id;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
@@ -9075,6 +9110,7 @@ async function plLateAccion(acc,id){
   const el=document.getElementById('pl-late');if(el)el.classList.remove('show');
   if(acc==='play')await plPlay(id);
   else if(acc==='posponer'){plLatePosp[id]=Date.now()+PL_LATE_POSPONER_MIN*60000;showToast(`⏰ Te lo vuelvo a recordar en ${PL_LATE_POSPONER_MIN} min`);}
+  else if(acc==='hecho')await plHechoSinPlay(id);
   else if(acc==='saltar'){if(!confirm('¿Marcar este bloque como no hecho?')){if(el)el.classList.add('show');return;}await plSkip(id);}
   plLateId=null;plLateCheck();plRenderAll();
 }
@@ -9319,7 +9355,7 @@ function renderPlanCumplimiento(){
     const pasados=sem.filter(b=>['completado','saltado','perdido'].includes(plEstado(b,now)));
     const hechos=pasados.filter(b=>b.estado==='completado');
     const pct=pasados.length?Math.round(hechos.length/pasados.length*100):null;
-    const trab=sem.reduce((t,b)=>t+plWorked(b),0);
+    const trab=sem.filter(b=>!b.sin_play).reduce((t,b)=>t+plWorked(b),0);
     return{s,plan:sem.reduce((t,b)=>t+b.duracion_min,0),n:sem.length,pasados:pasados.length,hechos:hechos.length,no:pasados.length-hechos.length,pct,trab,urg:plUrgentesSinPlanificar(s.id).length,demos:sem.reduce((t,b)=>t+plNum(b.res_demos),0)};
   });
   el.innerHTML=`<table class="mgr-table"><thead><tr><th>SDR</th><th>Planificado</th><th>Bloques</th><th>Ya tocaban</th><th>Hechos</th><th>No hechos</th><th>Cumplimiento</th><th>Tiempo con play</th><th>Demos</th><th>Urgentes sin planificar</th></tr></thead><tbody>
