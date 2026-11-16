@@ -1163,6 +1163,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pl-btn.link{display:inline-flex;align-items:center;text-decoration:none;border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
 .pl-btn:hover{filter:brightness(0.97);}
 
+/* Reportes: biblioteca de enlaces */
+.rep-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.rep-search{flex:1;min-width:200px;padding:11px 14px;border:1.5px solid var(--border);border-radius:11px;font-family:'Inter',sans-serif;font-size:14px;background:var(--surface);}
+.rep-search:focus{outline:none;border-color:var(--lime);}
+.rep-cats{display:flex;gap:6px;flex-wrap:wrap;}
+.rep-cat-btn{padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;}
+.rep-cat-btn.on{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+.rep-group{margin-bottom:22px;}
+.rep-group-t{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--teal-dark);margin-bottom:10px;}
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.rep-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.rep-card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.06);}
+.rep-card-t{font-weight:700;font-size:15px;color:var(--teal-dark);text-decoration:none;overflow-wrap:anywhere;}
+.rep-card-t:hover{text-decoration:underline;}
+.rep-card-d{font-size:13px;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;}
+.rep-card-u{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rep-card-m{font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.rep-card-a{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:6px;}
+.rep-priv{background:var(--amber-soft);color:#8a5e00;padding:2px 8px;border-radius:20px;font-weight:700;}
+@media (max-width:640px){.rep-grid{grid-template-columns:1fr;}}
+
 /* Detalle de bloque */
 .pl-det-strip{height:6px;border-radius:6px;margin-bottom:14px;}
 .pl-det-t{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);}
@@ -1281,6 +1302,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="sdr-nav-btn active" data-panel="inicio" onclick="showPanel('inicio')"><span class="sdr-nav-ico">🏠</span><span class="sdr-nav-txt">Inicio</span></button>
       <button class="sdr-nav-btn" data-panel="pendientes" onclick="showPanel('pendientes')"><span class="sdr-nav-ico">⏳</span><span class="sdr-nav-txt">Pendientes</span><span class="sdr-nav-badge" id="nav-badge-pendientes"></span></button>
       <button class="sdr-nav-btn" data-panel="planificacion" onclick="showPanel('planificacion')"><span class="sdr-nav-ico">🗓️</span><span class="sdr-nav-txt">Mi planificación</span><span class="sdr-nav-badge urgent" id="nav-badge-plan"></span></button>
+      <button class="sdr-nav-btn" data-panel="reportes" onclick="showPanel('reportes')"><span class="sdr-nav-ico">📎</span><span class="sdr-nav-txt">Reportes</span></button>
       <button class="sdr-nav-btn" data-panel="demos" onclick="showPanel('demos')"><span class="sdr-nav-ico">📋</span><span class="sdr-nav-txt">Mis demos</span></button>
       <button class="sdr-nav-btn" data-panel="metricas" onclick="showPanel('metricas')"><span class="sdr-nav-ico">📊</span><span class="sdr-nav-txt">Mis métricas</span></button>
       <button class="sdr-nav-btn" data-panel="equipo" onclick="showPanel('equipo')"><span class="sdr-nav-ico">👥</span><span class="sdr-nav-txt">Equipo</span><span class="sdr-nav-badge info" id="nav-badge-equipo"></span></button>
@@ -1552,6 +1574,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
       </section>
 
+      <!-- ═════ REPORTES ═════ -->
+      <section class="sdr-panel" id="panel-reportes">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Reportes</div>
+            <div class="page-sub">Tu biblioteca de enlaces directos: reportes de Salesforce, listas, hojas… Guárdalos una vez y tenlos siempre a mano.</div>
+          </div>
+          <button class="btn-primary" onclick="repOpen()">+ Añadir reporte</button>
+        </div>
+        <div class="rep-toolbar">
+          <input class="rep-search" type="search" placeholder="🔍 Buscar reporte…" oninput="repBuscar=this.value;renderReportes()" aria-label="Buscar reporte"/>
+          <div class="rep-cats" data-rep="cats"></div>
+        </div>
+        <div data-rep="list"></div>
+      </section>
+
       <!-- ═════ MI PLANIFICACIÓN ═════ -->
       <section class="sdr-panel" id="panel-planificacion">
         <div class="page-head">
@@ -1578,6 +1616,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="modal-close" onclick="closeDemoPopup()">✕</button>
     </div>
     <div class="modal-body" id="demo-popup-body"></div>
+  </div>
+</div>
+
+<!-- REPORTES: añadir / editar -->
+<div class="modal-overlay" id="rep-modal" onclick="if(event.target===this)repClose()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div class="modal-title" id="rep-modal-title">Reporte</div>
+      <button class="modal-close" onclick="repClose()">✕</button>
+    </div>
+    <div class="modal-body" id="rep-modal-body"></div>
   </div>
 </div>
 
@@ -1623,6 +1672,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
       <button class="mgr-nav-btn active" onclick="setMgrTab('equipo',this)">📊 Visión equipo</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('individual',this)">👤 Por SDR</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('planificacion',this)">🗓️ Planificación</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('reportes',this)">📎 Reportes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('resumenes',this)">📅 Resúmenes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('generador',this)">✍️ Generador de mensajes</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('llamadas',this)">📞 Llamadas</button>
@@ -2005,6 +2055,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
 
     <!-- TAB: GESTION -->
+    <div class="mgr-tab" id="mgrtab-reportes">
+      <div class="page-head">
+          <div>
+            <div class="page-title">Reportes</div>
+            <div class="page-sub">Tu biblioteca de enlaces directos: reportes de Salesforce, listas, hojas… Guárdalos una vez y tenlos siempre a mano.</div>
+          </div>
+          <button class="btn-primary" onclick="repOpen()">+ Añadir reporte</button>
+        </div>
+        <div class="rep-toolbar">
+          <input class="rep-search" type="search" placeholder="🔍 Buscar reporte…" oninput="repBuscar=this.value;renderReportes()" aria-label="Buscar reporte"/>
+          <div class="rep-cats" data-rep="cats"></div>
+        </div>
+        <div data-rep="list"></div>
+    </div>
+
     <div class="mgr-tab" id="mgrtab-gestion">
       <div class="mgr-card" style="margin-bottom:20px;">
         <div class="mgr-card-title">👥 Comerciales</div>
@@ -2742,6 +2807,7 @@ async function enterApp(){
   let savedPanel=null;try{savedPanel=sessionStorage.getItem('sdr_panel');}catch(e){}
   showPanel(savedPanel||'inicio');
   plInitSdr();
+  loadReportes();
 }
 
 // ── MANAGER STATE ──
@@ -2762,6 +2828,7 @@ async function sinUsuariosDePrueba(lista){
 
 async function enterManagerApp(){
   document.getElementById('manager-app').classList.add('active');
+  loadReportes();
   document.getElementById('mgr-name').textContent=currentUser.nombre;
   document.getElementById('mgr-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('mgr-date').textContent=fmtDateLong();
@@ -4110,6 +4177,7 @@ function setMgrTab(tab,btn){
   if(tab==='resumenes')renderResumen();
   if(tab==='generador')renderGenTopics();
   if(tab==='planificacion')openMgrPlan();
+  if(tab==='reportes')loadReportes().then(renderReportes);
 }
 
 // ── RESÚMENES ──
@@ -5406,6 +5474,7 @@ function showPanel(p){
   if(slot&&nav&&nav.parentElement!==slot)slot.appendChild(nav);
   try{sessionStorage.setItem('sdr_panel',p);}catch(e){}
   window.scrollTo(0,0);
+  if(p==='reportes')loadReportes().then(renderReportes);
   if(p==='planificacion'){plArmed=null;loadPlanificacion().then(()=>{plRenderAll();return plMarcarVistos();}).then(plRenderAll);}
   else plNuevos.clear();
   if(typeof plRenderFocus==='function')plRenderFocus();
@@ -8362,7 +8431,9 @@ function plEnlace(b){
 }
 function plEnlaceBtn(b,txt){const u=plEnlace(b);return u?`<a class="pl-btn link" href="${plEsc(u)}" target="_blank" rel="noopener noreferrer" title="${plEsc(u)}" onclick="event.stopPropagation()">🔗 ${txt||'Abrir enlace'}</a>`:'';}
 function plEnlaceInput(id,val,hint){
-  return`<div class="form-group"><label class="form-label">Enlace (opcional)</label><input class="form-input" type="url" id="${id}" maxlength="2000" placeholder="https://… (p. ej. el reporte de Salesforce)" value="${plEsc(val||'')}"/>${hint?`<div class="form-hint">${hint}</div>`:''}</div>`;
+  const lib=repLista.length?`<select class="form-select" style="margin-top:6px;" onchange="if(this.value){document.getElementById('${id}').value=this.value;this.selectedIndex=0;}" aria-label="Elegir de la biblioteca de reportes">
+    <option value="">📎 …o elige uno de la biblioteca de reportes</option>${repOrdenados().map(r=>`<option value="${plEsc(r.url)}">${r.emoji?plEsc(r.emoji)+' ':''}${plEsc(r.titulo)}${r.categoria?' · '+plEsc(r.categoria):''}</option>`).join('')}</select>`:'';
+  return`<div class="form-group"><label class="form-label">Enlace (opcional)</label><input class="form-input" type="url" id="${id}" maxlength="2000" placeholder="https://… (p. ej. el reporte de Salesforce)" value="${plEsc(val||'')}"/>${lib}${hint?`<div class="form-hint">${hint}</div>`:''}</div>`;
 }
 function plNum(v){return v==null||v===''?0:+v;}
 function plEsFestivo(f){return FESTIVOS_2026.includes(f);}
@@ -9279,6 +9350,102 @@ async function plGuardarEmail(id){
     const s=plMgrSdrs.find(x=>x.id===id);if(s){s.email=email;s.avisos_email=on;}
     showToast('✓ Avisos por email guardados');
   }catch(e){console.error(e);showToast('❌ No se pudo guardar el email');}
+}
+
+// ══════════ REPORTES: biblioteca de enlaces ══════════
+// Enlaces directos a reportes que guarda el equipo. Compartidos (los ve todo
+// el equipo) o solo para mí. Edita / borra quien lo creó o el manager.
+let repLista=[],repBuscar='',repCat='',repCargado=false;
+function repEsMio(r){return!!currentUser&&(r.autor_id===currentUser.id||currentUser.rol==='manager');}
+function repOrdenados(){return[...repLista].sort((a,b)=>(a.categoria||'~').localeCompare(b.categoria||'~','es')||a.titulo.localeCompare(b.titulo,'es'));}
+function repCategorias(){return[...new Set(repLista.map(r=>(r.categoria||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));}
+function repRoots(){return[document.getElementById(currentUser&&currentUser.rol==='manager'?'mgrtab-reportes':'panel-reportes')].filter(Boolean);}
+async function loadReportes(){
+  try{
+    repLista=await sb('reportes?select=*,autor:sdr_users!autor_id(nombre)&order=titulo.asc')||[];
+    repCargado=true;
+  }catch(e){console.error(e);repCargado=false;}
+}
+function renderReportes(){
+  repRoots().forEach(root=>{
+    const listEl=root.querySelector('[data-rep="list"]'),catsEl=root.querySelector('[data-rep="cats"]');
+    if(!listEl)return;
+    if(!repCargado){listEl.innerHTML='<div class="home-empty">No se pudieron cargar los reportes. Recarga la página.</div>';if(catsEl)catsEl.innerHTML='';return;}
+    const cats=repCategorias();
+    if(repCat&&!cats.includes(repCat))repCat='';
+    if(catsEl)catsEl.innerHTML=cats.length?[['','Todos'],...cats.map(c=>[c,c])].map(([v,t])=>`<button class="rep-cat-btn${repCat===v?' on':''}" onclick="repCat=${plEsc(JSON.stringify(v))};renderReportes()">${plEsc(t)}</button>`).join(''):'';
+    const q=repBuscar.trim().toLowerCase();
+    const lista=repOrdenados().filter(r=>(!repCat||(r.categoria||'').trim()===repCat)&&(!q||[r.titulo,r.descripcion,r.categoria,r.url].some(x=>(x||'').toLowerCase().includes(q))));
+    if(!repLista.length){listEl.innerHTML='<div class="home-empty"><b>Aún no hay reportes</b>Añade el primero: por ejemplo "📞 Inbounds de hoy" con el enlace al reporte de Salesforce.</div>';return;}
+    if(!lista.length){listEl.innerHTML='<div class="home-empty">Ningún reporte coincide con la búsqueda.</div>';return;}
+    const grupos={};lista.forEach(r=>{const k=(r.categoria||'').trim()||'Sin categoría';(grupos[k]=grupos[k]||[]).push(r);});
+    listEl.innerHTML=Object.entries(grupos).map(([g,rs])=>`<div class="rep-group">${Object.keys(grupos).length>1||g!=='Sin categoría'?`<div class="rep-group-t">${plEsc(g)}</div>`:''}<div class="rep-grid">${rs.map(repCard).join('')}</div></div>`).join('');
+  });
+}
+function repCard(r){
+  const autor=r.autor&&r.autor.nombre?(r.autor_id===currentUser.id?'Tú':r.autor.nombre):'';
+  let host='';try{host=new URL(r.url).hostname.replace(/^www\./,'');}catch(e){}
+  return`<div class="rep-card">
+    <a class="rep-card-t" href="${plEsc(r.url)}" target="_blank" rel="noopener noreferrer">${r.emoji?plEsc(r.emoji)+' ':'🔗 '}${plEsc(r.titulo)}</a>
+    ${r.descripcion?`<div class="rep-card-d">${plEsc(r.descripcion)}</div>`:''}
+    <div class="rep-card-u" title="${plEsc(r.url)}">${plEsc(host||r.url)}</div>
+    <div class="rep-card-m">${autor?`<span>👤 ${plEsc(autor)}</span>`:''}${r.compartido?'':'<span class="rep-priv">🔒 Solo para ti</span>'}</div>
+    <div class="rep-card-a">
+      <a class="pl-btn link" href="${plEsc(r.url)}" target="_blank" rel="noopener noreferrer">🔗 Abrir</a>
+      <button class="pl-btn" onclick="repCopiar(${r.id})" title="Copiar el enlace">📋 Copiar</button>
+      ${repEsMio(r)?`<button class="pl-btn ghost" onclick="repOpen(${r.id})">✏️ Editar</button>`:''}
+    </div></div>`;
+}
+async function repCopiar(id){
+  const r=repLista.find(x=>x.id===id);if(!r)return;
+  try{await navigator.clipboard.writeText(r.url);showToast('✓ Enlace copiado');}
+  catch(e){prompt('Copia el enlace:',r.url);}
+}
+function repClose(){document.getElementById('rep-modal').classList.remove('active');}
+function repOpen(id){
+  const r=id?repLista.find(x=>x.id===id):null;
+  const v=r||{titulo:'',url:'',descripcion:'',categoria:'',emoji:'',compartido:true};
+  const cats=repCategorias();
+  document.getElementById('rep-modal-title').textContent=r?'Editar reporte':'Nuevo reporte';
+  document.getElementById('rep-modal-body').innerHTML=`
+    <div class="form-group"><label class="form-label">Nombre</label>
+      <div style="display:flex;gap:8px;"><input class="form-input" id="rep-emoji" maxlength="4" placeholder="📞" value="${plEsc(v.emoji||'')}" style="width:64px;text-align:center;"/><input class="form-input" id="rep-titulo" maxlength="80" placeholder="Ej.: Inbounds de hoy" value="${plEsc(v.titulo)}"/></div></div>
+    <div class="form-group"><label class="form-label">Enlace</label><input class="form-input" type="url" id="rep-url" maxlength="2000" placeholder="https://… (pega el enlace del reporte)" value="${plEsc(v.url)}"/></div>
+    <div class="form-group"><label class="form-label">Categoría (opcional)</label><input class="form-input" id="rep-cat" maxlength="40" list="rep-cats-dl" placeholder="Ej.: Salesforce, Campañas, Métricas…" value="${plEsc(v.categoria||'')}"/>
+      <datalist id="rep-cats-dl">${cats.map(c=>`<option value="${plEsc(c)}"></option>`).join('')}</datalist></div>
+    <div class="form-group"><label class="form-label">Para qué sirve (opcional)</label><textarea class="form-textarea" id="rep-desc" maxlength="300" placeholder="Qué muestra, cuándo usarlo…">${plEsc(v.descripcion||'')}</textarea></div>
+    <div class="form-group"><label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600;"><input type="checkbox" id="rep-comp" ${v.compartido?'checked':''} style="width:18px;height:18px;accent-color:var(--teal-dark);"/> Compartir con todo el equipo</label>
+      <div class="form-hint">Si lo desmarcas, solo lo ves tú${currentUser.rol==='manager'?'':' (y tu manager)'}.</div></div>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button class="btn-primary" onclick="repGuardar(${r?r.id:'null'})">${r?'Guardar cambios':'Añadir reporte'}</button>
+      ${r?`<button class="pl-btn danger" style="margin-left:auto;" onclick="repBorrar(${r.id})">🗑 Borrar</button>`:''}
+    </div>`;
+  document.getElementById('rep-modal').classList.add('active');
+  setTimeout(()=>document.getElementById(r?'rep-titulo':'rep-url').focus(),50);
+}
+async function repGuardar(id){
+  const titulo=document.getElementById('rep-titulo').value.trim();
+  if(!titulo){showToast('⚠️ Ponle un nombre al reporte');return;}
+  const url=plLimpiarEnlace(document.getElementById('rep-url').value);
+  if(!url){showToast(url===null?'⚠️ Pega el enlace del reporte':'⚠️ El enlace no parece válido');return;}
+  const row={titulo,url,emoji:document.getElementById('rep-emoji').value.trim()||null,
+    categoria:document.getElementById('rep-cat').value.trim()||null,
+    descripcion:document.getElementById('rep-desc').value.trim()||null,
+    compartido:document.getElementById('rep-comp').checked};
+  try{
+    if(id)await sb(`reportes?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(row)});
+    else await sb('reportes',{method:'POST',body:JSON.stringify({...row,autor_id:currentUser.id})});
+    repClose();showToast(id?'✓ Reporte guardado':row.compartido?'✓ Reporte añadido · ya lo ve todo el equipo':'✓ Reporte añadido (solo para ti)');
+    await loadReportes();renderReportes();
+  }catch(e){console.error(e);showToast('❌ No se pudo guardar el reporte');}
+}
+async function repBorrar(id){
+  const r=repLista.find(x=>x.id===id);if(!r)return;
+  if(!confirm(`¿Borrar "${r.titulo}" de la biblioteca?`))return;
+  try{
+    await sb(`reportes?id=eq.${id}`,{method:'DELETE'});
+    repLista=repLista.filter(x=>x.id!==id);repClose();renderReportes();showToast('✓ Reporte borrado');
+  }catch(e){console.error(e);showToast('❌ No se pudo borrar');}
 }
 
 // ── INIT ──
