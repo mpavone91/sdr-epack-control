@@ -1160,6 +1160,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pl-btn.done{background:var(--lime);border-color:var(--lime);}
 .pl-btn.danger{border-color:#f3c2c2;background:var(--red-soft);color:var(--red);}
 .pl-btn.ghost{border-style:dashed;color:var(--muted);}
+.pl-btn.link{display:inline-flex;align-items:center;text-decoration:none;border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
 .pl-btn:hover{filter:brightness(0.97);}
 
 /* Detalle de bloque */
@@ -8347,6 +8348,22 @@ function plSolapa(sdrId,fecha,ini,dur,exceptId){
   return plBloques.some(b=>b.sdr_id===sdrId&&b.fecha===fecha&&b.id!==exceptId&&ini<plFin(b)&&plMin(b.hora_inicio)<ini+dur);
 }
 function plPorManager(b){return b.creado_por!=null&&b.creado_por!==b.sdr_id;}
+// Enlace del bloque (p. ej. el reporte de Salesforce). Opcional.
+function plLimpiarEnlace(v){
+  v=(v||'').trim();if(!v)return null;
+  if(!/^https?:\/\//i.test(v))v='https://'+v;
+  try{const u=new URL(v);if(!/^https?:$/.test(u.protocol)||!u.hostname.includes('.'))return false;}catch(e){return false;}
+  return v.length>2000?false:v;
+}
+function plEnlace(b){
+  if(!b)return null;
+  const p=b.plantilla_id&&plPlantillas.find(x=>x.id===b.plantilla_id);
+  return(p&&p.enlace)||b.enlace||null;
+}
+function plEnlaceBtn(b,txt){const u=plEnlace(b);return u?`<a class="pl-btn link" href="${plEsc(u)}" target="_blank" rel="noopener noreferrer" title="${plEsc(u)}" onclick="event.stopPropagation()">🔗 ${txt||'Abrir enlace'}</a>`:'';}
+function plEnlaceInput(id,val,hint){
+  return`<div class="form-group"><label class="form-label">Enlace (opcional)</label><input class="form-input" type="url" id="${id}" maxlength="2000" placeholder="https://… (p. ej. el reporte de Salesforce)" value="${plEsc(val||'')}"/>${hint?`<div class="form-hint">${hint}</div>`:''}</div>`;
+}
 function plNum(v){return v==null||v===''?0:+v;}
 function plEsFestivo(f){return FESTIVOS_2026.includes(f);}
 
@@ -8391,6 +8408,8 @@ async function plPatch(b,cambios,silencioso){
   finally{plRenderAll();}
 }
 async function plInsert(rows){
+  // Sin enlaces no se manda la columna (así funciona aunque falte la migración del enlace)
+  if(!rows.some(r=>r.enlace))rows=rows.map(({enlace,...r})=>r);
   try{
     const r=await sb('planificacion_bloques',{method:'POST',body:JSON.stringify(rows)});
     plBloques.push(...(r||[]));plBloques.sort(plSort);
@@ -8431,7 +8450,7 @@ function renderPlanCal(){
     const u=usados(p.id);
     return`<div class="pl-chip prio-${p.prioridad}${plArmed&&plArmed.id===p.id?' armed':''}" data-pid="${p.id}" style="--c:${p.color}" title="${plEsc(p.descripcion||p.titulo)}">
       <div class="pl-chip-t">${p.emoji?plEsc(p.emoji)+' ':''}${plEsc(p.titulo)}</div>
-      <div class="pl-chip-m"><span>⏱ ${plDur(p.duracion_min)}</span>${plPrioPill(p.prioridad)}${p.sdr_id?'<span>👤 solo para ti</span>':''}${p.fecha_limite?`<span>📅 antes del ${fmtDate(p.fecha_limite)}</span>`:''}${u?`<span class="pl-used">✓ ${u} esta semana</span>`:''}</div>
+      <div class="pl-chip-m"><span>⏱ ${plDur(p.duracion_min)}</span>${plPrioPill(p.prioridad)}${p.enlace?'<span title="Tiene enlace">🔗</span>':''}${p.sdr_id?'<span>👤 solo para ti</span>':''}${p.fecha_limite?`<span>📅 antes del ${fmtDate(p.fecha_limite)}</span>`:''}${u?`<span class="pl-used">✓ ${u} esta semana</span>`:''}</div>
     </div>`;}).join(''):`<div class="pl-pal-empty">${plIsMgr()?'Crea bloques arriba para que aparezcan aquí.':'Tu manager aún no ha creado bloques. Puedes añadir uno propio.'}</div>`;
   pal+=`<button class="pl-pal-add" onclick="plOpenCustom()">+ Bloque propio</button>`;
 
@@ -8619,7 +8638,7 @@ function plPointerUp(e){
   }
 }
 async function plCrearDesde(p,fecha,ini){
-  const r=await plInsert([{sdr_id:plSdrId(),plantilla_id:p.id||null,titulo:p.titulo,emoji:p.emoji||null,color:p.color,prioridad:p.prioridad||'normal',
+  const r=await plInsert([{sdr_id:plSdrId(),plantilla_id:p.id||null,titulo:p.titulo,emoji:p.emoji||null,color:p.color,prioridad:p.prioridad||'normal',enlace:p.enlace||null,
     fecha,hora_inicio:plHora(ini),duracion_min:p.duracion_min,creado_por:currentUser.id}]);
   if(r&&r.length)showToast(`✓ ${p.titulo} · ${plDiaLargo(fecha)} ${plHora(ini)}`);
 }
@@ -8656,13 +8675,15 @@ function plOpenBloque(id){
     <div class="pl-det-m"><span>📅 ${plDiaLargo(b.fecha)} · ${plRango(b)} (${plDur(b.duracion_min)})</span>${plPrioPill(b.prioridad)}${plEstPill(st)}</div>
     ${plPorManager(b)?`<div class="form-hint" style="margin:-4px 0 10px;">📌 ${plIsMgr()?`Puesto por ti · ${b.visto_at?`👀 lo vio el ${new Date(b.visto_at).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}`:'<b style="color:var(--red)">aún no lo ha visto</b>'}`:'Te lo ha puesto tu manager'}</div>`:''}
     ${p&&p.descripcion?`<div class="pl-det-desc">${plEsc(p.descripcion)}</div>`:''}
+    ${plEnlace(b)?`<div class="pl-det-actions" style="margin-top:0;">${plEnlaceBtn(b)}</div>`:''}
     ${w>0?`<div class="form-hint" style="margin-bottom:10px;">⏱ Trabajado: <b>${plDurSeg(w)}</b> de ${plDur(b.duracion_min)}${b.completed_at?` · terminado a las ${new Date(b.completed_at).toTimeString().slice(0,5)}`:''}</div>`:''}
     ${acc?`<div class="pl-det-actions">${acc}</div>`:''}
     ${editable?`<div class="pl-det-sep"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Empieza</label><select class="form-select" id="pl-e-hora">${plOpcionesHora(plMin(b.hora_inicio))}</select></div>
       <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-e-dur">${plOpcionesDur(b.duracion_min)}</select></div>
-    </div>`:''}
+    </div>
+    ${p&&p.enlace?'':plEnlaceInput('pl-e-enlace',b.enlace)}`:''}
     ${b.estado==='completado'||b.estado==='pausado'||b.estado==='en_curso'||plNum(b.res_llamadas)+plNum(b.res_demos)>0?plResInputs(b,'pl-e',plIsMgr()):''}
     <div class="form-group"><label class="form-label">Notas ${plIsMgr()?'del SDR':'(cómo ha ido, algo a destacar…)'}</label><textarea class="form-textarea" id="pl-e-notas" maxlength="500" ${plIsMgr()?'readonly':''}>${plEsc(b.notas||'')}</textarea></div>
     <div class="modal-actions" style="flex-wrap:wrap;">
@@ -8677,6 +8698,8 @@ async function plGuardarBloque(id){
   const notas=document.getElementById('pl-e-notas').value.trim()||null;
   if(!plIsMgr()&&notas!==(b.notas||null))c.notas=notas;
   if(!plIsMgr())Object.assign(c,plResLeer('pl-e',b));
+  const en=document.getElementById('pl-e-enlace');
+  if(en){const u=plLimpiarEnlace(en.value);if(u===false){showToast('⚠️ El enlace no parece válido');return;}if(u!==(b.enlace||null))c.enlace=u;}
   const h=document.getElementById('pl-e-hora'),du=document.getElementById('pl-e-dur');
   if(h&&du){
     const ini=+h.value,dur=Math.min(+du.value,PL_H_FIN*60-ini);
@@ -8703,7 +8726,7 @@ async function plCopiarDias(id){
   const dias=plWeek().filter(f=>f!==b.fecha&&!plEsFestivo(f)&&f>=todayStr());
   const libres=dias.filter(f=>!plSolapa(b.sdr_id,f,ini,b.duracion_min));
   if(!libres.length){showToast('⛔ No hay más días libres a esa hora esta semana');return;}
-  const r=await plInsert(libres.map(f=>({sdr_id:b.sdr_id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:f,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id})));
+  const r=await plInsert(libres.map(f=>({sdr_id:b.sdr_id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,enlace:b.enlace||null,fecha:f,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id})));
   if(r){plCloseModal();showToast(`✓ Repetido en ${r.length} día${r.length>1?'s':''}${libres.length<dias.length?' (los ocupados se han saltado)':''}`);}
 }
 async function plCopiarSemana(){
@@ -8714,7 +8737,7 @@ async function plCopiarSemana(){
   plWeekOffset++;await loadPlanificacion();
   const rows=mios.map(b=>({...b,fecha:plAddDays(b.fecha,7)}))
     .filter(b=>!plEsFestivo(b.fecha)&&!plSolapa(sdrId,b.fecha,plMin(b.hora_inicio),b.duracion_min))
-    .map(b=>({sdr_id:sdrId,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id}));
+    .map(b=>({sdr_id:sdrId,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,enlace:b.enlace||null,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id}));
   if(!rows.length){plRenderAll();showToast('La semana siguiente ya tiene esos huecos ocupados');return;}
   const r=await plInsert(rows);
   if(r)showToast(`✓ ${r.length} bloques copiados a la semana siguiente`);
@@ -8733,6 +8756,7 @@ function plOpenCustom(fecha,ini){
       <div class="form-group"><label class="form-label">Empieza</label><select class="form-select" id="pl-c-hora">${plOpcionesHora(ini)}</select></div>
     </div>
     <div class="form-group"><label class="form-label">Duración</label><select class="form-select" id="pl-c-dur">${plOpcionesDur(60)}</select></div>
+    ${plEnlaceInput('pl-c-enlace')}
     <div class="form-group"><label class="form-label">Color</label>${plSwatches(PL_COLORES[5])}</div>
     <div class="modal-actions"><button class="btn-primary" onclick="plGuardarCustom()">Añadir al calendario</button></div>`);
   setTimeout(()=>document.getElementById('pl-c-titulo').focus(),50);
@@ -8743,8 +8767,10 @@ async function plGuardarCustom(){
   const fecha=document.getElementById('pl-c-fecha').value,ini=+document.getElementById('pl-c-hora').value;
   const dur=Math.min(+document.getElementById('pl-c-dur').value,PL_H_FIN*60-ini);
   if(plSolapa(plSdrId(),fecha,ini,dur)){showToast('⛔ Se solapa con otro bloque');return;}
+  const enlace=plLimpiarEnlace(document.getElementById('pl-c-enlace').value);
+  if(enlace===false){showToast('⚠️ El enlace no parece válido');return;}
   plCloseModal();
-  await plCrearDesde({titulo,emoji:document.getElementById('pl-c-emoji').value.trim()||null,color:plSwatchSel(),prioridad:'normal',duracion_min:dur},fecha,ini);
+  await plCrearDesde({titulo,enlace,emoji:document.getElementById('pl-c-emoji').value.trim()||null,color:plSwatchSel(),prioridad:'normal',duracion_min:dur},fecha,ini);
 }
 
 // ── Play / pausa / terminar ──
@@ -8844,7 +8870,7 @@ function plRenderFocus(){
     html=`<div class="pl-focus-ico">${a.tipo==='run'?'▶️':'⏸️'}</div>
       <div class="pl-focus-info"><div class="pl-focus-lbl">${a.tipo==='run'?'En curso':'En pausa'} · ${plRango(b)}</div><div class="pl-focus-t">${tit}</div><div class="pl-focus-prog"><div style="width:${pct}%"></div></div></div>
       <div class="pl-focus-clock" title="Tiempo que queda">${plClock(tot-w)}</div>
-      <div class="pl-focus-actions">${a.tipo==='run'?`<button class="pl-btn pause" onclick="plPause(${b.id})">⏸ Pausa</button>`:`<button class="pl-btn play" onclick="plPlay(${b.id})">▶ Reanudar</button>`}<button class="pl-btn done" onclick="plFinish(${b.id})">✓ Terminar</button></div>`;
+      <div class="pl-focus-actions">${a.tipo==='run'?`<button class="pl-btn pause" onclick="plPause(${b.id})">⏸ Pausa</button>`:`<button class="pl-btn play" onclick="plPlay(${b.id})">▶ Reanudar</button>`}<button class="pl-btn done" onclick="plFinish(${b.id})">✓ Terminar</button>${plEnlaceBtn(b,'Abrir')}</div>`;
   }else if(a.tipo==='rest'){
     cls='rest';
     html=`<div class="pl-focus-ico">☕</div>
@@ -8855,12 +8881,12 @@ function plRenderFocus(){
     cls='late';
     html=`<div class="pl-focus-ico">⏰</div>
       <div class="pl-focus-info"><div class="pl-focus-lbl">Toca ahora · ${plRango(b)}</div><div class="pl-focus-t">${tit}</div></div>
-      <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Play</button><button class="pl-btn ghost" onclick="plOpenBloque(${b.id})">Ver</button></div>`;
+      <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Play</button>${plEnlaceBtn(b,'Abrir')}<button class="pl-btn ghost" onclick="plOpenBloque(${b.id})">Ver</button></div>`;
   }else if(a.tipo==='next'){
     const falta=plMin(b.hora_inicio)-plNowMin();
     html=`<div class="pl-focus-ico">🗓️</div>
       <div class="pl-focus-info"><div class="pl-focus-lbl">Siguiente · ${plRango(b)} · en ${plDur(Math.max(1,falta))}</div><div class="pl-focus-t">${tit}</div></div>
-      <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Empezar ya</button></div>`;
+      <div class="pl-focus-actions"><button class="pl-btn play" onclick="plPlay(${b.id})">▶ Empezar ya</button>${plEnlaceBtn(b,'Abrir')}</div>`;
   }else if(a.tipo==='done'){
     html=`<div class="pl-focus-ico">${a.hechos<a.total?'📋':'🏁'}</div><div class="pl-focus-info"><div class="pl-focus-lbl">Hoy</div><div class="pl-focus-t">${a.hechos<a.total?`${a.hechos} de ${a.total} bloques hechos. No queda nada más planificado para hoy.`:`¡Has hecho los ${a.total} bloques de hoy! 🎉`}</div></div>`;
   }else{
@@ -8965,7 +8991,7 @@ function plLateCheck(){
     <div class="pl-late-lbl">Tu bloque ya ha empezado · ${plRango(b)}</div>
     <div class="pl-late-t">${b.emoji?plEsc(b.emoji)+' ':''}${plEsc(b.titulo)}</div>
     <div class="pl-late-s">Empezó hace ${plDur(Math.max(1,hace))} y aún no le has dado a Play. Dale para que cuente el tiempo.</div>
-    <div class="pl-late-a"><button class="pl-btn play" onclick="plLateAccion('play',${b.id})">▶ Empezar ahora</button>
+    <div class="pl-late-a"><button class="pl-btn play" onclick="plLateAccion('play',${b.id})">▶ Empezar ahora</button>${plEnlaceBtn(b,'Abrir')}
       <button class="pl-btn ghost" onclick="plLateAccion('posponer',${b.id})">Recordar en ${PL_LATE_POSPONER_MIN} min</button>
       <button class="pl-btn ghost" onclick="plLateAccion('saltar',${b.id})">No lo voy a hacer</button></div></div>`;
   if(plLateId!==b.id){
@@ -9050,7 +9076,7 @@ async function plCopiarASdrs(){
   ids.forEach(id=>origen.forEach(b=>{
     const ini=plMin(b.hora_inicio);
     if(plSolapa(id,b.fecha,ini,b.duracion_min)||rows.some(r=>r.sdr_id===id&&r.fecha===b.fecha&&ini<plMin(r.hora_inicio)+r.duracion_min&&plMin(r.hora_inicio)<ini+b.duracion_min))return;
-    rows.push({sdr_id:id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id});
+    rows.push({sdr_id:id,plantilla_id:b.plantilla_id,titulo:b.titulo,emoji:b.emoji,color:b.color,prioridad:b.prioridad,enlace:b.enlace||null,fecha:b.fecha,hora_inicio:b.hora_inicio,duracion_min:b.duracion_min,creado_por:currentUser.id});
   }));
   if(!rows.length){showToast('No había huecos libres (o no quedan días por delante esta semana)');return;}
   plCloseModal();
@@ -9156,13 +9182,14 @@ function renderPlanPlantillas(){
       <div class="pl-tpl-t">${p.emoji?plEsc(p.emoji)+' ':''}${plEsc(p.titulo)}</div>
       <div class="pl-tpl-m"><span>⏱ ${plDur(p.duracion_min)}</span>${plPrioPill(p.prioridad)}<span>👥 ${plEsc(para)}</span>${p.fecha_limite?`<span>📅 antes del ${fmtDate(p.fecha_limite)}</span>`:''}</div>
       ${p.descripcion?`<div class="pl-tpl-d">${plEsc(p.descripcion)}</div>`:''}
+      ${p.enlace?`<div class="pl-tpl-m" style="margin-top:4px;"><a href="${plEsc(p.enlace)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);word-break:break-all;">🔗 ${plEsc(p.enlace.length>60?p.enlace.slice(0,60)+'…':p.enlace)}</a></div>`:''}
       <div class="pl-tpl-m" style="margin-top:6px;"><span>Esta semana lo han planificado <b>${con}/${quien.length}</b></span></div>
       <div class="pl-tpl-a"><button class="pl-link-btn" onclick="plOpenPlantilla(${p.id})">✏️ Editar</button><button class="pl-link-btn" onclick="plArchivarPlantilla(${p.id})">🗄 Archivar</button></div>
     </div>`;}).join('')}</div>`;
 }
 function plOpenPlantilla(id){
   const p=id?plPlantillas.find(x=>x.id===id):null;
-  const v=p||{titulo:'',emoji:'',color:PL_COLORES[0],duracion_min:60,prioridad:'normal',sdr_id:null,fecha_limite:'',descripcion:''};
+  const v=p||{titulo:'',emoji:'',color:PL_COLORES[0],duracion_min:60,prioridad:'normal',sdr_id:null,fecha_limite:'',descripcion:'',enlace:''};
   plModal(p?'Editar bloque':'Nuevo bloque para el equipo',`
     <div class="form-group"><label class="form-label">Nombre del bloque</label>
       <div style="display:flex;gap:8px;"><input class="form-input" id="pl-p-emoji" maxlength="4" placeholder="📞" value="${plEsc(v.emoji||'')}" style="width:64px;text-align:center;"/><input class="form-input" id="pl-p-titulo" maxlength="80" placeholder="Ej.: Llamar inbounds, Campaña Black Friday…" value="${plEsc(v.titulo)}"/></div></div>
@@ -9178,6 +9205,7 @@ function plOpenPlantilla(id){
       <div class="form-group"><label class="form-label">Hacer antes del (opcional)</label><input class="form-input" type="date" id="pl-p-limite" value="${v.fecha_limite||''}"/></div>
     </div>
     <div class="form-group"><label class="form-label">Instrucciones (opcional)</label><textarea class="form-textarea" id="pl-p-desc" maxlength="500" placeholder="Qué tienen que hacer en este bloque, lista a usar, objetivo…">${plEsc(v.descripcion||'')}</textarea></div>
+    ${plEnlaceInput('pl-p-enlace',v.enlace,'Se guarda con el bloque: cada vez que lo pongan en su calendario lo llevará puesto.')}
     <div class="form-group"><label class="form-label">Color</label>${plSwatches(v.color)}</div>
     <div class="modal-actions"><button class="btn-primary" onclick="plGuardarPlantilla(${p?p.id:'null'})">${p?'Guardar cambios':'Crear bloque'}</button></div>`);
   setTimeout(()=>document.getElementById('pl-p-titulo').focus(),50);
@@ -9185,12 +9213,21 @@ function plOpenPlantilla(id){
 async function plGuardarPlantilla(id){
   const titulo=document.getElementById('pl-p-titulo').value.trim();
   if(!titulo){showToast('⚠️ Ponle un nombre al bloque');return;}
-  const row={titulo,emoji:document.getElementById('pl-p-emoji').value.trim()||null,color:plSwatchSel(),
+  const enlace=plLimpiarEnlace(document.getElementById('pl-p-enlace').value);
+  if(enlace===false){showToast('⚠️ El enlace no parece válido');return;}
+  const row={titulo,enlace,emoji:document.getElementById('pl-p-emoji').value.trim()||null,color:plSwatchSel(),
     duracion_min:+document.getElementById('pl-p-dur').value,prioridad:document.getElementById('pl-p-prio').value,
     sdr_id:document.getElementById('pl-p-sdr').value?+document.getElementById('pl-p-sdr').value:null,
     fecha_limite:document.getElementById('pl-p-limite').value||null,descripcion:document.getElementById('pl-p-desc').value.trim()||null};
+  const antes=id&&plPlantillas.find(x=>x.id===id);
+  if(!enlace&&!(antes&&antes.enlace))delete row.enlace; // sin enlace no se manda la columna
   try{
-    if(id)await sb(`planificacion_plantillas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(row)});
+    if(id){
+      await sb(`planificacion_plantillas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(row)});
+      // Si cambia el enlace, los bloques de hoy en adelante que ya lo tenían puesto también se actualizan
+      if(antes&&(antes.enlace||null)!==enlace)
+        await sb(`planificacion_bloques?plantilla_id=eq.${id}&fecha=gte.${todayStr()}`,{method:'PATCH',body:JSON.stringify({enlace})});
+    }
     else await sb('planificacion_plantillas',{method:'POST',body:JSON.stringify({...row,autor_id:currentUser.id})});
     plCloseModal();showToast(id?'✓ Bloque actualizado':row.prioridad==='urgente'?'✓ Bloque urgente creado · les llegará un email':'✓ Bloque creado · ya lo ven en su planificación');
     await loadPlanificacion();renderPlanMgr();
