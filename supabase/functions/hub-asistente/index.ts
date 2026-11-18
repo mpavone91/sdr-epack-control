@@ -120,6 +120,22 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "oportunidades_sin_actualizar",
+    description:
+      "Oportunidades abiertas (demo hecha con resultado interesado o necesita_seguimiento) en las que no se ha hecho nada en el Hub " +
+      "desde hace al menos `dias` días. Marca las que tienen la fecha de seguimiento vencida (la fecha que puso el SDR ya pasó y no se ha " +
+      "tocado desde entonces) y las pone primero. No incluye las que tienen una fecha de seguimiento futura (están planificadas). Úsala para cualquier pregunta sobre oportunidades sin actualizar, olvidadas, paradas, " +
+      "sin tocar o con el seguimiento vencido. Devuelve consulta_id para mostrar_tabla.",
+    input_schema: {
+      type: "object",
+      properties: {
+        dias: { type: "integer", description: "Días mínimos sin actividad (3 meses = 90). Por defecto 30. Con solo_vencidas puedes poner 0." },
+        solo_vencidas: { type: "boolean", description: "true = solo las que tienen la fecha de seguimiento vencida." },
+        sdr_id: { type: "integer", description: "Solo para el manager: limitar a un SDR. Si no se pone, todo el equipo." },
+      },
+    },
+  },
+  {
     name: "mostrar_tabla",
     description:
       "Enseña al usuario un listado como tabla en el chat (con enlaces clicables y botón para descargarlo en Excel). " +
@@ -171,7 +187,7 @@ demos: una fila por demo agendada.
 - seguimiento_aplazado_hasta: el SDR pospuso el seguimiento hasta esa fecha.
 - descartada: true si una cancelada se descartó (no se va a reagendar).
 - fecha_firma: fecha en que se firmó. motivo: motivo de cancelación o pérdida. notas: notas del SDR.
-- updated_at: última vez que se tocó la demo en el Hub (cualquier cambio). Solo se registra desde el 18-11-2026; antes vale la fecha de creación.
+- updated_at: última vez que se tocó la demo en el Hub (cualquier cambio). Solo se registra desde el 18-11-2026; para lo anterior se usa la fecha de la demo como última actividad.
 - demo_padre_id: si es una demo reagendada, la demo original.
 tareas: recordatorios de leads del SDR (lead_nombre, lead_url, nota, fecha_recordatorio, completada).
 planificacion_bloques: bloques del calendario semanal (estado: planificado, en_curso, pausado, completado, saltado; sin_play = se marcó hecho sin darle a Play; res_* = llamadas, conectadas y demos que sacó).
@@ -184,7 +200,7 @@ vacaciones, comerciales, ciudades, comercial_ausencias, sdr_users (equipo), repo
 - Follow-ups pendientes: estado = ejecutada, outcome interesado o necesita_seguimiento, fecha de hace 7 días o más, y seguimiento_aplazado_hasta null o <= hoy.
 - Para reagendar: estado = cancelada, descartada no true, outcome distinto de cerrado_perdido.
 - Oportunidades abiertas: estado = ejecutada y outcome interesado, necesita_seguimiento o null.
-- "Sin actualizar desde hace X": oportunidades abiertas con updated_at anterior a hoy menos X (y si quieren, también la fecha de la demo).
+- "Sin actualizar" / "olvidadas" / "paradas": oportunidades con resultado interesado o necesita_seguimiento en las que no se ha hecho nada en el Hub desde entonces, sobre todo si tenían una fecha de seguimiento (seguimiento_aplazado_hasta) que ya pasó. Usa SIEMPRE la herramienta oportunidades_sin_actualizar para esto (no consultar_datos). En la tabla pon: Oportunidad (sf_nombre con enlace sf_link), Resultado (outcome), Demo (fecha), Seguimiento (seguimiento_aplazado_hasta), Sin actividad (dias_sin_actividad), Comercial y, si es el manager viendo a varios, SDR. Di cuántas tienen el seguimiento vencido.
 - CWD / firmadas: outcome = cerrado_ganado. Demos hechas = estado ejecutada.
 - Demos agendadas en un periodo: por fecha_agendamiento (o created_at). Demos celebradas en un periodo: por fecha con estado ejecutada.
 - Los usuarios con es_prueba = true no cuentan en nada del equipo.`;
@@ -333,6 +349,73 @@ async function consultarDatos(input: Record<string, unknown>, ctx: Ctx): Promise
   });
 }
 
+// ── Herramienta: oportunidades_sin_actualizar ──
+// Última actividad = lo más reciente entre el último cambio en el Hub (updated_at)
+// y la fecha de la demo (antes del 18-11-2026 no se guardaba updated_at).
+// Seguimiento vencido = la fecha de seguimiento ya pasó y nadie ha tocado la
+// oportunidad después de esa fecha.
+async function sinActualizar(input: Record<string, unknown>, ctx: Ctx, hoy: string): Promise<string> {
+  const dias = Math.max(0, Math.min(3650, Number.isFinite(Number(input.dias)) && input.dias !== undefined && input.dias !== null ? Number(input.dias) : 30));
+  const soloVencidas = input.solo_vencidas === true || input.solo_vencidas === "true";
+  const params = [
+    "select=id,sdr_id,sf_nombre,sf_url,comercial_id,fecha,outcome,seguimiento_aplazado_hasta,updated_at,notas",
+    "estado=eq.ejecutada",
+    "outcome=in.(interesado,necesita_seguimiento)",
+    "order=fecha.asc",
+  ];
+  if (ctx.user.rol !== "manager") params.push(`sdr_id=eq.${ctx.user.id}`);
+  else if (input.sdr_id) params.push(`sdr_id=eq.${Number(input.sdr_id)}`);
+  const filas: Record<string, unknown>[] = [];
+  try {
+    for (let desde = 0; desde < MAX_FILAS_CONSULTA; desde += 1000) {
+      const { data } = await rest(`demos?${params.join("&")}`, ctx.token, { "Range-Unit": "items", Range: `${desde}-${desde + 999}` });
+      filas.push(...(data as Record<string, unknown>[]));
+      if ((data as unknown[]).length < 1000) break;
+    }
+  } catch (e) {
+    return `Error al consultar: ${(e as Error).message}`;
+  }
+  const diaMs = 86400000;
+  const aDia = (f: string) => Date.UTC(+f.slice(0, 4), +f.slice(5, 7) - 1, +f.slice(8, 10));
+  const tHoy = aDia(hoy);
+  const res = filas.map((r) => {
+    const tocada = typeof r.updated_at === "string" ? new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date(r.updated_at)) : "";
+    const fecha = typeof r.fecha === "string" ? r.fecha : "";
+    const ultima = [tocada, fecha].filter(Boolean).sort().pop() || "";
+    const seg = typeof r.seguimiento_aplazado_hasta === "string" ? r.seguimiento_aplazado_hasta : "";
+    const vencido = !!seg && seg < hoy && (!tocada || tocada <= seg);
+    return {
+      id: r.id,
+      sf_nombre: r.sf_nombre,
+      sf_link: sfLink(r.sf_url as string | null),
+      outcome: r.outcome,
+      fecha,
+      seguimiento_aplazado_hasta: seg || null,
+      seguimiento_vencido: vencido,
+      dias_vencido: vencido ? Math.round((tHoy - aDia(seg)) / diaMs) : null,
+      ultima_actividad: ultima || null,
+      dias_sin_actividad: ultima ? Math.round((tHoy - aDia(ultima)) / diaMs) : null,
+      comercial: ctx.nombres.comercial.get(Number(r.comercial_id)) ?? null,
+      sdr: ctx.nombres.sdr.get(Number(r.sdr_id)) ?? r.sdr_id,
+      notas: typeof r.notas === "string" ? r.notas.slice(0, 200) : null,
+    };
+  }).filter((r) =>
+    // Con una fecha de seguimiento que aún no ha llegado, la oportunidad está planificada: no está olvidada
+    !(r.seguimiento_aplazado_hasta && r.seguimiento_aplazado_hasta >= hoy) &&
+    (r.dias_sin_actividad ?? 0) >= dias && (!soloVencidas || r.seguimiento_vencido))
+    .sort((a, b) => Number(b.seguimiento_vencido) - Number(a.seguimiento_vencido) || (b.dias_vencido ?? 0) - (a.dias_vencido ?? 0) || (b.dias_sin_actividad ?? 0) - (a.dias_sin_actividad ?? 0));
+  const id = `c${ctx.consultas.size + 1}`;
+  ctx.consultas.set(id, res);
+  return JSON.stringify({
+    consulta_id: id,
+    criterio: `interesado o necesita_seguimiento, sin actividad desde hace ${dias}+ días${soloVencidas ? ", solo con seguimiento vencido" : ""}`,
+    total: res.length,
+    con_seguimiento_vencido: res.filter((r) => r.seguimiento_vencido).length,
+    nota: res.length > FILAS_AL_MODELO ? `Solo ves las ${FILAS_AL_MODELO} primeras; usa mostrar_tabla con consulta_id "${id}" para enseñarlas todas.` : undefined,
+    filas: res.slice(0, FILAS_AL_MODELO),
+  });
+}
+
 // ── Herramienta: mostrar_tabla ──
 function mostrarTabla(input: Record<string, unknown>, ctx: Ctx): string {
   const titulo = String(input.titulo ?? "Listado").slice(0, 120);
@@ -469,6 +552,7 @@ Deno.serve(async (req) => {
         let out: string;
         try {
           out = t.name === "consultar_datos" ? await consultarDatos(input, ctx)
+            : t.name === "oportunidades_sin_actualizar" ? await sinActualizar(input, ctx, hoy.fecha)
             : t.name === "mostrar_tabla" ? mostrarTabla(input, ctx)
             : `Error: herramienta desconocida ${t.name}`;
         } catch (e) { out = `Error: ${(e as Error).message}`; }
