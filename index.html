@@ -1184,7 +1184,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .rep-priv{background:var(--amber-soft);color:#8a5e00;padding:2px 8px;border-radius:20px;font-weight:700;}
 @media (max-width:640px){.rep-grid{grid-template-columns:1fr;}}
 
-/* Asistente (chat con IA) */
+/* Mi Niño (asistente con IA) */
 .ia-fab{position:fixed;right:22px;bottom:22px;z-index:150;width:58px;height:58px;border-radius:50%;border:none;background:var(--teal-dark);color:#fff;font-size:26px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,0.25);display:none;align-items:center;justify-content:center;transition:transform .15s;}
 .ia-fab:hover{transform:scale(1.06);}
 .ia-fab::after{content:'';position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:var(--lime);border:2px solid var(--teal-dark);}
@@ -1680,21 +1680,21 @@ body.ia-abierto .ia-panel{display:flex;}
   </div>
 </div>
 
-<!-- ASISTENTE (chat con IA) -->
-<button class="ia-fab" id="ia-fab" onclick="iaAbrir()" title="Asistente: pregúntame por tus demos, oportunidades…" aria-label="Abrir el asistente">💬</button>
-<div class="ia-panel" id="ia-panel" role="dialog" aria-label="Asistente del Hub">
+<!-- MI NIÑO (asistente con IA) -->
+<button class="ia-fab" id="ia-fab" onclick="iaAbrir()" title="Mi Niño: pregúntame lo que quieras del Hub" aria-label="Abrir a Mi Niño, el asistente">🧒</button>
+<div class="ia-panel" id="ia-panel" role="dialog" aria-label="Mi Niño, el asistente del Hub">
   <div class="ia-head">
-    <div class="ia-head-t">✨ Asistente<div class="ia-head-s" id="ia-sub">Pregúntame por tus datos del Hub</div></div>
+    <div class="ia-head-t">🧒 Mi Niño<div class="ia-head-s" id="ia-sub">Me sé el Hub de memoria</div></div>
     <button class="ia-hbtn" onclick="iaNueva()" title="Empezar una conversación nueva">Nueva</button>
     <button class="ia-hbtn" onclick="iaCerrar()" aria-label="Cerrar">✕</button>
   </div>
   <div class="ia-ver" id="ia-ver" style="display:none;">Sobre: <select id="ia-ver-sel" aria-label="Sobre quién preguntas"></select></div>
   <div class="ia-msgs" id="ia-msgs"></div>
   <form class="ia-form" onsubmit="event.preventDefault();iaEnviar()">
-    <textarea id="ia-input" rows="1" maxlength="2000" placeholder="Escribe tu pregunta…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();iaEnviar();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+    <textarea id="ia-input" rows="1" maxlength="2000" placeholder="Dime, ¿qué necesitas?" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();iaEnviar();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
     <button type="submit" id="ia-send" aria-label="Enviar">➤</button>
   </form>
-  <div class="ia-pie" id="ia-pie">Usa los datos del Hub (no Salesforce en directo). Revisa lo importante.</div>
+  <div class="ia-pie" id="ia-pie">Mi Niño usa los datos del Hub (no Salesforce en directo) y a veces se confunde: revisa lo importante.</div>
 </div>
 
 <!-- PLANIFICACIÓN: detalle de bloque / bloque propio / bloque del manager -->
@@ -9458,12 +9458,14 @@ async function plGuardarEmail(id){
   }catch(e){console.error(e);showToast('❌ No se pudo guardar el email');}
 }
 
-// ══════════ ASISTENTE (chat con IA) ══════════
+// ══════════ MI NIÑO (asistente con IA) ══════════
 // Habla con la Edge Function hub-asistente, que consulta los datos del Hub
 // con la sesión del usuario (un SDR solo ve lo suyo; el manager, todo).
 let iaMsgs=[],iaCargando=false,iaSdrs=null;
-const IA_SUG_SDR=['¿Qué demos me faltan por confirmar?','¿Qué oportunidades tengo olvidadas o con el seguimiento vencido?','¿A qué comercial le he puesto más demos este mes?','¿Qué follow-ups tengo pendientes?','¿Cómo voy con mi objetivo de este mes?'];
-const IA_SUG_MGR=['¿Cuántas demos ha agendado cada SDR este mes?','¿Qué demos faltan por confirmar esta semana?','¿Quién tiene más demos sin cerrar?','¿Qué oportunidades tiene cada SDR con el seguimiento vencido?','Ranking de firmadas por comercial este mes'];
+const IA_SUG_SDR=['¿Por dónde empiezo hoy?','¿Qué oportunidades tengo olvidadas o con el seguimiento vencido?','¿Qué demos me faltan por confirmar?','¿A qué comercial le he puesto más demos este mes?','¿Cómo voy con mi objetivo de este mes?'];
+const IA_SUG_MGR=['¿Cómo está el equipo hoy?','¿Quién necesita un empujón?','¿Qué oportunidades tiene cada SDR con el seguimiento vencido?','¿Cuántas demos ha agendado cada SDR este mes?','Ranking de firmadas por comercial este mes'];
+const IA_PENSANDO=['Mi Niño está mirando tus datos…','Dame un segundo, estoy revolviendo el Hub…','Buscando… no toques nada 🤫','Consultando mis apuntes…','Un momento, que me lo sé pero lo compruebo…'];
+let iaPensando=IA_PENSANDO[0];
 function iaKey(){return currentUser?'ia_chat_'+currentUser.id:'';}
 function iaGuardar(){try{sessionStorage.setItem(iaKey(),JSON.stringify(iaMsgs.slice(-30)));}catch(e){}}
 function iaInit(){
@@ -9471,7 +9473,7 @@ function iaInit(){
   try{iaMsgs=JSON.parse(sessionStorage.getItem(iaKey())||'[]')||[];}catch(e){iaMsgs=[];}
   const mgr=currentUser.rol==='manager';
   document.getElementById('ia-ver').style.display=mgr?'flex':'none';
-  document.getElementById('ia-sub').textContent=mgr?'Pregunta por cualquier SDR o por el equipo':'Pregúntame por tus demos, oportunidades y tareas';
+  document.getElementById('ia-sub').textContent=mgr?'Pregúntame por cualquier SDR o por todo el equipo':'Tus demos, tareas y seguimientos, sin perderte';
   iaRender();
 }
 function iaReset(){iaMsgs=[];iaSdrs=null;document.body.classList.remove('ia-on','ia-abierto');}
@@ -9528,21 +9530,24 @@ function iaExcel(mi,ti){
   t.filas.forEach((r,i)=>{let col=0;t.columnas.forEach(c=>{if(c.enlace&&r[c.enlace]){const a=XLSX.utils.encode_cell({r:i+1,c:col});if(ws[a])ws[a].l={Target:r[c.enlace]};}col+=c.enlace?2:1;});});
   ws['!cols']=cab.map(h=>({wch:Math.min(50,Math.max(12,h.length+2))}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Datos');
-  const nombre=(t.titulo||'Asistente').replace(/[\\/:*?"<>|]+/g,'').slice(0,60).trim()||'Asistente';
+  const nombre=(t.titulo||'Mi Niño').replace(/[\\/:*?"<>|]+/g,'').slice(0,60).trim()||'Mi Niño';
   XLSX.writeFile(wb,`${nombre} ${todayStr()}.xlsx`);
 }
 function iaRender(){
   const el=document.getElementById('ia-msgs');if(!el)return;
   if(!iaMsgs.length){
     const sug=currentUser&&currentUser.rol==='manager'?IA_SUG_MGR:IA_SUG_SDR;
-    el.innerHTML=`<div class="ia-msg ia">¡Hola${currentUser?' '+escHtml(currentUser.nombre.split(' ')[0]):''}! 👋 Pregúntame lo que quieras sobre ${currentUser&&currentUser.rol==='manager'?'las demos, oportunidades y la planificación del equipo':'tus demos, oportunidades, tareas y planificación'}. Si te saco un listado, lo puedes descargar en Excel.</div>
-      <div class="ia-intro">Por ejemplo:</div>
+    const nom=currentUser?escHtml(currentUser.nombre.split(' ')[0]):'';
+    const mgr=currentUser&&currentUser.rol==='manager';
+    el.innerHTML=`<div class="ia-msg ia">${mgr?`Buenas, ${nom}. Soy Mi Niño. Pregúntame por cualquier SDR o por todo el equipo: quién va bien, quién se está quedando atrás, qué oportunidades se están enfriando… Y si quieres los datos en Excel, solo pídelo.`
+      :`¡Ey, ${nom}! Soy Mi Niño. Me sé tus demos, tareas y seguimientos de memoria, y a mí no se me olvida nada. Dime por dónde quieres empezar y lo vamos sacando.`}</div>
+      <div class="ia-intro">Para entrar en calor:</div>
       <div class="ia-sug">${sug.map(q=>`<button type="button" onclick="iaPreguntar(${escHtml(JSON.stringify(q))})">${escHtml(q)}</button>`).join('')}</div>`;
     return;
   }
   el.innerHTML=iaMsgs.map((m,i)=>m.role==='user'?`<div class="ia-msg yo">${escHtml(m.content)}</div>`
     :`<div class="ia-msg ia${m.error?' err':''}">${iaMd(m.content)}${(m.tablas||[]).map((t,ti)=>iaTablaHtml(t,i,ti)).join('')}</div>`).join('')
-    +(iaCargando?'<div class="ia-pensando"><i></i><i></i><i></i> Buscando en tus datos…</div>':'');
+    +(iaCargando?'<div class="ia-pensando"><i></i><i></i><i></i> ${escHtml(iaPensando)}</div>':'');
   el.scrollTop=el.scrollHeight;
 }
 function iaPreguntar(q){document.getElementById('ia-input').value=q;iaEnviar();}
@@ -9550,6 +9555,7 @@ async function iaEnviar(){
   const inp=document.getElementById('ia-input');const q=inp.value.trim();
   if(!q||iaCargando)return;
   inp.value='';inp.style.height='auto';
+  iaPensando=IA_PENSANDO[Math.floor(Math.random()*IA_PENSANDO.length)];
   iaMsgs.push({role:'user',content:q});iaCargando=true;
   document.getElementById('ia-send').disabled=true;iaRender();
   // Al modelo solo se le manda el texto; las tablas van resumidas
@@ -9562,13 +9568,13 @@ async function iaEnviar(){
       body:JSON.stringify({mensajes,ver_sdr_id:currentUser.rol==='manager'&&verSel&&verSel.value?+verSel.value:null})});
     const d=await r.json().catch(()=>({}));
     if(r.ok)res=d;
-    else err=d.error==='limite'?`Has llegado al límite de ${d.limite} preguntas por hoy. Mañana puedes seguir 🙂`
-      :d.error==='sin_clave'?'El asistente aún no está configurado (falta la clave de la API de Claude en Supabase). Avisa a tu manager.'
-      :d.error==='sesion'?'Tu sesión ha caducado. Vuelve a entrar en el Hub.'
-      :d.error==='largo'?'La pregunta es demasiado larga. Resúmela un poco.'
-      :d.error==='ocupado'?'El asistente está muy ocupado ahora mismo. Prueba en un minuto.'
-      :'No he podido responder. Prueba otra vez en un momento.';
-  }catch(e){console.error(e);err='No hay conexión con el asistente. Revisa tu internet y prueba otra vez.';}
+    else err=d.error==='limite'?`Hoy ya me has exprimido (${d.limite} preguntas). Mañana volvemos a la carga 😉`
+      :d.error==='sin_clave'?'Todavía no estoy configurado del todo (falta la clave de la API de Claude en Supabase). Avisa a tu manager.'
+      :d.error==='sesion'?'Se te ha caducado la sesión. Vuelve a entrar en el Hub y seguimos.'
+      :d.error==='largo'?'Eso es un tochazo. Resúmemelo un poco y lo miro.'
+      :d.error==='ocupado'?'Estoy hasta arriba ahora mismo. Prueba otra vez en un minuto.'
+      :'Se me ha cruzado un cable y no he podido responder. Prueba otra vez en un momento.';
+  }catch(e){console.error(e);err='No consigo conectar. Revisa tu internet y prueba otra vez.';}
   iaCargando=false;document.getElementById('ia-send').disabled=false;
   if(res)iaMsgs.push({role:'assistant',content:res.texto||'',tablas:res.tablas||[]});
   else iaMsgs.push({role:'assistant',content:err,error:true});
