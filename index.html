@@ -9462,8 +9462,8 @@ async function plGuardarEmail(id){
 // Habla con la Edge Function hub-asistente, que consulta los datos del Hub
 // con la sesión del usuario (un SDR solo ve lo suyo; el manager, todo).
 let iaMsgs=[],iaCargando=false,iaSdrs=null;
-const IA_SUG_SDR=['¿Qué demos me faltan por confirmar?','¿Qué oportunidades llevo sin actualizar desde hace más de 3 meses?','¿A qué comercial le he puesto más demos este mes?','¿Qué follow-ups tengo pendientes?','¿Cómo voy con mi objetivo de este mes?'];
-const IA_SUG_MGR=['¿Cuántas demos ha agendado cada SDR este mes?','¿Qué demos faltan por confirmar esta semana?','¿Quién tiene más demos sin cerrar?','¿Qué oportunidades llevan más de 3 meses sin actualizar?','Ranking de firmadas por comercial este mes'];
+const IA_SUG_SDR=['¿Qué demos me faltan por confirmar?','¿Qué oportunidades tengo olvidadas o con el seguimiento vencido?','¿A qué comercial le he puesto más demos este mes?','¿Qué follow-ups tengo pendientes?','¿Cómo voy con mi objetivo de este mes?'];
+const IA_SUG_MGR=['¿Cuántas demos ha agendado cada SDR este mes?','¿Qué demos faltan por confirmar esta semana?','¿Quién tiene más demos sin cerrar?','¿Qué oportunidades tiene cada SDR con el seguimiento vencido?','Ranking de firmadas por comercial este mes'];
 function iaKey(){return currentUser?'ia_chat_'+currentUser.id:'';}
 function iaGuardar(){try{sessionStorage.setItem(iaKey(),JSON.stringify(iaMsgs.slice(-30)));}catch(e){}}
 function iaInit(){
