@@ -14,7 +14,7 @@
 //
 // Secretos de la función (Edge Functions → Secrets):
 //   ANTHROPIC_API_KEY   clave de la API de Claude (console.anthropic.com)
-//   ASISTENTE_LIMITE    preguntas por persona y día (opcional, 80 por defecto)
+//   ASISTENTE_LIMITE    preguntas por persona y día (opcional, 30 por defecto)
 // SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY los pone Supabase.
 // ════════════════════════════════════════════════════════════════════
 
@@ -24,8 +24,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-const LIMITE_DIA = Number(Deno.env.get("ASISTENTE_LIMITE") ?? "80") || 80;
-const MODEL = "claude-opus-5-5";
+const LIMITE_DIA = Number(Deno.env.get("ASISTENTE_LIMITE") ?? "30") || 30;
+const MODEL = "claude-haiku-5-5"; // el más económico
 const MAX_VUELTAS = 10;          // llamadas a herramientas por pregunta
 const FILAS_AL_MODELO = 60;      // filas que ve Claude de cada consulta
 const MAX_FILAS_CONSULTA = 5000; // filas que se leen como mucho
@@ -83,7 +83,7 @@ const TABLAS: Record<string, TablaDef> = {
 };
 const OPS = ["eq", "neq", "gt", "gte", "lt", "lte", "in", "is", "not_is", "ilike"] as const;
 
-const TOOLS: Anthropic.Beta.BetaTool[] = [
+const TOOLS: Anthropic.Tool[] = [
   {
     name: "consultar_datos",
     description:
@@ -436,16 +436,14 @@ Deno.serve(async (req) => {
   ].join("\n");
 
   const client = new Anthropic({ apiKey: API_KEY });
-  const messages: Anthropic.Beta.BetaMessageParam[] = historial.map((m) => ({ role: m.role, content: m.content }));
+  const messages: Anthropic.MessageParam[] = historial.map((m) => ({ role: m.role, content: m.content }));
   let inTok = 0, outTok = 0, texto = "";
 
   try {
     for (let vuelta = 0; vuelta < MAX_VUELTAS; vuelta++) {
-      const res = await client.beta.messages.create({
+      const res = await client.messages.create({
         model: MODEL,
         max_tokens: 16000,
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
         output_config: { effort: "medium" },
         system: [
           { type: "text", text: SISTEMA, cache_control: { type: "ephemeral" } },
@@ -458,14 +456,14 @@ Deno.serve(async (req) => {
       outTok += res.usage.output_tokens ?? 0;
 
       if (res.stop_reason === "refusal") { texto = "Lo siento, no puedo ayudarte con eso."; break; }
-      const textos = res.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
-      const usos = res.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
-      messages.push({ role: "assistant", content: res.content as Anthropic.Beta.BetaContentBlockParam[] });
+      const textos = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
+      const usos = res.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+      messages.push({ role: "assistant", content: res.content as Anthropic.ContentBlockParam[] });
 
       if (res.stop_reason === "pause_turn") continue;
       if (res.stop_reason !== "tool_use" || !usos.length) { texto = textos; break; }
 
-      const resultados: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+      const resultados: Anthropic.ToolResultBlockParam[] = [];
       for (const t of usos) {
         const input = (t.input && typeof t.input === "object" ? t.input : {}) as Record<string, unknown>;
         let out: string;
