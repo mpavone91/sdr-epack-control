@@ -1184,6 +1184,56 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .rep-priv{background:var(--amber-soft);color:#8a5e00;padding:2px 8px;border-radius:20px;font-weight:700;}
 @media (max-width:640px){.rep-grid{grid-template-columns:1fr;}}
 
+/* Asistente (chat con IA) */
+.ia-fab{position:fixed;right:22px;bottom:22px;z-index:150;width:58px;height:58px;border-radius:50%;border:none;background:var(--teal-dark);color:#fff;font-size:26px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,0.25);display:none;align-items:center;justify-content:center;transition:transform .15s;}
+.ia-fab:hover{transform:scale(1.06);}
+.ia-fab::after{content:'';position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:var(--lime);border:2px solid var(--teal-dark);}
+body.ia-on .ia-fab{display:flex;}
+body.ia-on .toast{bottom:94px;}
+body.ia-abierto .ia-fab{display:none;}
+.ia-panel{position:fixed;right:22px;bottom:22px;z-index:160;width:min(460px,calc(100vw - 24px));height:min(680px,calc(100vh - 100px));background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.25);display:none;flex-direction:column;overflow:hidden;}
+body.ia-abierto .ia-panel{display:flex;}
+.ia-head{background:var(--teal-dark);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.ia-head-t{font-family:'Fraunces',serif;font-weight:700;font-size:16px;flex:1;min-width:0;}
+.ia-head-s{font-size:11px;opacity:.75;font-family:'Inter',sans-serif;font-weight:500;}
+.ia-hbtn{background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:8px;padding:6px 9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.ia-hbtn:hover{background:rgba(255,255,255,0.22);}
+.ia-ver{padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);font-weight:600;}
+.ia-ver select{flex:1;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;background:var(--surface);}
+.ia-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg);}
+.ia-msg{max-width:92%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.5;overflow-wrap:anywhere;}
+.ia-msg.yo{align-self:flex-end;background:var(--teal-dark);color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap;}
+.ia-msg.ia{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text);}
+.ia-msg.ia a{color:var(--blue);}
+.ia-msg.ia ul{margin:4px 0 4px 18px;padding:0;}
+.ia-msg.err{background:var(--red-soft);border-color:#f3c2c2;color:var(--red);}
+.ia-tabla{margin-top:10px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.ia-tabla-h{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-bottom:1px solid var(--border);font-weight:700;font-size:13px;color:var(--teal-dark);}
+.ia-tabla-h span{flex:1;min-width:0;}
+.ia-xls{background:var(--green);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;}
+.ia-tabla-w{max-height:300px;overflow:auto;}
+.ia-tabla table{border-collapse:collapse;width:100%;font-size:12px;}
+.ia-tabla th{position:sticky;top:0;background:var(--teal-dark);color:#fff;text-align:left;padding:6px 8px;font-weight:700;white-space:nowrap;}
+.ia-tabla td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
+.ia-tabla td.f{white-space:nowrap;}
+.ia-tabla tr:nth-child(even) td{background:var(--surface-2);}
+.ia-tabla-n{padding:5px 10px;font-size:11px;color:var(--muted);}
+.ia-pensando{align-self:flex-start;color:var(--muted);font-size:13px;display:flex;gap:6px;align-items:center;}
+.ia-pensando i{width:7px;height:7px;border-radius:50%;background:var(--teal-light);animation:iaDot 1s infinite ease-in-out;}
+.ia-pensando i:nth-child(2){animation-delay:.15s}.ia-pensando i:nth-child(3){animation-delay:.3s}
+@keyframes iaDot{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.ia-sug{display:flex;flex-wrap:wrap;gap:6px;}
+.ia-sug button{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--teal-dark);cursor:pointer;text-align:left;font-family:'Inter',sans-serif;}
+.ia-sug button:hover{border-color:var(--teal-light);}
+.ia-intro{font-size:13px;color:var(--muted);}
+.ia-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border);background:var(--surface);}
+.ia-form textarea{flex:1;resize:none;border:1.5px solid var(--border);border-radius:11px;padding:9px 11px;font-family:'Inter',sans-serif;font-size:14px;max-height:120px;min-height:42px;}
+.ia-form textarea:focus{outline:none;border-color:var(--lime);}
+.ia-form button{background:var(--lime);border:none;border-radius:11px;padding:0 16px;font-weight:700;font-size:15px;color:var(--teal-dark);cursor:pointer;}
+.ia-form button:disabled{opacity:.5;cursor:default;}
+.ia-pie{font-size:10.5px;color:var(--muted);text-align:center;padding:0 10px 8px;background:var(--surface);}
+@media (max-width:640px){.ia-panel{right:0;bottom:0;width:100vw;height:calc(100vh - 60px);border-radius:16px 16px 0 0;}.ia-fab{right:16px;bottom:16px;}}
+
 /* Detalle de bloque */
 .pl-det-strip{height:6px;border-radius:6px;margin-bottom:14px;}
 .pl-det-t{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);}
@@ -1628,6 +1678,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
     </div>
     <div class="modal-body" id="rep-modal-body"></div>
   </div>
+</div>
+
+<!-- ASISTENTE (chat con IA) -->
+<button class="ia-fab" id="ia-fab" onclick="iaAbrir()" title="Asistente: pregúntame por tus demos, oportunidades…" aria-label="Abrir el asistente">💬</button>
+<div class="ia-panel" id="ia-panel" role="dialog" aria-label="Asistente del Hub">
+  <div class="ia-head">
+    <div class="ia-head-t">✨ Asistente<div class="ia-head-s" id="ia-sub">Pregúntame por tus datos del Hub</div></div>
+    <button class="ia-hbtn" onclick="iaNueva()" title="Empezar una conversación nueva">Nueva</button>
+    <button class="ia-hbtn" onclick="iaCerrar()" aria-label="Cerrar">✕</button>
+  </div>
+  <div class="ia-ver" id="ia-ver" style="display:none;">Sobre: <select id="ia-ver-sel" aria-label="Sobre quién preguntas"></select></div>
+  <div class="ia-msgs" id="ia-msgs"></div>
+  <form class="ia-form" onsubmit="event.preventDefault();iaEnviar()">
+    <textarea id="ia-input" rows="1" maxlength="2000" placeholder="Escribe tu pregunta…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();iaEnviar();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+    <button type="submit" id="ia-send" aria-label="Enviar">➤</button>
+  </form>
+  <div class="ia-pie" id="ia-pie">Usa los datos del Hub (no Salesforce en directo). Revisa lo importante.</div>
 </div>
 
 <!-- PLANIFICACIÓN: detalle de bloque / bloque propio / bloque del manager -->
@@ -2777,6 +2844,7 @@ async function savePin(){
 function clearPins(){['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value='');document.getElementById('pin1').focus();}
 
 function logout(){
+  iaReset();
   if(sessionToken)rpc('sdr_logout').catch(()=>{});
   sessionToken=null;
   sessionStorage.removeItem('sdr_token');
@@ -2808,6 +2876,7 @@ async function enterApp(){
   showPanel(savedPanel||'inicio');
   plInitSdr();
   loadReportes();
+  iaInit();
 }
 
 // ── MANAGER STATE ──
@@ -2829,6 +2898,7 @@ async function sinUsuariosDePrueba(lista){
 async function enterManagerApp(){
   document.getElementById('manager-app').classList.add('active');
   loadReportes();
+  iaInit();
   document.getElementById('mgr-name').textContent=currentUser.nombre;
   document.getElementById('mgr-avatar').textContent=currentUser.nombre.charAt(0).toUpperCase();
   document.getElementById('mgr-date').textContent=fmtDateLong();
@@ -9386,6 +9456,124 @@ async function plGuardarEmail(id){
     const s=plMgrSdrs.find(x=>x.id===id);if(s){s.email=email;s.avisos_email=on;}
     showToast('✓ Avisos por email guardados');
   }catch(e){console.error(e);showToast('❌ No se pudo guardar el email');}
+}
+
+// ══════════ ASISTENTE (chat con IA) ══════════
+// Habla con la Edge Function hub-asistente, que consulta los datos del Hub
+// con la sesión del usuario (un SDR solo ve lo suyo; el manager, todo).
+let iaMsgs=[],iaCargando=false,iaSdrs=null;
+const IA_SUG_SDR=['¿Qué demos me faltan por confirmar?','¿Qué oportunidades llevo sin actualizar desde hace más de 3 meses?','¿A qué comercial le he puesto más demos este mes?','¿Qué follow-ups tengo pendientes?','¿Cómo voy con mi objetivo de este mes?'];
+const IA_SUG_MGR=['¿Cuántas demos ha agendado cada SDR este mes?','¿Qué demos faltan por confirmar esta semana?','¿Quién tiene más demos sin cerrar?','¿Qué oportunidades llevan más de 3 meses sin actualizar?','Ranking de firmadas por comercial este mes'];
+function iaKey(){return currentUser?'ia_chat_'+currentUser.id:'';}
+function iaGuardar(){try{sessionStorage.setItem(iaKey(),JSON.stringify(iaMsgs.slice(-30)));}catch(e){}}
+function iaInit(){
+  document.body.classList.add('ia-on');
+  try{iaMsgs=JSON.parse(sessionStorage.getItem(iaKey())||'[]')||[];}catch(e){iaMsgs=[];}
+  const mgr=currentUser.rol==='manager';
+  document.getElementById('ia-ver').style.display=mgr?'flex':'none';
+  document.getElementById('ia-sub').textContent=mgr?'Pregunta por cualquier SDR o por el equipo':'Pregúntame por tus demos, oportunidades y tareas';
+  iaRender();
+}
+function iaReset(){iaMsgs=[];iaSdrs=null;document.body.classList.remove('ia-on','ia-abierto');}
+async function iaAbrir(){
+  document.body.classList.add('ia-abierto');
+  if(currentUser.rol==='manager'&&!iaSdrs){
+    try{iaSdrs=await sb('sdr_users?activo=is.true&rol=eq.sdr&select=id,nombre,es_prueba&order=nombre.asc')||[];}catch(e){iaSdrs=[];}
+    document.getElementById('ia-ver-sel').innerHTML='<option value="">Todo el equipo</option>'+iaSdrs.map(s=>`<option value="${s.id}">${escHtml(s.nombre)}${s.es_prueba?' 🧪':''}</option>`).join('');
+  }
+  iaRender();
+  setTimeout(()=>document.getElementById('ia-input').focus(),50);
+}
+function iaCerrar(){document.body.classList.remove('ia-abierto');}
+function iaNueva(){if(iaCargando)return;iaMsgs=[];iaGuardar();iaRender();document.getElementById('ia-input').focus();}
+// Markdown mínimo y seguro: negrita, código, enlaces http(s), listas y saltos de línea
+function iaMd(txt){
+  const enlace=(u,t)=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
+  const lineas=escHtml(txt).split('\n');let html='',enLista=false;
+  for(let l of lineas){
+    l=l.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>enlace(u,t))
+      .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g,(m,a,u)=>a+enlace(u,u.length>48?u.slice(0,48)+'…':u));
+    const li=l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)$/);
+    if(li){if(!enLista){html+='<ul>';enLista=true;}html+=`<li>${li[1]}</li>`;continue;}
+    if(enLista){html+='</ul>';enLista=false;}
+    html+=l.trim()?l+'<br>':'<br>';
+  }
+  if(enLista)html+='</ul>';
+  return html.replace(/(<br>)+$/,'');
+}
+function iaValor(v){
+  if(v==null||v==='')return'';
+  if(typeof v==='boolean')return v?'Sí':'No';
+  if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}(T|$)/.test(v)){const[y,m,d]=v.slice(0,10).split('-');return`${d}/${m}/${y}`;}
+  if(typeof v==='string'&&outcomeLabel(v))return outcomeLabel(v);
+  return String(v).replace(/^([a-z]+)_([a-z_]+)$/,(m,x,y)=>(x+' '+y.replace(/_/g,' ')).replace(/^./,c=>c.toUpperCase()));
+}
+function iaTablaHtml(t,mi,ti){
+  const fil=t.filas.slice(0,300);
+  return`<div class="ia-tabla"><div class="ia-tabla-h"><span>${escHtml(t.titulo)}</span><button class="ia-xls" onclick="iaExcel(${mi},${ti})">⬇️ Excel</button></div>
+    <div class="ia-tabla-w"><table><thead><tr>${t.columnas.map(c=>`<th>${escHtml(c.titulo)}</th>`).join('')}</tr></thead><tbody>
+    ${fil.map(r=>`<tr>${t.columnas.map(c=>{const v=escHtml(iaValor(r[c.campo]));const u=c.enlace&&r[c.enlace];
+      return`<td${/^\d{2}\/\d{2}\/\d{4}$/.test(v)?' class="f"':''}>${u&&/^https?:\/\//i.test(u)?`<a href="${escHtml(u)}" target="_blank" rel="noopener noreferrer">${v||'Abrir'}</a>`:v}</td>`;}).join('')}</tr>`).join('')}
+    </tbody></table></div>
+    <div class="ia-tabla-n">${t.filas.length} fila${t.filas.length===1?'':'s'}${t.filas.length>fil.length?` · aquí ves ${fil.length}, el Excel las lleva todas`:''}</div></div>`;
+}
+function iaExcel(mi,ti){
+  const t=iaMsgs[mi]&&iaMsgs[mi].tablas&&iaMsgs[mi].tablas[ti];if(!t)return;
+  if(typeof XLSX==='undefined'){showToast('❌ No se pudo cargar el generador de Excel');return;}
+  const cab=[];t.columnas.forEach(c=>{cab.push(c.titulo);if(c.enlace)cab.push(c.titulo+' (enlace)');});
+  const filas=t.filas.map(r=>{const o=[];t.columnas.forEach(c=>{o.push(iaValor(r[c.campo]));if(c.enlace)o.push(r[c.enlace]||'');});return o;});
+  const ws=XLSX.utils.aoa_to_sheet([cab,...filas]);
+  // El texto de las columnas con enlace también es clicable
+  t.filas.forEach((r,i)=>{let col=0;t.columnas.forEach(c=>{if(c.enlace&&r[c.enlace]){const a=XLSX.utils.encode_cell({r:i+1,c:col});if(ws[a])ws[a].l={Target:r[c.enlace]};}col+=c.enlace?2:1;});});
+  ws['!cols']=cab.map(h=>({wch:Math.min(50,Math.max(12,h.length+2))}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Datos');
+  const nombre=(t.titulo||'Asistente').replace(/[\\/:*?"<>|]+/g,'').slice(0,60).trim()||'Asistente';
+  XLSX.writeFile(wb,`${nombre} ${todayStr()}.xlsx`);
+}
+function iaRender(){
+  const el=document.getElementById('ia-msgs');if(!el)return;
+  if(!iaMsgs.length){
+    const sug=currentUser&&currentUser.rol==='manager'?IA_SUG_MGR:IA_SUG_SDR;
+    el.innerHTML=`<div class="ia-msg ia">¡Hola${currentUser?' '+escHtml(currentUser.nombre.split(' ')[0]):''}! 👋 Pregúntame lo que quieras sobre ${currentUser&&currentUser.rol==='manager'?'las demos, oportunidades y la planificación del equipo':'tus demos, oportunidades, tareas y planificación'}. Si te saco un listado, lo puedes descargar en Excel.</div>
+      <div class="ia-intro">Por ejemplo:</div>
+      <div class="ia-sug">${sug.map(q=>`<button type="button" onclick="iaPreguntar(${escHtml(JSON.stringify(q))})">${escHtml(q)}</button>`).join('')}</div>`;
+    return;
+  }
+  el.innerHTML=iaMsgs.map((m,i)=>m.role==='user'?`<div class="ia-msg yo">${escHtml(m.content)}</div>`
+    :`<div class="ia-msg ia${m.error?' err':''}">${iaMd(m.content)}${(m.tablas||[]).map((t,ti)=>iaTablaHtml(t,i,ti)).join('')}</div>`).join('')
+    +(iaCargando?'<div class="ia-pensando"><i></i><i></i><i></i> Buscando en tus datos…</div>':'');
+  el.scrollTop=el.scrollHeight;
+}
+function iaPreguntar(q){document.getElementById('ia-input').value=q;iaEnviar();}
+async function iaEnviar(){
+  const inp=document.getElementById('ia-input');const q=inp.value.trim();
+  if(!q||iaCargando)return;
+  inp.value='';inp.style.height='auto';
+  iaMsgs.push({role:'user',content:q});iaCargando=true;
+  document.getElementById('ia-send').disabled=true;iaRender();
+  // Al modelo solo se le manda el texto; las tablas van resumidas
+  const mensajes=iaMsgs.filter(m=>!m.error).map(m=>({role:m.role,content:m.role==='assistant'&&m.tablas&&m.tablas.length?m.content+'\n'+m.tablas.map(t=>`[Tabla mostrada: ${t.titulo}, ${t.filas.length} filas]`).join('\n'):m.content}));
+  const verSel=document.getElementById('ia-ver-sel');
+  let res=null,err='';
+  try{
+    const r=await fetch(`${SUPABASE_URL}/functions/v1/hub-asistente`,{method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','x-sdr-token':sessionToken||''},
+      body:JSON.stringify({mensajes,ver_sdr_id:currentUser.rol==='manager'&&verSel&&verSel.value?+verSel.value:null})});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok)res=d;
+    else err=d.error==='limite'?`Has llegado al límite de ${d.limite} preguntas por hoy. Mañana puedes seguir 🙂`
+      :d.error==='sin_clave'?'El asistente aún no está configurado (falta la clave de la API de Claude en Supabase). Avisa a tu manager.'
+      :d.error==='sesion'?'Tu sesión ha caducado. Vuelve a entrar en el Hub.'
+      :d.error==='largo'?'La pregunta es demasiado larga. Resúmela un poco.'
+      :d.error==='ocupado'?'El asistente está muy ocupado ahora mismo. Prueba en un minuto.'
+      :'No he podido responder. Prueba otra vez en un momento.';
+  }catch(e){console.error(e);err='No hay conexión con el asistente. Revisa tu internet y prueba otra vez.';}
+  iaCargando=false;document.getElementById('ia-send').disabled=false;
+  if(res)iaMsgs.push({role:'assistant',content:res.texto||'',tablas:res.tablas||[]});
+  else iaMsgs.push({role:'assistant',content:err,error:true});
+  if(res&&typeof res.quedan==='number'&&res.quedan<=5)document.getElementById('ia-pie').textContent=`Te quedan ${res.quedan} pregunta${res.quedan===1?'':'s'} hoy.`;
+  iaGuardar();iaRender();
 }
 
 // ══════════ REPORTES: biblioteca de enlaces ══════════

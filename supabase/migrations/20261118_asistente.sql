@@ -23,7 +23,6 @@ begin
   return new;
 end $$;
 
-drop trigger if exists demos_updated_at on public.demos;
 create trigger demos_updated_at before update on public.demos
   for each row execute function sdr_private.tocar_updated_at();
 
