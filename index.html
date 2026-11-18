@@ -9540,7 +9540,7 @@ function iaRender(){
     const nom=currentUser?escHtml(currentUser.nombre.split(' ')[0]):'';
     const mgr=currentUser&&currentUser.rol==='manager';
     el.innerHTML=`<div class="ia-msg ia">${mgr?`Buenas, ${nom}. Soy Mi Niño. Pregúntame por cualquier SDR o por todo el equipo: quién va bien, quién se está quedando atrás, qué oportunidades se están enfriando… Y si quieres los datos en Excel, solo pídelo.`
-      :`¡Ey, ${nom}! Soy Mi Niño. Me sé tus demos, tareas y seguimientos de memoria, y a mí no se me olvida nada. Dime por dónde quieres empezar y lo vamos sacando.`}</div>
+      :`¡Holi, ${nom}! Soy Mi Niño. Me sé tus demos, tareas y seguimientos de memoria, y a mí no se me olvida nada. Dime por dónde quieres empezar y lo vamos sacando.`}</div>
       <div class="ia-intro">Para entrar en calor:</div>
       <div class="ia-sug">${sug.map(q=>`<button type="button" onclick="iaPreguntar(${escHtml(JSON.stringify(q))})">${escHtml(q)}</button>`).join('')}</div>`;
     return;
