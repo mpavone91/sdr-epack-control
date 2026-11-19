@@ -230,7 +230,7 @@ demos: una fila por demo agendada.
 - descartada: true si una cancelada se descartó (no se va a reagendar).
 - fecha_firma: fecha en que se firmó. motivo: motivo de cancelación o pérdida. notas: notas del SDR.
 - updated_at: última vez que se tocó la demo en el Hub (cualquier cambio). Solo se registra desde el 18-11-2026; para lo anterior se usa la fecha de la demo como última actividad.
-- demo_padre_id: si es una demo reagendada, la demo original.
+- demo_padre_id: si es una demo reagendada o una nueva demo agendada desde un seguimiento, la demo original. Una oportunidad interesado/necesita_seguimiento que ya tiene una demo hija (otra demo con demo_padre_id = su id) no necesita seguimiento: su siguiente paso es esa nueva demo.
 tareas: recordatorios de leads del SDR (lead_nombre, lead_url, nota, fecha_recordatorio, completada).
 planificacion_bloques: bloques del calendario semanal (estado: planificado, en_curso, pausado, completado, saltado; sin_play = se marcó hecho sin darle a Play; res_* = llamadas, conectadas y demos que sacó).
 objetivos y llamadas: por SDR, mes (1-12) y anio.
@@ -239,7 +239,7 @@ vacaciones, comerciales, ciudades, comercial_ausencias, sdr_users (equipo), repo
 # Definiciones del Hub (úsalas tal cual)
 - Demos por confirmar: estado = agendada, fecha >= hoy, confirmada_at es null.
 - Por cerrar (pendientes de marcar si se hicieron): estado agendada o ejecutada sin outcome y fecha < hoy (las canceladas y reagendadas no cuentan).
-- Follow-ups pendientes: estado = ejecutada, outcome interesado o necesita_seguimiento, fecha de hace 7 días o más, y seguimiento_aplazado_hasta null o <= hoy.
+- Follow-ups pendientes: estado = ejecutada, outcome interesado o necesita_seguimiento, fecha de hace 7 días o más, seguimiento_aplazado_hasta null o <= hoy, y sin una nueva demo agendada (ninguna demo con demo_padre_id = su id).
 - Para reagendar: estado = cancelada, descartada no true, outcome distinto de cerrado_perdido, y seguimiento_aplazado_hasta null o <= hoy (si es posterior a hoy, el SDR la está trabajando y no cuenta como pendiente).
 - Oportunidades abiertas: estado = ejecutada y outcome interesado, necesita_seguimiento o null.
 - "Sin actualizar" / "olvidadas" / "paradas": oportunidades con resultado interesado o necesita_seguimiento en las que no se ha hecho nada en el Hub desde entonces, sobre todo si tenían una fecha de seguimiento (seguimiento_aplazado_hasta) que ya pasó. Usa SIEMPRE la herramienta oportunidades_sin_actualizar para esto (no consultar_datos). En la tabla pon: Oportunidad (sf_nombre con enlace sf_link), Resultado (outcome), Demo (fecha), Seguimiento (seguimiento_aplazado_hasta), Sin actividad (dias_sin_actividad), Comercial y, si es el manager viendo a varios, SDR. Di cuántas tienen el seguimiento vencido.
@@ -418,6 +418,10 @@ async function sinActualizar(input: Record<string, unknown>, ctx: Ctx, hoy: stri
       filas.push(...(data as Record<string, unknown>[]));
       if ((data as unknown[]).length < 1000) break;
     }
+    // Las que ya tienen una nueva demo agendada no están olvidadas: su siguiente paso es esa demo
+    const { data: hijas } = await rest("demos?select=demo_padre_id&demo_padre_id=not.is.null", ctx.token);
+    const conHija = new Set((hijas as Record<string, unknown>[]).map((h) => Number(h.demo_padre_id)));
+    for (let i = filas.length - 1; i >= 0; i--) if (conHija.has(Number(filas[i].id))) filas.splice(i, 1);
   } catch (e) {
     return `Error al consultar: ${(e as Error).message}`;
   }
@@ -484,7 +488,7 @@ async function resumenPendientes(input: Fila, ctx: Ctx, hoy: string): Promise<st
   let demos: Fila[] = [], tareas: Fila[] = [], bloques: Fila[] = [], objetivos: Fila[] = [], llamadas: Fila[] = [], config: Fila[] = [];
   try {
     [demos, tareas, bloques, objetivos, llamadas, config] = await Promise.all([
-      leerTodo(`demos?${con(["select=id,sdr_id,sf_nombre,sf_url,comercial_id,fecha,hora,estado,outcome,canal,fecha_firma,confirmada_at,seguimiento_aplazado_hasta,descartada,updated_at,created_at,fecha_agendamiento", "order=fecha.asc"])}`, ctx.token),
+      leerTodo(`demos?${con(["select=id,sdr_id,sf_nombre,sf_url,comercial_id,fecha,hora,estado,outcome,canal,fecha_firma,confirmada_at,seguimiento_aplazado_hasta,descartada,updated_at,created_at,fecha_agendamiento,demo_padre_id", "order=fecha.asc"])}`, ctx.token),
       leerTodo(`tareas?${con(["select=id,sdr_id,lead_nombre,lead_url,nota,fecha_recordatorio", "completada=is.false", `fecha_recordatorio=lte.${hoy}`, "order=fecha_recordatorio.asc"])}`, ctx.token),
       leerTodo(`planificacion_bloques?${con(["select=id,sdr_id,titulo,hora_inicio,estado", `fecha=eq.${hoy}`])}`, ctx.token),
       leerTodo(`objetivos?${con(["select=sdr_id,demos_objetivo_outbound,demos_objetivo_inbound,cwd_objetivo_outbound,cwd_objetivo_inbound", `mes=eq.${mes}`, `anio=eq.${anio}`])}`, ctx.token),
@@ -530,7 +534,9 @@ async function resumenPendientes(input: Fila, ctx: Ctx, hoy: string): Promise<st
     const demosHoy = ds.filter((r) => r.estado === "agendada" && str(r.fecha) === hoy).sort(porFecha);
     const porConfirmar = ds.filter((r) => r.estado === "agendada" && str(r.fecha) >= hoy && !r.confirmada_at).sort(porFecha);
     const porCerrar = ds.filter((r) => r.estado !== "cancelada" && r.estado !== "reagendada" && !r.outcome && yaPaso(r)).sort(porFecha);
-    const abiertas = ds.filter((r) => r.estado === "ejecutada" && (r.outcome === "interesado" || r.outcome === "necesita_seguimiento"));
+    // Con una nueva demo agendada (hija con demo_padre_id) la oportunidad ya no necesita seguimiento
+    const conHija = new Set(ds.map((r) => r.demo_padre_id).filter((v) => v !== null && v !== undefined).map(Number));
+    const abiertas = ds.filter((r) => r.estado === "ejecutada" && (r.outcome === "interesado" || r.outcome === "necesita_seguimiento") && !conHija.has(Number(r.id)));
     const followUps = abiertas.filter((r) => str(r.fecha) <= hace7 && (!r.seguimiento_aplazado_hasta || str(r.seguimiento_aplazado_hasta) <= hoy)).sort(porFecha);
     const vencidas = abiertas.filter((r) => {
       const seg = str(r.seguimiento_aplazado_hasta);

@@ -2167,11 +2167,13 @@ body.ia-abierto .ia-panel{display:flex;}
 <div class="modal-overlay" id="reagendar-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-head">
-      <div class="modal-title">🔄 Reagendar demo</div>
+      <div class="modal-title" id="reag-title">🔄 Reagendar demo</div>
       <button class="modal-close" onclick="closeReagendarModal()">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="reag-demo-id"/>
+      <input type="hidden" id="reag-modo"/>
+      <div id="reag-intro" class="aplazar-intro" style="display:none;"></div>
       <div id="reag-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
       <div class="form-row">
         <div class="form-group">
@@ -2187,7 +2189,7 @@ body.ia-abierto .ia-panel{display:flex;}
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeReagendarModal()">Cancelar</button>
-        <button class="btn-save" onclick="confirmReagendar()">🔄 Reagendar</button>
+        <button class="btn-save" id="reag-save" onclick="confirmReagendar()">🔄 Reagendar</button>
       </div>
     </div>
   </div>
@@ -4870,7 +4872,7 @@ function pendingSeguimientosDe(sdrId){
   const today=todayStr();
   const c=new Date();c.setDate(c.getDate()-7);const cut=localDateStr(c);
   return allDemos.filter(d=>d.sdr_id===sdrId&&d.estado==='ejecutada'&&
-    ['interesado','necesita_seguimiento'].includes(d.outcome)&&
+    ['interesado','necesita_seguimiento'].includes(d.outcome)&&!tieneHija(d,allDemos)&&
     (d.fecha||'')<=cut&&
     (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today));
 }
@@ -5519,7 +5521,7 @@ function getFilteredDemos(){
       const cutStr=localDateStr(cutoff);
       result=demos.filter(d=>
         d.estado==='ejecutada'&&
-        ['interesado','necesita_seguimiento'].includes(d.outcome)&&
+        ['interesado','necesita_seguimiento'].includes(d.outcome)&&!tieneHija(d)&&
         (d.fecha||'')<=cutStr&&
         (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today)
       );
@@ -5582,13 +5584,19 @@ function colaFollow(){
   const today=todayStr();
   const cut=new Date();cut.setDate(cut.getDate()-7);
   const cutStr=localDateStr(cut);
-  return demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&
+  return demos.filter(d=>d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&!tieneHija(d)&&
     (d.fecha||'')<=cutStr&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today))
     .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 }
 // Canceladas "que estoy trabajando": el SDR pide que se la recordemos en X días.
 // Hasta esa fecha sale de "Por reagendar" y no cuenta como pendiente; ese día vuelve sola.
 // Se guarda en seguimiento_aplazado_hasta (en una cancelada no se usa para nada más).
+// Nueva demo agendada desde una oportunidad con interés: la nueva lleva demo_padre_id = la original.
+// La original deja de pedir seguimiento: su siguiente paso ya es esa demo.
+const _hijasCache=new WeakMap();
+function idsConHija(arr){let st=_hijasCache.get(arr);if(!st){st=new Set(arr.filter(x=>x.demo_padre_id).map(x=>x.demo_padre_id));_hijasCache.set(arr,st);}return st;}
+const tieneHija=(d,arr=demos)=>idsConHija(arr).has(d.id);
+const hijaDe=(d,arr=demos)=>arr.filter(x=>x.demo_padre_id===d.id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))[0]||null;
 function canceladaViva(d){return d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido';}
 function canceladaTrabajando(d,hoy=todayStr()){return canceladaViva(d)&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>hoy;}
 function canceladaPorReagendar(d,hoy=todayStr()){return canceladaViva(d)&&!canceladaTrabajando(d,hoy);}
@@ -6110,6 +6118,7 @@ function pendCardHtml(d,q){
     when=`<div class="pd-when${n>=21?' old':''}">Demo ${fmtDate(d.fecha)}<small>${hace}</small>${aplazado}</div>`;
     actions=`<div class="pd-actions">
         <button class="pd-btn win" onclick="openFirmaModal(${d.id})">🏆 Firmada</button>
+        <button class="pd-btn ok" onclick="openNuevaDemoModal(${d.id})" title="Hay que hacer otra demo con este cliente: se agenda una nueva y este seguimiento se cierra">📅 Nueva demo</button>
         <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'perdida',outcome:'cerrado_perdido'})">💔 Perdida</button>
         <button class="pd-btn" onclick="snoozeFollow(${d.id},3)" title="Recordármelo en 3 días">⏰ +3 días</button>
         <button class="pd-btn" onclick="snoozeFollow(${d.id},7)" title="Recordármelo en una semana">⏰ +1 sem</button>
@@ -6313,6 +6322,7 @@ function retomarCandidatas(lista){
   const hoy=todayStr();
   return lista.filter(d=>{
     if(d.estado!=='ejecutada'||!['interesado','necesita_seguimiento'].includes(d.outcome))return false;
+    if(tieneHija(d,lista))return false;
     if(diasDesde(d.fecha)<RETOMAR_DIAS)return false;
     const ap=d.seguimiento_aplazado_hasta;
     if(ap&&(ap>hoy||diasDesde(ap)<RETOMAR_DIAS))return false;
@@ -6843,9 +6853,25 @@ async function reagendarConHora(id){
 }
 
 // ── REAGENDAR MODAL ──
+function setReagModo(nueva){
+  document.getElementById('reag-modo').value=nueva?'nueva':'';
+  document.getElementById('reag-title').textContent=nueva?'📅 Nueva demo agendada':'🔄 Reagendar demo';
+  document.getElementById('reag-save').textContent=nueva?'📅 Agendar nueva demo':'🔄 Reagendar';
+  const intro=document.getElementById('reag-intro');
+  intro.style.display=nueva?'block':'none';
+  intro.textContent=nueva?'Se crea una demo nueva con los mismos datos (comercial, canal, tipo…) y este seguimiento sale de tus pendientes: el siguiente paso ya es esa demo.':'';
+}
+function openNuevaDemoModal(id){
+  const demo=demos.find(d=>d.id===id);
+  if(!demo)return;
+  openReagendarModal(id);
+  setReagModo(true);
+  document.getElementById('reag-fecha').value=nextWorkdayStr();
+}
 function openReagendarModal(id){
   const demo=demos.find(d=>d.id===id);
   if(!demo)return;
+  setReagModo(false);
   document.getElementById('reag-demo-id').value=id;
   document.getElementById('reag-demo-name').textContent=demo.sf_nombre||'Sin nombre';
   document.getElementById('reag-fecha').value=demo.fecha||todayStr();
@@ -6875,6 +6901,27 @@ function selectReagHora(val){
   document.getElementById('reag-hora-dropdown').classList.remove('show');
 }
 
+// Nueva demo desde un seguimiento: copia los datos de la oportunidad y la enlaza con demo_padre_id
+async function crearNuevaDemo(padreId,fecha,hora){
+  const p=demos.find(d=>d.id===padreId);
+  if(!p)return;
+  const payload={
+    sdr_id:p.sdr_id||currentUser.id,
+    sf_url:p.sf_url||null,sf_nombre:p.sf_nombre||'Sin nombre',
+    comercial_id:p.comercial_id||null,ciudad_id:p.ciudad_id||null,telefono:p.telefono||null,
+    fecha_agendamiento:todayStr(),fecha,hora,
+    tipo:p.tipo||'online',plataforma:p.tipo==='presencial'?null:(p.plataforma||null),
+    canal:p.canal||'outbound',estado:'agendada',outcome:null,
+    demo_padre_id:p.id
+  };
+  try{
+    await sb('demos',{method:'POST',body:JSON.stringify(payload)});
+    showToast('📅 Nueva demo agendada para '+fmtDate(fecha)+(hora?' a las '+hora:''));
+    closeReagendarModal();
+    await loadDemos();
+    sfNudge(p,'Actualiza la oportunidad en Salesforce con la nueva demo del '+fmtDate(fecha)+'.');
+  }catch(e){showToast('❌ Error al crear la demo');console.error(e);}
+}
 async function confirmReagendar(){
   const id=document.getElementById('reag-demo-id').value;
   const fechaTrim=document.getElementById('reag-fecha').value;
@@ -6898,6 +6945,7 @@ async function confirmReagendar(){
       if(!confirm('Esa hora de hoy ya pasó. La demo seguirá apareciendo como pendiente. ¿Continuar?'))return;
     }
   }
+  if(document.getElementById('reag-modo').value==='nueva')return crearNuevaDemo(Number(id),fechaTrim,horaVal);
   try{
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({
       fecha:fechaTrim,
@@ -6937,6 +6985,8 @@ function renderDemoCard(d,liveClass='',searchMode=false){
         <span class="badge ${d.canal||'outbound'}">${(d.canal||'outbound')==='outbound'?'🎯 Outbound':'📥 Inbound'}</span>
         ${d.outcome?`<span class="outcome-pill outcome-${d.outcome}">${outcomeLabel(d.outcome)}</span>`:''}
         ${d.confirmada_at&&d.estado==='agendada'&&!d.outcome?'<span class="conf-pill">✓ Confirmada</span>':''}
+        ${d.demo_padre_id?'<span class="conf-pill" title="Nueva demo agendada desde un seguimiento">↪ 2ª demo</span>':''}
+        ${tieneHija(d)?`<span class="conf-pill" title="Ya tiene otra demo agendada">📅 Nueva demo ${fmtDate(hijaDe(d)?.fecha)}</span>`:''}
       </div>
       <div class="demo-meta">
         <span class="demo-meta-item">📅 ${fmtDate(d.fecha)}${d.hora?' · 🕐 '+d.hora:''}</span>
@@ -6964,6 +7014,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
               <option value="cerrado_perdido">❌ Perdido</option>
             </select>
             <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})">📅 Seguimiento en fecha</button>
+            <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="openNuevaDemoModal(${d.id})">📅 Nueva demo</button>
           </div>`
         :!searchMode&&currentView==='papelera'
         ?`<span class="badge ${d.estado==='cancelada'?'cancelada-badge':'perdida-badge'}">${d.estado==='cancelada'?'🗑️ Cancelada':'❌ Perdida'}</span>`
@@ -6974,6 +7025,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
             ${d.estado==='reagendada'?'<option value="reagendada" selected>Reagendada</option>':''}
           </select>`}
       <div class="demo-actions">
+        ${d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)&&!tieneHija(d)?`<button class="icon-btn" onclick="openNuevaDemoModal(${d.id})" title="Agendar una nueva demo con este cliente">➕</button>`:''}
         ${d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)?`<button class="icon-btn" onclick="openAplazarModal(${d.id})" title="${d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>todayStr()?'Seguimiento el '+fmtDate(d.seguimiento_aplazado_hasta)+' · cambiar':'Programar seguimiento en una fecha concreta'}">📅</button>`:''}
         <button class="icon-btn" onclick='openDemoModal(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="Editar">✏️</button>
         <button class="icon-btn" onclick="deleteDemo(${d.id})" title="Eliminar">🗑️</button>

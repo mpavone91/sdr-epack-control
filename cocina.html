@@ -1007,6 +1007,12 @@ const ACTIVA=d=>!['ejecutada','cancelada','reagendada'].includes(d.estado);
 const horaPasada=d=>d.fecha===today()&&d.hora&&minutesDiff(d.hora.slice(0,5),nowHM())>=60;
 // Cancelada "la estoy trabajando": recordatorio en seguimiento_aplazado_hasta. Hasta ese día
 // descansa fuera de los platos devueltos (no se pudre) y ese día vuelve sola.
+// Nueva demo agendada desde un seguimiento: la nueva lleva demo_padre_id = la original,
+// y la original deja de pedir seguimiento (su siguiente paso ya es esa demo).
+let PADRES=new Set();
+const calcPadres=()=>{PADRES=new Set(demos.filter(x=>x.demo_padre_id).map(x=>x.demo_padre_id));};
+const tieneHija=d=>PADRES.has(d.id);
+const hijaDe=d=>demos.filter(x=>x.demo_padre_id==d.id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))[0]||null;
 const canTrabajando=d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido'&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today();
 function zoneOf(d){
   const t=today();
@@ -1032,6 +1038,7 @@ function segDue(d){
 }
 function segVencido(d){
   if(!['interesado','necesita_seguimiento'].includes(d.outcome))return false;
+  if(tieneHija(d))return false;
   return (d.fecha||'')<=ds(addDays(-7))&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today());
 }
 const ageDays=d=>d.fecha?Math.max(0,daysBetween(d.fecha,today())):0;
@@ -1044,6 +1051,7 @@ function staleDays(d,zone){
 const ROT_LIMIT={marcar:3,seguimiento:21,canceladas:14};
 
 function classify(){
+  calcPadres();
   const z={nuevas:[],agenda:[],hoy:[],marcar:[],canceladas:[],seguimiento:[],ventas:[],papelera:[],reposo:[],vertedero:[]};
   const ms=monthStart();
   for(const d of demos){
@@ -1717,6 +1725,7 @@ function retomarCandidatas(){
   const t=today();
   return demos.filter(d=>{
     if(d.estado!=='ejecutada'||!['interesado','necesita_seguimiento'].includes(d.outcome))return false;
+    if(tieneHija(d))return false;
     if(ageDays(d)<RETOMAR_DIAS)return false;
     const ap=d.seguimiento_aplazado_hasta;
     return!(ap&&(ap>t||daysBetween(ap,t)<RETOMAR_DIAS));
@@ -1771,6 +1780,9 @@ function demoSheet(d,view='main'){
   if(d.motivo)facts.push(['Motivo',MOTIVO_LABEL[d.motivo]||d.motivo]);
   if(d.seguimiento_aplazado_hasta)facts.push(['Recordatorio',fmt(d.seguimiento_aplazado_hasta)]);
   if(d.fecha_firma)facts.push(['Firma',fmt(d.fecha_firma)]);
+  if(d.demo_padre_id)facts.push(['Origen','Nueva demo desde un seguimiento']);
+  const hija=tieneHija(d)?hijaDe(d):null;
+  if(hija)facts.push(['Nueva demo',`${fmt(hija.fecha)}${hija.hora?' · '+hija.hora.slice(0,5):''} · ${hija.estado}`]);
   let h='';
   if(place==='vertedero'&&view==='main'){
     const why=zone==='marcar'?`Lleva ${staleDays(d,zone)} días en el pase sin que digas qué pasó.`:zone==='seguimiento'?`El seguimiento venció hace ${staleDays(d,zone)} días.`:`Devuelto hace ${staleDays(d,zone)} días y nadie lo ha rescatado.`;
@@ -1803,6 +1815,15 @@ function demoSheet(d,view='main'){
       <div class="msg" id="seg-hint">${segHint(val)}</div>
       <div class="alertbox sf-tip">📝 Apúntalo también en Salesforce: una <b>tarea</b> para ese día o una <b>nota</b> en la oportunidad.</div>
       <button class="btn primary" data-act="do-fecha" style="padding:10px;">Guardar hasta esa fecha ${xpLbl('aplazar',d)?'· '+xpLbl('aplazar',d):''}</button>`;
+    return h;
+  }
+  if(view==='nuevademo'){
+    const def=ds(addDays(new Date().getDay()===5?3:1));
+    h+=`<button class="back" data-act="back">← Volver</button><div class="act-title">NUEVA DEMO CON ESTE CLIENTE</div>
+      <div class="msg">Se crea una comanda nueva con los mismos datos (comercial, canal, tipo…) y este seguimiento sale de la cámara: el siguiente paso ya es esa demo.</div>
+      <div class="row-inp"><input type="date" class="inp" id="inp-nd-fecha" value="${def}" min="${today()}"><input type="time" class="inp" id="inp-nd-hora" value="${(d.hora||'10:00').slice(0,5)}" step="900"></div>
+      <div class="alertbox sf-tip">📝 Actualiza también la oportunidad en Salesforce con la nueva demo.</div>
+      <button class="btn primary" data-act="do-nuevademo" style="padding:10px;">Colgar la nueva comanda en el rail</button>`;
     return h;
   }
   if(view==='reagendar'){
@@ -1839,6 +1860,7 @@ function demoSheet(d,view='main'){
   }else if(zone==='seguimiento'){
     h+=`<div class="acts">`+
        act('ganado','Cerrado ganado','Se sirve en el comedor',xpLbl('ganado',d),'good','var(--gold)')+
+       act('nuevademo','Nueva demo agendada','Hay que hacer otra demo: nueva comanda al rail','','good','var(--teal-lt)')+
        act('perdido','Cerrado perdido','Al cubo, con motivo',xpLbl('perdido',d),'bad','var(--red)')+
        act('aplazar:7','Sigue con interés · recordar en 7 días','Sale de la cámara hasta entonces',xpLbl('aplazar',d),'','var(--blue)')+
        act('aplazar:14','Recordar en 14 días','',xpLbl('aplazar',d),'','var(--blue)')+
@@ -1857,7 +1879,9 @@ function demoSheet(d,view='main'){
   }else if(zone==='papelera'&&d.estado==='cancelada'&&d.descartada){
     h+=`<div class="acts">`+act('recuperar','Recuperar a platos devueltos','Vuelve a estar pendiente de reagendar','','warn','var(--amber)')+`</div>`;
   }else if(zone==='reposo'&&d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)){
+    if(hija)h+=`<div class="alertbox wait">Ya tiene una nueva demo agendada el <b>${fmt(hija.fecha)}</b>: no necesita seguimiento.</div>`;
     h+=`<div class="acts">`+
+       (hija?'':act('nuevademo','Nueva demo agendada','Hay que hacer otra demo: nueva comanda al rail','','good','var(--teal-lt)'))+
        act('fecha',d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today()?'Cambiar la fecha del seguimiento':'Seguimiento en una fecha concreta','«Llámame en 5 meses»: eliges el día exacto','','','var(--frost)')+
        act('ganado','Cerrado ganado','Se sirve en el comedor',xpLbl('ganado',d),'good','var(--gold)')+
        act('perdido','Cerrado perdido','Al cubo, con motivo',xpLbl('perdido',d),'bad','var(--red)')+`</div>`;
@@ -1984,7 +2008,8 @@ drBody.addEventListener('click',async e=>{
   const a=b.dataset.act;
   const show=v=>{drBody.innerHTML=demoSheet(d,v);};
   if(a==='back')return show('main');
-  if(['perdido','cancelar','ganado','reagendar','fecha'].includes(a))return show(a);
+  if(['perdido','cancelar','ganado','reagendar','fecha','nuevademo'].includes(a))return show(a);
+  if(a==='do-nuevademo'){crearNuevaDemo(d,b);return;}
   if(a.startsWith('fq:')){const f=addMonthsDs(+a.slice(3)),i=document.getElementById('inp-seg');if(i){i.value=f;document.getElementById('seg-hint').innerHTML=segHint(f);}return;}
   if(a==='editar'){openDemoForm(d);return;}
   const wasZone=d._zone,wasPlace=placeOf(d);
@@ -2271,6 +2296,31 @@ function openDemoForm(d=null){
   setTimeout(()=>urlEl.focus(),80);
 }
 
+async function crearNuevaDemo(p,btn){
+  const f=document.getElementById('inp-nd-fecha').value,hr=document.getElementById('inp-nd-hora').value;
+  if(!f){toast('Elige una fecha','warn');return;}
+  if(f<today()){toast('Elige hoy o una fecha futura','warn');return;}
+  const nueva={sdr_id:p.sdr_id||currentUser.id,sf_url:p.sf_url||null,sf_nombre:p.sf_nombre||'Sin nombre',
+    comercial_id:p.comercial_id||null,ciudad_id:p.ciudad_id||null,telefono:p.telefono||null,
+    fecha_agendamiento:today(),fecha:f,hora:hr||null,tipo:p.tipo||'online',
+    plataforma:p.tipo==='presencial'?null:(p.plataforma||null),canal:p.canal||'outbound',
+    estado:'agendada',outcome:null,fecha_firma:null,motivo:null,notas:null,demo_padre_id:p.id};
+  btn.disabled=true;
+  const at=drawerCtx&&drawerCtx.el&&world.contains(drawerCtx.el)?worldPos(drawerCtx.el):null;
+  let creada;
+  try{
+    if(MODE==='real'&&!viewId){const r=await sb('demos',{method:'POST',body:JSON.stringify(nueva)});creada=Array.isArray(r)?r[0]:r;}
+    else creada={...nueva,id:Math.max(0,...demos.map(x=>+x.id||0))+1,created_at:new Date().toISOString(),descartada:false,confirmada_at:null,seguimiento_aplazado_hasta:null};
+  }catch(err){console.error(err);toast('No se pudo guardar. Revisa tu conexión o vuelve a entrar.','warn');btn.disabled=false;return;}
+  demos.push(creada);calcPadres();
+  game.unboxed[creada.id]=true;
+  const before=XP;
+  closeDrawer();renderWorld();
+  const gain=XP-before,text=`Nueva demo el ${fmt(f)}: ${shortName(p)}`;
+  logLine(text,gain,['nuevademo']);saveGame();renderDash();
+  popXP(at,gain);
+  toast(gain?`${text} · +${gain} XP`:text);
+}
 async function saveDemoForm(d){
   const raw=document.getElementById('f-url').value.trim();
   const tipo=document.getElementById('f-tipo').value;
