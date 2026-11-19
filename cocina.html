@@ -1005,9 +1005,12 @@ function saveGame(){try{localStorage.setItem(gameKey(),JSON.stringify(game));}ca
 // ═══════════════════════════════════════════════════════════════
 const ACTIVA=d=>!['ejecutada','cancelada','reagendada'].includes(d.estado);
 const horaPasada=d=>d.fecha===today()&&d.hora&&minutesDiff(d.hora.slice(0,5),nowHM())>=60;
+// Cancelada "la estoy trabajando": recordatorio en seguimiento_aplazado_hasta. Hasta ese día
+// descansa fuera de los platos devueltos (no se pudre) y ese día vuelve sola.
+const canTrabajando=d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido'&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today();
 function zoneOf(d){
   const t=today();
-  if(d.estado==='cancelada')return(d.descartada||d.outcome==='cerrado_perdido')?'papelera':'canceladas';
+  if(d.estado==='cancelada')return(d.descartada||d.outcome==='cerrado_perdido')?'papelera':canTrabajando(d)?'reposo':'canceladas';
   if(d.estado==='ejecutada'){
     if(d.outcome==='cerrado_ganado')return'ventas';
     if(d.outcome==='cerrado_perdido')return'papelera';
@@ -1033,6 +1036,7 @@ function segVencido(d){
 }
 const ageDays=d=>d.fecha?Math.max(0,daysBetween(d.fecha,today())):0;
 function staleDays(d,zone){
+  if(zone==='canceladas'&&d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>(d.fecha||''))return Math.max(0,daysBetween(d.seguimiento_aplazado_hasta,today()));
   if(zone==='marcar'||zone==='canceladas')return ageDays(d);
   if(zone==='seguimiento')return Math.max(0,daysBetween(segDue(d),today()));
   return 0;
@@ -1673,7 +1677,7 @@ function patchFor(a,d){
     case'ganado':return{estado:'ejecutada',outcome:'cerrado_ganado',fecha_firma:today(),motivo:null};
     case'perdido':return{estado:'ejecutada',outcome:'cerrado_perdido'};
     case'cancelar':return{estado:'cancelada'};
-    case'reagendar':return{fecha:ds(addDays(1)),estado:'agendada',outcome:null,descartada:false,confirmada_at:null};
+    case'reagendar':return{fecha:ds(addDays(1)),estado:'agendada',outcome:null,descartada:false,confirmada_at:null,...(d.estado==='cancelada'?{seguimiento_aplazado_hasta:null}:{})};
     case'aplazar':return{seguimiento_aplazado_hasta:ds(addDays(7))};
     case'descartar':return{descartada:true};
     case'confirmar':return{confirmada_at:new Date().toISOString()};
@@ -1683,7 +1687,7 @@ function patchFor(a,d){
 function extraFor(a,d){
   const z=d._zone,place=placeOf(d);let x=0;const why=[];
   if(z==='marcar'&&a==='reagendar'){x+=10;}
-  if(z==='canceladas'&&a==='reagendar'){x+=20;}
+  if((z==='canceladas'||(z==='reposo'&&d.estado==='cancelada'))&&a==='reagendar'){x+=20;}
   if(z==='seguimiento'&&a==='perdido'){x+=20;}
   if(z==='seguimiento'&&a==='aplazar'){x+=5;}
   if(z==='canceladas'&&a==='descartar'){x+=3;}
@@ -1748,6 +1752,11 @@ function sfNudge(d,texto){
 function xpPreview(a,d){return demoXP({...d,...patchFor(a,d)})-demoXP(d)+extraFor(a,d).x;}
 const xpLbl=(a,d)=>{const x=xpPreview(a,d);return x?`+${x} XP`:'';};
 
+const TRABAJAR_OPC=[['3','3 días'],['7','7 días'],['15','15 días'],['1m','1 mes']];
+const fechaTrabajar=v=>v==='1m'?addMonthsDs(1):ds(addDays(+v));
+function trabajarHTML(titulo){
+  return`<div class="act-group"><div class="act-sub">${titulo}</div><div class="fq">${TRABAJAR_OPC.map(o=>`<button class="btn" data-act="trabajar:${o[0]}">${o[1]}</button>`).join('')}</div></div>`;
+}
 function demoSheet(d,view='main'){
   const zone=d._zone||zoneOf(d),place=placeOf(d);
   const href=sfHref(d);
@@ -1837,7 +1846,14 @@ function demoSheet(d,view='main'){
   }else if(zone==='canceladas'){
     h+=`<div class="acts">`+
        act('reagendar','Rescatar: reagendar','Vuelve al rail',xpLbl('reagendar',d),'good','var(--lime)')+
-       act('descartar','Tirar al cubo','Descartada. Se puede recuperar.',xpLbl('descartar',d),'bad','var(--red)')+`</div>`;
+       act('descartar','Tirar al cubo','Descartada. Se puede recuperar.',xpLbl('descartar',d),'bad','var(--red)')+`</div>`+
+       trabajarHTML('LA ESTOY TRABAJANDO · RECUÉRDAMELA EN');
+  }else if(zone==='reposo'&&canTrabajando(d)){
+    h+=`<div class="alertbox wait">La estás trabajando. Vuelve a platos devueltos el <b>${fmt(d.seguimiento_aplazado_hasta)}</b>; hasta entonces no se pudre.</div><div class="acts">`+
+       act('reagendar','Rescatar: reagendar','Vuelve al rail',xpLbl('reagendar',d),'good','var(--lime)')+
+       act('trabajar-ya','Devolver ya a platos devueltos','Quita el recordatorio','','warn','var(--amber)')+
+       act('descartar','Tirar al cubo','Descartada. Se puede recuperar.','','bad','var(--red)')+`</div>`+
+       trabajarHTML('CAMBIAR EL RECORDATORIO');
   }else if(zone==='papelera'&&d.estado==='cancelada'&&d.descartada){
     h+=`<div class="acts">`+act('recuperar','Recuperar a platos devueltos','Vuelve a estar pendiente de reagendar','','warn','var(--amber)')+`</div>`;
   }else if(zone==='reposo'&&d.estado==='ejecutada'&&['interesado','necesita_seguimiento'].includes(d.outcome)){
@@ -1898,6 +1914,12 @@ function openZoneList(zone){
   openDrawer(ZONE_NAME[zone],`${list.length} ${list.length===1?'comanda':'comandas'}`,
     list.length?`<div class="list">${list.map(d=>`<button class="li" data-id="${d.id}">${zone==='vertedero'?`<span class="sw" style="background:${CAT_COLOR[d._zone]}"></span>`:''}<span class="nm">${esc(shortName(d))}</span><span class="meta">${esc(meta(d))}</span></button>`).join('')}</div>`
       :'<div style="color:var(--ink-3)">No hay nada aquí.</div>');
+  if(zone==='canceladas'){
+    const trab=demos.filter(canTrabajando).sort((a,b)=>a.seguimiento_aplazado_hasta.localeCompare(b.seguimiento_aplazado_hasta));
+    if(trab.length)drBody.insertAdjacentHTML('beforeend',`<div class="act-title" style="margin-top:14px">⏳ LAS ESTÁS TRABAJANDO · ${trab.length}</div>
+      <div class="msg">Vuelven solas a platos devueltos el día del recordatorio.</div>
+      <div class="list">${trab.map(d=>`<button class="li" data-id="${d.id}"><span class="sw" style="background:var(--amber)"></span><span class="nm">${esc(shortName(d))}</span><span class="meta">vuelve el ${esc(fmt(d.seguimiento_aplazado_hasta))}</span></button>`).join('')}</div>`);
+  }
 }
 
 function openCalls(){
@@ -1990,10 +2012,15 @@ drBody.addEventListener('click',async e=>{
     if(!f){toast('Elige una fecha','warn');return;}
     if(f<today()){toast('Elige hoy o una fecha futura','warn');return;}
     patch={fecha:f,hora:hr||null,estado:'agendada',outcome:null,descartada:false,confirmada_at:null};
-    key='reagendar';text=(wasZone==='canceladas'?'Rescatada':wasZone==='marcar'?'No se hizo, reagendada':'Cambio de fecha')+` al ${fmt(f)}: ${nm}`;
-    if(wasZone==='canceladas')kinds.push('rescate');
-  }else if(a==='descartar'){patch={descartada:true};key='descartar';text=`Al cubo: ${nm}`;}
-  else if(a==='recuperar'){patch={descartada:false};key='recuperar';text=`Recuperada: ${nm}`;}
+    if(d.estado==='cancelada')patch.seguimiento_aplazado_hasta=null;
+    const rescate=wasZone==='canceladas'||(wasZone==='reposo'&&d.estado==='cancelada');
+    key='reagendar';text=(rescate?'Rescatada':wasZone==='marcar'?'No se hizo, reagendada':'Cambio de fecha')+` al ${fmt(f)}: ${nm}`;
+    if(rescate)kinds.push('rescate');
+  }else if(a.startsWith('trabajar:')){
+    const f=fechaTrabajar(a.slice(9));patch={seguimiento_aplazado_hasta:f};key='trabajar';text=`La estás trabajando, vuelve el ${fmt(f)}: ${nm}`;
+  }else if(a==='trabajar-ya'){patch={seguimiento_aplazado_hasta:null};key='';text=`De vuelta a platos devueltos: ${nm}`;}
+  else if(a==='descartar'){patch={descartada:true};key='descartar';text=`Al cubo: ${nm}`;}
+  else if(a==='recuperar'){patch={descartada:false,seguimiento_aplazado_hasta:null};key='recuperar';text=`Recuperada: ${nm}`;}
   else if(a==='confirmar'){patch={confirmada_at:new Date().toISOString()};key='confirmar';text=`Asistencia confirmada: ${nm}`;}
   else if(a==='desconfirmar'){patch={confirmada_at:null};key='';text=`Confirmación quitada: ${nm}`;}
   if(!patch)return;
@@ -2055,6 +2082,7 @@ world.addEventListener('pointerover',e=>{
   const extra=placeOf(d)==='vertedero'?`en el friegue · ${CAT_NAME[z]} · ${a}d`
     :z==='seguimiento'?`${ageDays(d)} días desde la demo`:z==='marcar'?(a?`en el pase desde hace ${a} días`:'acaba de salir: ¿se hizo?'):z==='canceladas'?`devuelto hace ${a} días`
     :z==='ventas'?`venta · firma ${fmt(d.fecha_firma||d.fecha)}`
+    :canTrabajando(d)?`cancelada · la estás trabajando · vuelve el ${fmt(d.seguimiento_aplazado_hasta)}`
     :`${dayLbl(d.fecha||today())}${d.hora?' · '+d.hora.slice(0,5):''}${needsConfirm(d)?' · sin confirmar':d.confirmada_at?' · confirmada':''}`;
   tip.innerHTML=`<b>${esc(shortName(d))}</b><span>${esc(extra)} · ${esc(comName(d.comercial_id))}</span>`;
   const r=p.getBoundingClientRect();

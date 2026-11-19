@@ -226,7 +226,7 @@ demos: una fila por demo agendada.
 - estado: agendada (pendiente de hacerse), ejecutada (se hizo), cancelada, reagendada.
 - outcome (resultado tras hacerse): interesado, necesita_seguimiento, no_interesado, cerrado_ganado (firmada), cerrado_perdido (perdida). null = aún sin resultado.
 - confirmada_at: cuándo confirmó el cliente que asistirá (null = sin confirmar).
-- seguimiento_aplazado_hasta: el SDR pospuso el seguimiento hasta esa fecha.
+- seguimiento_aplazado_hasta: el SDR pospuso el seguimiento hasta esa fecha. En una cancelada significa "la estoy trabajando, recuérdamela ese día" (sale de Por reagendar hasta entonces).
 - descartada: true si una cancelada se descartó (no se va a reagendar).
 - fecha_firma: fecha en que se firmó. motivo: motivo de cancelación o pérdida. notas: notas del SDR.
 - updated_at: última vez que se tocó la demo en el Hub (cualquier cambio). Solo se registra desde el 18-11-2026; para lo anterior se usa la fecha de la demo como última actividad.
@@ -240,7 +240,7 @@ vacaciones, comerciales, ciudades, comercial_ausencias, sdr_users (equipo), repo
 - Demos por confirmar: estado = agendada, fecha >= hoy, confirmada_at es null.
 - Por cerrar (pendientes de marcar si se hicieron): estado agendada o ejecutada sin outcome y fecha < hoy (las canceladas y reagendadas no cuentan).
 - Follow-ups pendientes: estado = ejecutada, outcome interesado o necesita_seguimiento, fecha de hace 7 días o más, y seguimiento_aplazado_hasta null o <= hoy.
-- Para reagendar: estado = cancelada, descartada no true, outcome distinto de cerrado_perdido.
+- Para reagendar: estado = cancelada, descartada no true, outcome distinto de cerrado_perdido, y seguimiento_aplazado_hasta null o <= hoy (si es posterior a hoy, el SDR la está trabajando y no cuenta como pendiente).
 - Oportunidades abiertas: estado = ejecutada y outcome interesado, necesita_seguimiento o null.
 - "Sin actualizar" / "olvidadas" / "paradas": oportunidades con resultado interesado o necesita_seguimiento en las que no se ha hecho nada en el Hub desde entonces, sobre todo si tenían una fecha de seguimiento (seguimiento_aplazado_hasta) que ya pasó. Usa SIEMPRE la herramienta oportunidades_sin_actualizar para esto (no consultar_datos). En la tabla pon: Oportunidad (sf_nombre con enlace sf_link), Resultado (outcome), Demo (fecha), Seguimiento (seguimiento_aplazado_hasta), Sin actividad (dias_sin_actividad), Comercial y, si es el manager viendo a varios, SDR. Di cuántas tienen el seguimiento vencido.
 - CWD / firmadas: outcome = cerrado_ganado. Demos hechas = estado ejecutada.
@@ -537,7 +537,8 @@ async function resumenPendientes(input: Fila, ctx: Ctx, hoy: string): Promise<st
       const tocada = typeof r.updated_at === "string" ? fmtMadrid.format(new Date(r.updated_at)) : "";
       return !!seg && seg < hoy && (!tocada || tocada <= seg);
     }).sort((a, b) => str(a.seguimiento_aplazado_hasta).localeCompare(str(b.seguimiento_aplazado_hasta)));
-    const paraReagendar = ds.filter((r) => r.estado === "cancelada" && !r.descartada && r.outcome !== "cerrado_perdido");
+    const paraReagendar = ds.filter((r) => r.estado === "cancelada" && !r.descartada && r.outcome !== "cerrado_perdido" &&
+      (!r.seguimiento_aplazado_hasta || str(r.seguimiento_aplazado_hasta) <= hoy));
     const agendadasMes = ds.filter((r) => agendadoDia(r).startsWith(mesStr) && r.estado !== "cancelada");
     const agMesOut = agendadasMes.filter((r) => r.canal === "outbound").length;
     const agMesIn = agendadasMes.filter((r) => r.canal === "inbound").length;

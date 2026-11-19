@@ -989,6 +989,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .pd-btn.warn{border-color:#f0d58a;background:var(--amber-soft);color:#8a5e00;}
 .pd-btn.danger{border-color:#f3c2c2;background:var(--red-soft);color:var(--red);}
 .pd-btn.ghost{border-style:dashed;color:var(--muted);}
+select.pd-btn.pd-trab{appearance:auto;padding:7px 8px;max-width:200px;}
+.pd-trab-head{width:100%;text-align:left;cursor:pointer;background:none;border:none;font:inherit;margin-top:14px;}
+.pd-trab-sub{font-weight:500;color:var(--muted);margin-left:8px;font-size:11.5px;text-transform:none;letter-spacing:0;}
+.pd-card-trab{opacity:.85;border-style:dashed;}
 .pd-outcomes{display:none;margin-top:12px;padding:12px 14px;background:var(--green-soft);border-radius:10px;}
 .pd-outcomes.open{display:block;}
 .pd-outcomes-label{font-size:12px;font-weight:700;color:#15683a;margin-bottom:8px;}
@@ -3822,7 +3826,7 @@ function detectAlertas(){
 
   // 6. Demos canceladas acumuladas pendientes de reagendar
   allSdrs.forEach(s=>{
-    const pendientes=allDemos.filter(d=>d.sdr_id===s.id&&d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
+    const pendientes=allDemos.filter(d=>d.sdr_id===s.id&&canceladaPorReagendar(d)).length;
     if(pendientes>=5){
       alertas.push({tipo:'warning',icon:'🔄',titulo:`${s.nombre}: ${pendientes} demos canceladas pendientes`,desc:`Tiene <b>${pendientes} demos canceladas</b> sin reagendar ni descartar. Recuperar incluso 1 o 2 ya es ganar.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:3});
     }
@@ -4871,7 +4875,7 @@ function pendingSeguimientosDe(sdrId){
     (!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today));
 }
 function canceladasPendientesDe(sdrId){
-  return allDemos.filter(d=>d.sdr_id===sdrId&&d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido');
+  return allDemos.filter(d=>d.sdr_id===sdrId&&canceladaPorReagendar(d));
 }
 
 function genResumen(){
@@ -5507,7 +5511,7 @@ function getFilteredDemos(){
     case'todas':{const{start:mS,end:mE}=monthRange();result=demos.filter(d=>d.estado!=='cancelada'&&(d.fecha||'')>=mS&&(d.fecha||'')<=mE);break;}
     case'ganadas':result=demos.filter(d=>d.outcome==='cerrado_ganado');break;
     case'perdidas':result=demos.filter(d=>d.outcome==='cerrado_perdido'&&d.estado==='ejecutada');break;
-    case'reagendar':result=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido');break;
+    case'reagendar':result=demos.filter(d=>canceladaPorReagendar(d));break;
     case'papelera':result=demos.filter(d=>d.estado==='cancelada'&&(d.descartada||d.outcome==='cerrado_perdido'));break;
     case'viejas':{
       // Follow up: executed demos with pending outcome, 7+ days after the demo date, not snoozed
@@ -5582,9 +5586,51 @@ function colaFollow(){
     (d.fecha||'')<=cutStr&&(!d.seguimiento_aplazado_hasta||d.seguimiento_aplazado_hasta<=today))
     .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 }
+// Canceladas "que estoy trabajando": el SDR pide que se la recordemos en X días.
+// Hasta esa fecha sale de "Por reagendar" y no cuenta como pendiente; ese día vuelve sola.
+// Se guarda en seguimiento_aplazado_hasta (en una cancelada no se usa para nada más).
+function canceladaViva(d){return d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido';}
+function canceladaTrabajando(d,hoy=todayStr()){return canceladaViva(d)&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>hoy;}
+function canceladaPorReagendar(d,hoy=todayStr()){return canceladaViva(d)&&!canceladaTrabajando(d,hoy);}
 function colaReagendar(){
-  return demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido')
+  return demos.filter(d=>canceladaPorReagendar(d))
     .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+}
+function colaTrabajando(){
+  return demos.filter(d=>canceladaTrabajando(d))
+    .sort((a,b)=>(a.seguimiento_aplazado_hasta||'').localeCompare(b.seguimiento_aplazado_hasta||''));
+}
+const TRABAJAR_OPCIONES=[['3','3 días'],['7','7 días'],['15','15 días'],['1m','1 mes']];
+function fechaTrabajar(v){
+  if(v==='1m')return addMonthsStr(1);
+  const d=new Date();d.setDate(d.getDate()+Number(v));return localDateStr(d);
+}
+function trabajarSelectHtml(onchange){
+  return`<select class="pd-btn warn pd-trab" onchange="${onchange}" title="Sigues detrás de esta demo: desaparece de pendientes y vuelve sola ese día">
+      <option value="">⏳ La estoy trabajando…</option>
+      ${TRABAJAR_OPCIONES.map(o=>`<option value="${o[0]}">Recuérdame en ${o[1]}</option>`).join('')}
+    </select>`;
+}
+async function trabajarCancelada(id,v){
+  if(!v)return;
+  const fecha=fechaTrabajar(v);
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
+    showToast('⏳ Te la recordamos el '+fmtDate(fecha));
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+async function volverAReagendar(id){
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:null})});
+    showToast('🔄 De vuelta en Por reagendar');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
+function bulkTrabajar(v){
+  if(!v)return;
+  const fecha=fechaTrabajar(v);
+  bulkPatch({seguimiento_aplazado_hasta:fecha},'canceladas para recordar el '+fmtDate(fecha));
 }
 function diasDesde(fecha){
   if(!fecha)return 0;
@@ -5915,7 +5961,8 @@ function renderBulkBar(){
       <button class="pd-btn" onclick="bulkSnooze(3)">⏰ +3 días</button>
       <button class="pd-btn" onclick="bulkSnooze(7)">⏰ +1 semana</button>`;
   }else{
-    acts=`<button class="pd-btn danger" onclick="bulkDescartar()">🗑️ Descartar</button>`;
+    acts=`${trabajarSelectHtml('bulkTrabajar(this.value)')}
+      <button class="pd-btn danger" onclick="bulkDescartar()">🗑️ Descartar</button>`;
   }
   bar.innerHTML=`${txt}<div class="pd-actions">${acts}</div><button class="pd-bulk-clear" onclick="clearPendSel()" title="Quitar selección">✕</button>`;
 }
@@ -5989,7 +6036,7 @@ function renderPendientes(){
   }
   if(!items.length){
     const e=empties[pendQueue];
-    listEl.innerHTML=`<div class="pd-empty"><div class="pd-empty-icon">${e[0]}</div><div class="pd-empty-title">${e[1]}</div><div class="pd-empty-text">${e[2]}</div></div>`;
+    listEl.innerHTML=`<div class="pd-empty"><div class="pd-empty-icon">${e[0]}</div><div class="pd-empty-title">${e[1]}</div><div class="pd-empty-text">${e[2]}</div></div>`+(pendQueue==='reag'?trabajandoHtml():'');
     pendSel.clear();renderBulkBar();
     return;
   }
@@ -6001,7 +6048,7 @@ function renderPendientes(){
   }else if(pendQueue==='follow'){
     html+=`<div class="pd-intro">Demos con interés que llevan una semana o más sin decisión. Llama, y luego marca el resultado o pospón el recordatorio.</div>`;
   }else{
-    html+=`<div class="pd-intro">Demos canceladas (también las que no se presentaron). Recupéralas con una nueva fecha o descártalas si no hay nada que hacer.</div>`;
+    html+=`<div class="pd-intro">Demos canceladas (también las que no se presentaron). Recupéralas con una nueva fecha, descártalas si no hay nada que hacer o, si sigues detrás, pulsa <b>⏳ La estoy trabajando</b> y te la recordamos en 3, 7, 15 días o 1 mes.</div>`;
   }
   html+=`<label class="pd-selectall"><input type="checkbox" id="pd-select-all" onchange="selectAllPend()"/> Seleccionar todas (${items.length})</label>`;
   // Agrupado por fecha de la demo: en "Por cerrar" los días recientes van aparte; lo demás, por meses
@@ -6022,8 +6069,33 @@ function renderPendientes(){
     html+=pendCardHtml(d,pendQueue);
   });
   if(items.length>PEND_LIMIT)html+=`<button class="pd-more" onclick="togglePendShowAll('${pendQueue}')">${pendShowAll[pendQueue]?'▴ Ver menos':'▾ Ver las '+items.length}</button>`;
+  if(pendQueue==='reag')html+=trabajandoHtml();
   listEl.innerHTML=html;
   syncPendSelUI();
+}
+// Canceladas aparcadas con "La estoy trabajando": se listan aparte, debajo de Por reagendar
+let trabajandoOpen=false;
+function trabajandoHtml(){
+  const lista=applyPendFilter(colaTrabajando());
+  if(!lista.length)return'';
+  let h=`<button class="pd-group pd-trab-head" onclick="trabajandoOpen=!trabajandoOpen;renderPendientes()">${trabajandoOpen?'▾':'▸'} ⏳ Las estás trabajando · ${lista.length}<span class="pd-trab-sub">vuelven solas a esta lista el día del recordatorio</span></button>`;
+  if(!trabajandoOpen)return h;
+  lista.forEach(d=>{
+    const n=diasDesde(d.seguimiento_aplazado_hasta)*-1;
+    h+=`<div class="pd-card pd-card-trab">
+      <div class="pd-row">
+        <div class="pd-when">⏳ ${fmtDate(d.seguimiento_aplazado_hasta)}<small>${n===1?'mañana':`en ${n} días`}</small></div>
+        <div class="pd-info"><div class="pd-name">${demoNameHtml(d)}</div><div class="pd-meta">${demoMetaHtml(d)} · cancelada ${fmtDate(d.fecha)}${d.motivo?' · '+escHtml(motivoLabel(d.motivo)):''}</div></div>
+        <div class="pd-actions">
+          <button class="pd-btn ok" onclick="openReagendarModal(${d.id})">🔄 Reagendar</button>
+          ${trabajarSelectHtml(`trabajarCancelada(${d.id},this.value)`).replace('⏳ La estoy trabajando…','⏳ Cambiar recordatorio…')}
+          <button class="pd-btn ghost" onclick="volverAReagendar(${d.id})" title="Quitar el recordatorio y devolverla ya a Por reagendar">↩ Ya</button>
+          <button class="pd-btn ghost" onclick="descartarDemo(${d.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  return h;
 }
 function pendCardHtml(d,q){
   const n=diasDesde(d.fecha);
@@ -6044,9 +6116,11 @@ function pendCardHtml(d,q){
         <button class="pd-btn ghost" onclick="openAplazarModal(${d.id})" title="Elige el día exacto (p. ej. 'llámame en 5 meses')">📅 Fecha concreta</button>
       </div>`;
   }else{
-    when=`<div class="pd-when">${fmtDate(d.fecha)}<small>${d.motivo?escHtml(motivoLabel(d.motivo)):'Cancelada'}</small></div>`;
+    const vuelve=d.seguimiento_aplazado_hasta?`<small>recordatorio ${fmtDate(d.seguimiento_aplazado_hasta)}</small>`:'';
+    when=`<div class="pd-when">${fmtDate(d.fecha)}<small>${d.motivo?escHtml(motivoLabel(d.motivo)):'Cancelada'}</small>${vuelve}</div>`;
     actions=`<div class="pd-actions">
         <button class="pd-btn ok" onclick="openReagendarModal(${d.id})">🔄 Reagendar</button>
+        ${trabajarSelectHtml(`trabajarCancelada(${d.id},this.value)`)}
         <button class="pd-btn ghost" onclick="descartarDemo(${d.id})">🗑️ Descartar</button>
       </div>`;
   }
@@ -6518,7 +6592,7 @@ function renderProyeccion(actualOut,objOut,actualIn,objIn){
     return;
   }
 
-  const canceladas=demos.filter(d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido').length;
+  const canceladas=demos.filter(d=>canceladaPorReagendar(d)).length;
 
   const makeCard=(canal,emoji,actual,obj)=>{
     const ritmo=wElapsed>0?actual/wElapsed:0;
@@ -6831,7 +6905,8 @@ async function confirmReagendar(){
       estado:'agendada',
       outcome:null,
       descartada:false,
-      confirmada_at:null
+      confirmada_at:null,
+      ...(demos.find(x=>x.id==id)?.estado==='cancelada'?{seguimiento_aplazado_hasta:null}:{})
     })});
     showToast('✓ Demo reagendada para '+fmtDate(fechaTrim)+(horaVal?' a las '+horaVal:''));
     closeReagendarModal();
@@ -6878,6 +6953,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
       ${isReagendar
         ?`<div style="display:flex;flex-direction:column;gap:6px;">
             <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="reagendar(${d.id})">🔄 Reagendar</button>
+            ${trabajarSelectHtml(`trabajarCancelada(${d.id},this.value)`)}
             <button class="btn-ghost-red" onclick="descartarDemo(${d.id})">🗑️ Descartar</button>
           </div>`
         :!searchMode&&currentView==='viejas'
@@ -6957,7 +7033,7 @@ async function renderSdrMetricsInline(){
   try{
     allSdrUsers=(await sb(`sdr_users?rol=eq.sdr&activo=eq.true&es_prueba=is.false&select=id,nombre,fecha_alta&order=nombre.asc`)||[]).filter(s=>sdrActivoEnMes(s,end));
     allLlamadasData=await sb(`llamadas?mes=eq.${m.getMonth()+1}&anio=eq.${m.getFullYear()}&select=*`)||[];
-    allDemosData=await sinUsuariosDePrueba(await sbAll(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma&order=id.asc`));
+    allDemosData=await sinUsuariosDePrueba(await sbAll(`demos?select=id,sdr_id,canal,estado,outcome,fecha,created_at,fecha_agendamiento,descartada,fecha_firma,seguimiento_aplazado_hasta&order=id.asc`));
   }catch(e){panel.innerHTML='<div style="padding:20px;color:var(--red);text-align:center;">Error cargando métricas</div>';return;}
 
   const pill=(val,green,yellow)=>{
