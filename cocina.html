@@ -505,6 +505,7 @@ textarea.inp{resize:vertical;min-height:70px;font-family:inherit;}
 .rt-li .meta{margin-left:auto;color:var(--ink-3);font-size:11px;white-space:nowrap;}
 .rt-more{background:none;border:none;color:var(--amber);font-size:12px;font-weight:600;text-align:left;padding:0;}
 .back{align-self:flex-start;background:none;border:none;color:var(--ink-2);font-size:12.5px;padding:0;}
+.back.back-list{color:var(--teal-lt);font-weight:700;font-size:13px;}
 .back:hover{color:var(--lime);}
 .note-demo{font-size:11.5px;color:var(--amber);}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -1669,7 +1670,8 @@ function openDrawer(kicker,title,html){
   drawer.classList.add('open');drBg.classList.add('open');drawer.setAttribute('aria-hidden','false');
   setTimeout(()=>document.getElementById('dr-close').focus(),50);
 }
-function closeDrawer(){drawer.classList.remove('open');drBg.classList.remove('open');drawer.setAttribute('aria-hidden','true');drawerCtx=null;}
+function closeDrawer(){drawer.classList.remove('open');drBg.classList.remove('open');drawer.setAttribute('aria-hidden','true');drawerCtx=null;
+  if(refreshPending)setTimeout(()=>autoRefresh(),1500);}
 document.getElementById('dr-close').onclick=closeDrawer;drBg.onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();document.getElementById('promo').hidden=true;}});
 
@@ -1716,6 +1718,11 @@ function segHint(f){
   if(!f)return'Elige una fecha.';
   const n=daysBetween(today(),f);
   return`Te la sacamos de la cámara hasta el <b>${fmt(f)}</b> (${n<60?`dentro de ${n} día${n===1?'':'s'}`:`dentro de unos ${Math.round(n/30.4)} meses`}). Ese día vuelve para que le llames.`;
+}
+function comHint(f){
+  if(!f)return'Elige una fecha.';
+  const n=daysBetween(today(),f);
+  return`Vuelve a la cámara el <b>${fmt(f)}</b> (${n<60?`dentro de ${n} día${n===1?'':'s'}`:`dentro de unos ${Math.round(n/30.4)} meses`}).`;
 }
 // Oportunidades para retomar: interesados (o necesita seguimiento) sin tocar 2+ meses.
 // 3–5 al azar, fijas durante el día (cambian con 🔀).
@@ -1784,6 +1791,8 @@ function demoSheet(d,view='main'){
   const hija=tieneHija(d)?hijaDe(d):null;
   if(hija)facts.push(['Nueva demo',`${fmt(hija.fecha)}${hija.hora?' · '+hija.hora.slice(0,5):''} · ${hija.estado}`]);
   let h='';
+  const vuelta=drawerCtx&&drawerCtx.id==d.id&&drawerCtx.backZone;
+  if(vuelta&&view==='main')h+=`<button class="back back-list" data-act="back-list">← Volver a ${esc(backLabel(vuelta))}</button>`;
   if(place==='vertedero'&&view==='main'){
     const why=zone==='marcar'?`Lleva ${staleDays(d,zone)} días en el pase sin que digas qué pasó.`:zone==='seguimiento'?`El seguimiento venció hace ${staleDays(d,zone)} días.`:`Devuelto hace ${staleDays(d,zone)} días y nadie lo ha rescatado.`;
     h+=`<div class="alertbox rot"><b>Está en el friegue.</b> ${esc(why)} Gestiónalo y ganas +10 XP extra.</div>`;
@@ -1815,6 +1824,18 @@ function demoSheet(d,view='main'){
       <div class="msg" id="seg-hint">${segHint(val)}</div>
       <div class="alertbox sf-tip">📝 Apúntalo también en Salesforce: una <b>tarea</b> para ese día o una <b>nota</b> en la oportunidad.</div>
       <button class="btn primary" data-act="do-fecha" style="padding:10px;">Guardar hasta esa fecha ${xpLbl('aplazar',d)?'· '+xpLbl('aplazar',d):''}</button>`;
+    return h;
+  }
+  if(view==='comercial'){
+    const com=comName(d.comercial_id),def=ds(addDays(7));
+    h+=`<button class="back" data-act="back">← Volver</button><div class="act-title">YA HABLADO CON EL COMERCIAL</div>
+      <div class="msg">Ahora depende de ${com==='—'?'el comercial':`<b>${esc(com)}</b>`}: sale de la cámara y te la recordamos el día que elijas para pedirle el feedback.</div>
+      <div class="fq">${TRABAJAR_OPC.map(o=>`<button class="btn" data-act="cq:${o[0]}">${o[1]}</button>`).join('')}</div>
+      <div class="row-inp"><input type="date" class="inp" id="inp-com" value="${def}" min="${ds(addDays(1))}"></div>
+      <div class="msg" id="com-hint">${comHint(def)}</div>
+      <div class="fld"><label for="inp-com-nota" style="font-size:12px;color:var(--ink-3)">¿Qué te ha dicho? (opcional, se guarda en las notas)</label>
+      <textarea class="inp full" id="inp-com-nota" rows="2" placeholder="Ej.: le llama él el jueves, está esperando al socio…"></textarea></div>
+      <button class="btn primary" data-act="do-comercial" style="padding:10px;">Recordármela ese día ${xpLbl('aplazar',d)?'· '+xpLbl('aplazar',d):''}</button>`;
     return h;
   }
   if(view==='nuevademo'){
@@ -1862,6 +1883,7 @@ function demoSheet(d,view='main'){
        act('ganado','Cerrado ganado','Se sirve en el comedor',xpLbl('ganado',d),'good','var(--gold)')+
        act('nuevademo','Nueva demo agendada','Hay que hacer otra demo: nueva comanda al rail','','good','var(--teal-lt)')+
        act('perdido','Cerrado perdido','Al cubo, con motivo',xpLbl('perdido',d),'bad','var(--red)')+
+       act('comercial','Ya hablado con el comercial','Depende de él: recuérdamela en unos días',xpLbl('aplazar',d),'','var(--steel)')+
        act('aplazar:7','Sigue con interés · recordar en 7 días','Sale de la cámara hasta entonces',xpLbl('aplazar',d),'','var(--blue)')+
        act('aplazar:14','Recordar en 14 días','',xpLbl('aplazar',d),'','var(--blue)')+
        act('fecha','Recordar en una fecha concreta','«Llámame en 5 meses»: eliges el día exacto',xpLbl('aplazar',d),'','var(--frost)')+`</div>`;
@@ -1883,6 +1905,7 @@ function demoSheet(d,view='main'){
     h+=`<div class="acts">`+
        (hija?'':act('nuevademo','Nueva demo agendada','Hay que hacer otra demo: nueva comanda al rail','','good','var(--teal-lt)'))+
        act('fecha',d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today()?'Cambiar la fecha del seguimiento':'Seguimiento en una fecha concreta','«Llámame en 5 meses»: eliges el día exacto','','','var(--frost)')+
+       (hija?'':act('comercial','Ya hablado con el comercial','Depende de él: recuérdamela en unos días','','','var(--steel)'))+
        act('ganado','Cerrado ganado','Se sirve en el comedor',xpLbl('ganado',d),'good','var(--gold)')+
        act('perdido','Cerrado perdido','Al cubo, con motivo',xpLbl('perdido',d),'bad','var(--red)')+`</div>`;
   }else if(zone==='ventas'){
@@ -1890,13 +1913,17 @@ function demoSheet(d,view='main'){
   }else{
     h+=`<div style="font-size:13px;color:var(--ink-2)">Esta demo no necesita nada ahora mismo.</div>`;
   }
+  // Ficha completa, igual que el panel del SDR Hub: comercial, presencial/online, estado, resultado…
+  if(canEdit()&&!['nuevas','agenda','hoy'].includes(zone))
+    h+=`<div class="act-group"><div class="act-sub">OTROS CAMBIOS</div><div class="acts">`+
+       act('editar','Editar o reactivar','Comercial, presencial/online, estado, resultado, notas…','','','var(--steel)')+`</div></div>`;
   if(MODE==='real'&&viewId)h+=`<div class="note-demo">Vista espejo de la cocina de ${esc(viewName)}: los cambios solo se ven aquí y no se guardan.</div>`;
   else if(MODE==='real')h+=`<div style="font-size:11.5px;color:var(--ink-3)">Los cambios se guardan en el SDR Hub, igual que si los hicieras allí.</div>`;
   else h+=`<div class="note-demo">Modo de prueba: los cambios solo existen en esta pestaña.</div>`;
   return h;
 }
 
-async function openDemo(id,fromEl){
+async function openDemo(id,fromEl,backZone=null){
   const d=demos.find(x=>x.id==id);if(!d)return;
   hideTip();
   if(fromEl&&world.contains(fromEl)){
@@ -1918,15 +1945,18 @@ async function openDemo(id,fromEl){
     fromEl=world.querySelector(`.it[data-id="${d.id}"]`);
     toast(`Comanda colgada en el rail · +${gain} XP`);
   }
-  drawerCtx={id:d.id,el:fromEl};
+  drawerCtx={id:d.id,el:fromEl,backZone};
   openDrawer(ZONE_NAME[placeOf(d)]||'',d.sf_nombre||'Demo sin nombre',demoSheet(d));
 }
+// Volver a la lista (o al inspector) desde la que se abrió una comanda
+const backLabel=z=>z==='inspector'?'la inspección':(ZONE_NAME[z]||'la lista').split(' · ')[0].toLowerCase();
+function goBackTo(z){if(!z)return;if(z==='inspector')openInspector();else openZoneList(z,true);}
 
-function openZoneList(zone){
+function openZoneList(zone,quieto=false){
   if(!Z)return;
   hideTip();
   const b=zoneBox(zone);
-  walkTo({x:b.x+Math.min(b.w-30,90),y:b.y+b.h-24});
+  if(!quieto)walkTo({x:b.x+Math.min(b.w-30,90),y:b.y+b.h-24});
   if(zone==='office'){openCalls();return;}
   drawerCtx={zone};
   const list=Z[zone]||[];
@@ -2001,14 +2031,18 @@ drBody.addEventListener('click',async e=>{
   const li=e.target.closest('.li');
   if(li){
     if(li.dataset.zone){openZoneList(li.dataset.zone);return;}
-    const el=world.querySelector(`.it[data-id="${li.dataset.id}"]`);openDemo(li.dataset.id,el);return;
+    const el=world.querySelector(`.it[data-id="${li.dataset.id}"]`);
+    const desde=drawerCtx&&drawerCtx.zone&&drawerCtx.zone!=='office'?drawerCtx.zone:null;
+    openDemo(li.dataset.id,el,desde);return;
   }
   const b=e.target.closest('[data-act]');if(!b||!drawerCtx||!drawerCtx.id)return;
   const d=demos.find(x=>x.id==drawerCtx.id);if(!d)return;
   const a=b.dataset.act;
   const show=v=>{drBody.innerHTML=demoSheet(d,v);};
   if(a==='back')return show('main');
-  if(['perdido','cancelar','ganado','reagendar','fecha','nuevademo'].includes(a))return show(a);
+  if(a==='back-list'){goBackTo(drawerCtx.backZone);return;}
+  if(['perdido','cancelar','ganado','reagendar','fecha','nuevademo','comercial'].includes(a))return show(a);
+  if(a.startsWith('cq:')){const f=fechaTrabajar(a.slice(3)),i=document.getElementById('inp-com');if(i){i.value=f;document.getElementById('com-hint').innerHTML=comHint(f);}return;}
   if(a==='do-nuevademo'){crearNuevaDemo(d,b);return;}
   if(a.startsWith('fq:')){const f=addMonthsDs(+a.slice(3)),i=document.getElementById('inp-seg');if(i){i.value=f;document.getElementById('seg-hint').innerHTML=segHint(f);}return;}
   if(a==='editar'){openDemoForm(d);return;}
@@ -2032,6 +2066,14 @@ drBody.addEventListener('click',async e=>{
     const f=document.getElementById('inp-seg').value;
     if(!f||f<=today()){toast('Elige una fecha a partir de mañana','warn');return;}
     patch={seguimiento_aplazado_hasta:f};key='aplazar';text=`Seguimiento el ${fmt(f)}: ${nm}`;
+  }else if(a==='do-comercial'){
+    const f=document.getElementById('inp-com').value;
+    if(!f||f<=today()){toast('Elige una fecha a partir de mañana','warn');return;}
+    const dicho=(document.getElementById('inp-com-nota').value||'').trim().replace(/\s+/g,' ');
+    const com=comName(d.comercial_id);
+    const linea=`[${fmt(today())}] Hablado con ${com==='—'?'el comercial':com}${dicho?': '+dicho:''} · recordar el ${fmt(f)}`;
+    patch={seguimiento_aplazado_hasta:f,notas:d.notas?`${d.notas}\n${linea}`:linea};
+    key='aplazar';text=`Hablado con el comercial, vuelve el ${fmt(f)}: ${nm}`;
   }else if(a==='do-reagendar'){
     const f=document.getElementById('inp-fecha').value,hr=document.getElementById('inp-hora').value;
     if(!f){toast('Elige una fecha','warn');return;}
@@ -2067,7 +2109,7 @@ drBody.addEventListener('click',async e=>{
     drawerCtx={id:d.id,el};drBody.innerHTML=demoSheet(d);
     toast(gain?`${text} · +${gain} XP`:text);return;
   }
-  const fromEl=drawerCtx.el||world.querySelector(`.it[data-id="${d.id}"]`);
+  const fromEl=drawerCtx.el||world.querySelector(`.it[data-id="${d.id}"]`),volver=drawerCtx.backZone;
   closeDrawer();
   await flyBox(fromEl,zoneOf(d),d);
   renderWorld();
@@ -2077,12 +2119,16 @@ drBody.addEventListener('click',async e=>{
   saveGame();renderDash();
   popXP(at,gain,gain>=100);
   toast(gain?`${text} · +${gain} XP`:text);
+  if(volver&&!drawer.classList.contains('open'))setTimeout(()=>{if(!drawer.classList.contains('open'))goBackTo(volver);},700);
   const antiguo=wasZone==='seguimiento'||(wasZone==='reposo'&&ageDays(d)>=7);
   if(antiguo&&key==='aplazar')setTimeout(()=>sfNudge(d,patch.seguimiento_aplazado_hasta?`Crea una tarea en Salesforce para el ${fmt(patch.seguimiento_aplazado_hasta)} o deja una nota en la oportunidad con lo que has hablado.`:'Deja una nota en la oportunidad con lo que has hablado.'),900);
   else if(antiguo&&(key==='ganado'||key==='perdido'))setTimeout(()=>sfNudge(d,key==='ganado'?'Comprueba que la oportunidad está actualizada en Salesforce y deja una nota del cierre.':'Cierra también la oportunidad en Salesforce o deja una nota con el motivo.'),900);
 });
 
-drBody.addEventListener('input',e=>{if(e.target.id==='inp-seg'){const h=document.getElementById('seg-hint');if(h)h.innerHTML=segHint(e.target.value);}});
+drBody.addEventListener('input',e=>{
+  if(e.target.id==='inp-seg'){const h=document.getElementById('seg-hint');if(h)h.innerHTML=segHint(e.target.value);}
+  if(e.target.id==='inp-com'){const h=document.getElementById('com-hint');if(h)h.innerHTML=comHint(e.target.value);}
+});
 
 // Clicks en el mundo
 world.addEventListener('click',e=>{
@@ -2244,7 +2290,7 @@ function openDemoForm(d=null){
   const coms=comercialesActivos.length?comercialesActivos:comerciales;
   const hora=d&&d.hora?d.hora.slice(0,5):'';
   const tipo=d?.tipo||'presencial',canal=d?.canal||'outbound';
-  drawerCtx={form:true,editId:d?d.id:null};
+  drawerCtx={form:true,editId:d?d.id:null,backZone:d&&drawerCtx?drawerCtx.backZone:null};
   openDrawer(d?'Editar comanda':'Nueva comanda',d?(d.sf_nombre||'Demo'):'Agendar una demo',`
   <form class="form" id="demo-form" autocomplete="off">
     <div class="fld"><label for="f-url">Enlace de Salesforce</label>
@@ -2271,6 +2317,13 @@ function openDemoForm(d=null){
       <div class="fld"><label for="f-tel">Teléfono</label><input class="inp" id="f-tel" inputmode="tel" value="${esc(d?.telefono||'')}"></div>
       <div class="fld"><label for="f-ag">Agendada el</label><input type="date" class="inp" id="f-ag" value="${d?.fecha_agendamiento||today()}" max="${today()}"></div>
     </div>
+    ${d?`<div class="frow">
+      <div class="fld"><label for="f-estado">Estado</label><select class="inp" id="f-estado">${[['agendada','Agendada'],['ejecutada','Ejecutada'],['cancelada','Cancelada']].map(o=>`<option value="${o[0]}"${(d.estado==='reagendada'?'agendada':d.estado||'agendada')===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+      <div class="fld"><label for="f-outcome">Resultado</label><select class="inp" id="f-outcome"><option value="">Sin definir</option>${Object.entries(OUTCOME_LABEL).map(([k,v])=>`<option value="${k}"${d.outcome===k?' selected':''}>${v}</option>`).join('')}</select></div>
+    </div>
+    <div class="fld" id="f-motivo-wrap" hidden><label for="f-motivo" id="f-motivo-lbl">Motivo</label><select class="inp full" id="f-motivo"></select></div>
+    <div class="fld" id="f-firma-wrap" hidden><label for="f-firma">Fecha de la firma</label><input type="date" class="inp" id="f-firma" value="${d.fecha_firma||today()}" max="${today()}"></div>
+    <div class="hint">Para reactivar una oportunidad cambia el estado o el resultado (por ejemplo, de cerrado perdido a interesado).</div>`:''}
     <div class="fld"><label for="f-notas">Notas</label><textarea class="inp full" id="f-notas">${esc(d?.notas||'')}</textarea></div>
     <button class="btn primary" type="submit" style="padding:12px;font-size:14px;">${d?'Guardar cambios':'¡Marchando! Crear comanda'}</button>
     ${MODE==='demo'?'<div class="note-demo">Modo de prueba: la comanda solo existe en esta pestaña.</div>':'<div style="font-size:11.5px;color:var(--ink-3)">Se guarda en el SDR Hub igual que si la crearas allí.</div>'}
@@ -2291,7 +2344,27 @@ function openDemoForm(d=null){
   nomEl.addEventListener('input',()=>{nomEl.dataset.touched='1';check();});
   document.getElementById('f-canal').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#f-canal button').forEach(x=>x.classList.toggle('on',x===b));});
   document.getElementById('f-tipo').addEventListener('change',e=>{document.getElementById('f-plat-wrap').hidden=e.target.value!=='online';});
-  if(d)check();
+  if(d){
+    // Mismo comportamiento que el SDR Hub: sin resultado mientras está agendada;
+    // motivo si se cancela o se pierde; fecha de firma si se gana.
+    const est=document.getElementById('f-estado'),out=document.getElementById('f-outcome'),mot=document.getElementById('f-motivo');
+    const sync=()=>{
+      const lock=est.value==='agendada';
+      if(lock)out.value='';
+      out.disabled=lock;
+      const opts=est.value==='cancelada'?MOTIVOS_CANCELADA:out.value==='cerrado_perdido'?MOTIVOS_PERDIDA:null;
+      document.getElementById('f-motivo-wrap').hidden=!opts;
+      if(opts){
+        const prev=mot.value||d.motivo||'';
+        document.getElementById('f-motivo-lbl').textContent=est.value==='cancelada'?'Motivo de la cancelación':'Motivo de la pérdida';
+        mot.innerHTML='<option value="">Selecciona un motivo…</option>'+opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
+        if(opts.some(o=>o[0]===prev))mot.value=prev;
+      }
+      document.getElementById('f-firma-wrap').hidden=out.value!=='cerrado_ganado';
+    };
+    est.addEventListener('change',sync);out.addEventListener('change',sync);sync();
+    check();
+  }
   f.addEventListener('submit',e=>{e.preventDefault();saveDemoForm(d);});
   setTimeout(()=>urlEl.focus(),80);
 }
@@ -2342,13 +2415,28 @@ async function saveDemoForm(d){
     canal:document.querySelector('#f-canal .on')?.dataset.v||'outbound',
     notas:document.getElementById('f-notas').value||null
   };
+  if(d){
+    const estado=document.getElementById('f-estado').value||'agendada';
+    const outcome=estado==='agendada'?null:(document.getElementById('f-outcome').value||null);
+    if(estado==='ejecutada'&&fecha>today()){toast('Una demo de un día futuro no puede estar ejecutada','warn');return;}
+    Object.assign(payload,{
+      estado,outcome,
+      fecha_firma:outcome==='cerrado_ganado'?(document.getElementById('f-firma').value||today()):null,
+      motivo:(estado==='cancelada'||outcome==='cerrado_perdido')?(document.getElementById('f-motivo').value||null):null
+    });
+    if(estado!=='cancelada')payload.descartada=false;
+  }
   const btn=document.querySelector('#demo-form [type=submit]');btn.disabled=true;
   try{
     if(d){
-      if(MODE==='real')await sb(`demos?id=eq.${d.id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      const before=XP,fromZone=d._zone,back=drawerCtx&&drawerCtx.backZone;
+      if(MODE==='real'&&!viewId)await sb(`demos?id=eq.${d.id}`,{method:'PATCH',body:JSON.stringify(payload)});
       Object.assign(d,payload);
-      closeDrawer();renderWorld();toast('Comanda actualizada');
-      logLine('Datos editados: '+shortName(d),0,['editar']);saveGame();renderDash();
+      closeDrawer();renderWorld();
+      const gain=XP-before,cambio=zoneOf(d)!==fromZone;
+      logLine('Datos editados: '+shortName(d),gain,['editar']);saveGame();renderDash();
+      toast(cambio?`Comanda actualizada · ahora en ${ZONE_NAME[placeOf(d)]||'otra zona'}`:'Comanda actualizada');
+      if(back)setTimeout(()=>openZoneList(back),350);
       return;
     }
     const nueva={sdr_id:currentUser.id,estado:'agendada',outcome:null,fecha_firma:null,motivo:null,...payload};
@@ -3150,7 +3238,7 @@ async function enter(mode){
   if(mode==='demo'){currentUser={id:0,nombre:'SDR de prueba'};loadGame();demos=demoData();}
   else{
     if(currentUser.rol==='manager'){MODE=null;return enterManager(false);}
-    try{await loadReal();}catch(e){console.error(e);document.getElementById('login-err').textContent='No se pudieron cargar tus demos. Vuelve a entrar.';return;}
+    try{await loadReal();lastRefresh=Date.now();}catch(e){console.error(e);document.getElementById('login-err').textContent='No se pudieron cargar tus demos. Vuelve a entrar.';return;}
     loadGame();
     await syncExtras();
   }
@@ -3198,6 +3286,36 @@ document.getElementById('btn-refresh').onclick=async()=>{
   else{loadGame();game={unboxed:{},extras:[],log:[],missions:{},seen:{}};saveGame();demos=demoData();toast('Datos de ejemplo reiniciados');}
   renderWorld();
 };
+
+// ═══════════════════════════════════════════════════════════════
+// Sincronización con el SDR Hub: lo que se trabaja en el Hub (u otra pestaña)
+// aparece aquí sin tener que pulsar recargar. Se vuelve a leer al volver a la
+// pestaña, al regresar con «atrás» y cada 2 minutos mientras está visible.
+// Con el panel abierto se espera a que se cierre para no mover nada debajo.
+// ═══════════════════════════════════════════════════════════════
+let refreshPending=false,refreshing=false,lastRefresh=0;
+const firmaDemos=()=>demos.map(d=>[d.id,d.estado,d.outcome,d.fecha,d.hora,d.seguimiento_aplazado_hasta,d.descartada,d.confirmada_at,d.comercial_id,d.tipo,d.fecha_firma,d.demo_padre_id,d.sf_nombre,d.notas].join('|')).join(';');
+async function autoRefresh(force=false){
+  if(MODE!=='real'||managerMode||viewId||!currentUser||document.hidden)return;
+  if(refreshing)return;
+  if(drawer.classList.contains('open')||inOffice||document.querySelector('.it.fly')){refreshPending=true;return;}
+  if(!force&&Date.now()-lastRefresh<20000)return;
+  refreshing=true;refreshPending=false;
+  try{
+    const antes=firmaDemos();
+    await loadReal();lastRefresh=Date.now();
+    if(firmaDemos()!==antes||drawer.classList.contains('open')){
+      renderWorld();
+      // Si se abrió el panel mientras llegaban los datos, que apunte a los platos nuevos
+      if(drawerCtx&&drawerCtx.id)drawerCtx.el=world.querySelector(`.it[data-id="${drawerCtx.id}"]`);
+    }
+  }catch(e){console.warn('No se pudo sincronizar con el Hub',e);}
+  finally{refreshing=false;}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoRefresh(true);});
+addEventListener('focus',()=>autoRefresh());
+addEventListener('pageshow',e=>{if(e.persisted)autoRefresh(true);});
+setInterval(()=>autoRefresh(true),120000);
 
 const pins=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id));
 pins.forEach((p,i)=>{
