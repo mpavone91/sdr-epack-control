@@ -3818,7 +3818,7 @@ function detectAlertas(){
   const cutoff2=new Date();cutoff2.setDate(cutoff2.getDate()-2);
   const cutoff2Str=localDateStr(cutoff2);
   allSdrs.forEach(s=>{
-    const sinActualizar=allDemos.filter(d=>d.sdr_id===s.id&&d.estado==='ejecutada'&&(d.fecha||'')<=cutoff2Str&&!d.outcome).length;
+    const sinActualizar=allDemos.filter(d=>d.sdr_id===s.id&&d.estado==='ejecutada'&&(d.fecha||'')<=cutoff2Str&&!d.outcome&&!esperandoComercial(d)).length;
     if(sinActualizar>=3){
       alertas.push({tipo:'info',icon:'📋',titulo:`${s.nombre}: ${sinActualizar} demos sin outcome (>2 días)`,desc:`Hay demos ejecutadas hace más de 2 días sin marcar como ganadas/perdidas. Recuérdale actualizarlas.`,action:{label:'Ver perfil',fn:`setMgrIndividualSdr(${s.id})`},priority:6});
     }
@@ -5386,6 +5386,8 @@ async function saveDemo(){
   };
   if(!payload.fecha){showToast('⚠️ Pon una fecha para la demo');return;}
   if(payload.estado==='agendada'){payload.outcome=null;payload.fecha_firma=null;}
+  {const prev=id?demos.find(x=>x.id==id):null;
+   if(prev&&((payload.estado==='cancelada'&&prev.estado!=='cancelada')||(prev.outcome&&!payload.outcome)||(esperandoComercial(prev)&&payload.outcome)))payload.seguimiento_aplazado_hasta=null;}
   if(payload.estado==='ejecutada'&&payload.fecha>todayStr()){showToast('⚠️ Una demo de un día futuro no puede estar ejecutada');return;}
   try{
     if(id){
@@ -5451,6 +5453,8 @@ async function applyMotivo(motivo){
   const antes=id?demos.find(d=>d.id===id):null,antigua=outcome==='cerrado_perdido'&&esSeguimientoAntiguo(antes);
   const patch={motivo:motivo||null};
   if(estado!==undefined)patch.estado=estado;
+  // Una cancelada nueva no arrastra recordatorios (si no, saldría como "la estoy trabajando")
+  if(estado==='cancelada')patch.seguimiento_aplazado_hasta=null;
   if(outcome!==undefined)patch.outcome=outcome;
   try{
     const filtro=ids?`id=in.(${ids.join(',')})`:`id=eq.${id}`;
@@ -5569,9 +5573,26 @@ function showPanel(p){
 
 // ══════════ COLAS DE PENDIENTES ══════════
 // Por cerrar: la demo ya pasó (30 min después de la hora) y no tiene resultado
+// Esperando al comercial: la demo ya pasó, no sabemos cómo fue y el SDR ya ha preguntado al
+// comercial. Sale de "Por cerrar" hasta seguimiento_aplazado_hasta y ese día vuelve sola.
+function esperandoComercial(d,hoy=todayStr()){
+  return d.estado!=='cancelada'&&d.estado!=='reagendada'&&!d.outcome&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>hoy;
+}
+function colaEsperando(){
+  return demos.filter(d=>esperandoComercial(d)&&(d.fecha||'')<=todayStr())
+    .sort((a,b)=>(a.seguimiento_aplazado_hasta||'').localeCompare(b.seguimiento_aplazado_hasta||''));
+}
+async function volverACierre(id){
+  try{
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:null})});
+    showToast('↩ De vuelta en Por cerrar');
+    await loadDemos();
+  }catch(e){showToast('❌ Error');console.error(e);}
+}
 function isPendingCierre(d,now=madridNow()){
   if(d.estado==='cancelada'||d.estado==='reagendada')return false;
   if(d.outcome||!d.fecha)return false;
+  if(esperandoComercial(d))return false;
   const today=todayStr();
   if(d.fecha<today)return true;
   if(d.fecha>today)return false;
@@ -5677,6 +5698,7 @@ function cierreActionsHtml(d){
       <button class="pd-btn ok${open?' open':''}" onclick="toggleOutcomeRow(${d.id})">✅ Sí</button>
       <button class="pd-btn" onclick="openReagendarModal(${d.id})">🔄 Reagendar</button>
       <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'cancelada',estado:'cancelada'})">✕ Cancelada</button>
+      <button class="pd-btn ghost" onclick="openComercialModal(${d.id},'cierre')" title="No sabes cómo fue: ya se lo has preguntado al comercial y te lo recordamos para pedirle el feedback">🤝 Preguntado al comercial</button>
     </div>`;
 }
 function outcomeRowHtml(d){
@@ -6084,8 +6106,33 @@ function renderPendientes(){
   });
   if(items.length>PEND_LIMIT)html+=`<button class="pd-more" onclick="togglePendShowAll('${pendQueue}')">${pendShowAll[pendQueue]?'▴ Ver menos':'▾ Ver las '+items.length}</button>`;
   if(pendQueue==='reag')html+=trabajandoHtml();
+  if(pendQueue==='cierre')html+=esperandoHtml();
   listEl.innerHTML=html;
   syncPendSelUI();
+}
+// Demos pasadas esperando el feedback del comercial: se listan aparte, debajo de Por cerrar
+let esperandoOpen=false;
+function esperandoHtml(){
+  const lista=applyPendFilter(colaEsperando());
+  if(!lista.length)return'';
+  let h=`<button class="pd-group pd-trab-head" onclick="esperandoOpen=!esperandoOpen;renderPendientes()">${esperandoOpen?'▾':'▸'} 🤝 Esperando al comercial · ${lista.length}<span class="pd-trab-sub">vuelven solas a esta lista el día del recordatorio</span></button>`;
+  if(!esperandoOpen)return h;
+  lista.forEach(d=>{
+    const n=diasDesde(d.seguimiento_aplazado_hasta)*-1;
+    h+=`<div class="pd-card pd-card-trab">
+      <div class="pd-row">
+        <div class="pd-when">🤝 ${fmtDate(d.seguimiento_aplazado_hasta)}<small>${n===1?'mañana':`en ${n} días`}</small></div>
+        <div class="pd-info"><div class="pd-name">${demoNameHtml(d)}</div><div class="pd-meta">${demoMetaHtml(d)} · demo ${fmtDate(d.fecha)}</div></div>
+        <div class="pd-actions">
+          <button class="pd-btn ok${outcomeRowsOpen.has(d.id)?' open':''}" onclick="toggleOutcomeRow(${d.id})">✅ Ya sé cómo fue</button>
+          <button class="pd-btn" onclick="openComercialModal(${d.id},'cierre')">🤝 Cambiar recordatorio</button>
+          <button class="pd-btn ghost" onclick="volverACierre(${d.id})" title="Quitar el recordatorio y devolverla ya a Por cerrar">↩ Ya</button>
+        </div>
+      </div>
+      ${outcomeRowHtml(d)}
+    </div>`;
+  });
+  return h;
 }
 // Canceladas aparcadas con "La estoy trabajando": se listan aparte, debajo de Por reagendar
 let trabajandoOpen=false;
@@ -6271,10 +6318,17 @@ function openAplazarModal(id,intro,modo=''){
 function closeAplazarModal(){document.getElementById('aplazar-modal').classList.remove('active');}
 // "Ya hablado con el comercial": ahora depende de él. Sale de Follow-ups hasta la fecha
 // elegida y deja una línea en las notas (igual que en la cocina).
-function openComercialModal(id){
+function openComercialModal(id,donde){
   const d=demos.find(x=>x.id===id);
-  const com=d?comercialName(d.comercial_id):'—';
-  openAplazarModal(id,`Ahora depende de ${com==='—'?'el comercial':com}: sale de tus Follow-ups y te la recordamos el día que elijas para pedirle el feedback.`,'comercial');
+  const com=d?comercialName(d.comercial_id):'—',quien=com==='—'?'el comercial':com;
+  openAplazarModal(id,donde==='cierre'
+    ?`¿No sabes cómo fue? Si ya se lo has preguntado a ${quien}, sale de Por cerrar y te la recordamos el día que elijas para pedirle el feedback.`
+    :`Ahora depende de ${quien}: sale de tus Follow-ups y te la recordamos el día que elijas para pedirle el feedback.`,'comercial');
+  if(donde==='cierre'){
+    document.getElementById('aplazar-title').textContent='🤝 Preguntado al comercial';
+    document.getElementById('aplazar-modo').value='comercial-cierre';
+    if(!(d&&d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>todayStr()))setAplazarQuick(3);
+  }
   document.getElementById('aplazar-cancel').textContent='Cancelar';
 }
 function setAplazarQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('aplazar-fecha').value=localDateStr(d);document.getElementById('aplazar-n-meses').value='';updateAplazarHint();}
@@ -6306,12 +6360,13 @@ async function confirmAplazar(){
   if(!fecha){showToast('⚠️ Selecciona una fecha');return;}
   if(fecha<=todayStr()){showToast('⚠️ Elige una fecha a partir de mañana');return;}
   const patch={seguimiento_aplazado_hasta:fecha};
-  const modoCom=document.getElementById('aplazar-modo').value==='comercial';
+  const modo=document.getElementById('aplazar-modo').value,modoCom=modo.startsWith('comercial');
   if(modoCom){
     const d=demos.find(x=>x.id===id);
     const com=d?comercialName(d.comercial_id):'—';
     const dicho=(document.getElementById('aplazar-nota').value||'').trim().replace(/\s+/g,' ');
-    const linea=`[${fmtDate(todayStr())}] Hablado con ${com==='—'?'el comercial':com}${dicho?': '+dicho:''} · recordar el ${fmtDate(fecha)}`;
+    const quien=com==='—'?'el comercial':com;
+    const linea=`[${fmtDate(todayStr())}] ${modo==='comercial-cierre'?`Preguntado a ${quien} cómo fue la demo`:`Hablado con ${quien}`}${dicho?': '+dicho:''} · recordar el ${fmtDate(fecha)}`;
     patch.notas=d&&d.notas?`${d.notas}\n${linea}`:linea;
   }
   try{
@@ -6823,6 +6878,8 @@ async function applyOutcome(outcome){
   // Resto: guardamos directamente como ejecutada
   try{
     const patch={estado:'ejecutada',outcome:outcome||null};
+    const prev=demos.find(x=>x.id==id);
+    if(prev&&esperandoComercial(prev))patch.seguimiento_aplazado_hasta=null;
     await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
     showToast(outcome==='necesita_seguimiento'
       ? '✓ Ejecutada · pasa a tus seguimientos pendientes'
@@ -6984,7 +7041,7 @@ async function confirmReagendar(){
       outcome:null,
       descartada:false,
       confirmada_at:null,
-      ...(demos.find(x=>x.id==id)?.estado==='cancelada'?{seguimiento_aplazado_hasta:null}:{})
+      seguimiento_aplazado_hasta:null
     })});
     showToast('✓ Demo reagendada para '+fmtDate(fechaTrim)+(horaVal?' a las '+horaVal:''));
     closeReagendarModal();

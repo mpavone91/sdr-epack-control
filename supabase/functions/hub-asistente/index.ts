@@ -226,7 +226,7 @@ demos: una fila por demo agendada.
 - estado: agendada (pendiente de hacerse), ejecutada (se hizo), cancelada, reagendada.
 - outcome (resultado tras hacerse): interesado, necesita_seguimiento, no_interesado, cerrado_ganado (firmada), cerrado_perdido (perdida). null = aún sin resultado.
 - confirmada_at: cuándo confirmó el cliente que asistirá (null = sin confirmar).
-- seguimiento_aplazado_hasta: el SDR pospuso el seguimiento hasta esa fecha. En una cancelada significa "la estoy trabajando, recuérdamela ese día" (sale de Por reagendar hasta entonces).
+- seguimiento_aplazado_hasta: el SDR pospuso el seguimiento hasta esa fecha. En una cancelada significa "la estoy trabajando, recuérdamela ese día" (sale de Por reagendar hasta entonces). En una demo pasada sin outcome significa "esperando al comercial" (sale de Por cerrar hasta entonces).
 - descartada: true si una cancelada se descartó (no se va a reagendar).
 - fecha_firma: fecha en que se firmó. motivo: motivo de cancelación o pérdida. notas: notas del SDR.
 - updated_at: última vez que se tocó la demo en el Hub (cualquier cambio). Solo se registra desde el 18-11-2026; para lo anterior se usa la fecha de la demo como última actividad.
@@ -238,7 +238,8 @@ vacaciones, comerciales, ciudades, comercial_ausencias, sdr_users (equipo), repo
 
 # Definiciones del Hub (úsalas tal cual)
 - Demos por confirmar: estado = agendada, fecha >= hoy, confirmada_at es null.
-- Por cerrar (pendientes de marcar si se hicieron): estado agendada o ejecutada sin outcome y fecha < hoy (las canceladas y reagendadas no cuentan).
+- Por cerrar (pendientes de marcar si se hicieron): estado agendada o ejecutada sin outcome y fecha < hoy (las canceladas y reagendadas no cuentan), salvo que seguimiento_aplazado_hasta sea posterior a hoy.
+- Esperando al comercial: demo pasada sin outcome con seguimiento_aplazado_hasta posterior a hoy. El SDR ya preguntó al comercial cómo fue; no cuenta como pendiente y ese día vuelve a Por cerrar.
 - Follow-ups pendientes: estado = ejecutada, outcome interesado o necesita_seguimiento, fecha de hace 7 días o más, seguimiento_aplazado_hasta null o <= hoy, y sin una nueva demo agendada (ninguna demo con demo_padre_id = su id).
 - Para reagendar: estado = cancelada, descartada no true, outcome distinto de cerrado_perdido, y seguimiento_aplazado_hasta null o <= hoy (si es posterior a hoy, el SDR la está trabajando y no cuenta como pendiente).
 - Oportunidades abiertas: estado = ejecutada y outcome interesado, necesita_seguimiento o null.
@@ -533,7 +534,8 @@ async function resumenPendientes(input: Fila, ctx: Ctx, hoy: string): Promise<st
     const porFecha = (a: Fila, b: Fila) => str(a.fecha).localeCompare(str(b.fecha)) || str(a.hora).localeCompare(str(b.hora));
     const demosHoy = ds.filter((r) => r.estado === "agendada" && str(r.fecha) === hoy).sort(porFecha);
     const porConfirmar = ds.filter((r) => r.estado === "agendada" && str(r.fecha) >= hoy && !r.confirmada_at).sort(porFecha);
-    const porCerrar = ds.filter((r) => r.estado !== "cancelada" && r.estado !== "reagendada" && !r.outcome && yaPaso(r)).sort(porFecha);
+    const porCerrar = ds.filter((r) => r.estado !== "cancelada" && r.estado !== "reagendada" && !r.outcome && yaPaso(r) &&
+      !(r.seguimiento_aplazado_hasta && str(r.seguimiento_aplazado_hasta) > hoy)).sort(porFecha);
     // Con una nueva demo agendada (hija con demo_padre_id) la oportunidad ya no necesita seguimiento
     const conHija = new Set(ds.map((r) => r.demo_padre_id).filter((v) => v !== null && v !== undefined).map(Number));
     const abiertas = ds.filter((r) => r.estado === "ejecutada" && (r.outcome === "interesado" || r.outcome === "necesita_seguimiento") && !conHija.has(Number(r.id)));

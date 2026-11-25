@@ -1014,6 +1014,10 @@ let PADRES=new Set();
 const calcPadres=()=>{PADRES=new Set(demos.filter(x=>x.demo_padre_id).map(x=>x.demo_padre_id));};
 const tieneHija=d=>PADRES.has(d.id);
 const hijaDe=d=>demos.filter(x=>x.demo_padre_id==d.id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))[0]||null;
+// Esperando al comercial: demo pasada sin resultado que el SDR ya ha preguntado al comercial.
+// Sale del pase hasta seguimiento_aplazado_hasta (mismo criterio que el SDR Hub).
+const sinResultado=d=>d.estado!=='cancelada'&&d.estado!=='reagendada'&&!d.outcome;
+const esperandoCom=d=>d.estado!=='cancelada'&&d.estado!=='reagendada'&&!d.outcome&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today();
 const canTrabajando=d=>d.estado==='cancelada'&&!d.descartada&&d.outcome!=='cerrado_perdido'&&!!d.seguimiento_aplazado_hasta&&d.seguimiento_aplazado_hasta>today();
 function zoneOf(d){
   const t=today();
@@ -1021,13 +1025,13 @@ function zoneOf(d){
   if(d.estado==='ejecutada'){
     if(d.outcome==='cerrado_ganado')return'ventas';
     if(d.outcome==='cerrado_perdido')return'papelera';
-    if(!d.outcome)return'marcar';
+    if(!d.outcome)return esperandoCom(d)?'reposo':'marcar';
     if(segVencido(d))return'seguimiento';
     return'reposo';
   }
   if(!ACTIVA(d))return'reposo';
   if(!d.fecha)return'agenda';
-  if(d.fecha<t||horaPasada(d))return'marcar';
+  if(d.fecha<t||horaPasada(d))return esperandoCom(d)?'reposo':'marcar';
   const ag=agendadoDate(d);
   if(d.fecha>t&&ag&&daysBetween(ag,t)<=2&&!game.unboxed[d.id])return'nuevas';
   if(d.fecha===t)return'hoy';
@@ -1683,11 +1687,11 @@ function act(id,label,sub,xp,cls='',color=''){
 // Qué cambia en la demo y qué extra se gana con cada acción (para enseñar la XP exacta antes de pulsar)
 function patchFor(a,d){
   switch(a){
-    case'interesado':case'necesita_seguimiento':return{estado:'ejecutada',outcome:a};
+    case'interesado':case'necesita_seguimiento':return{estado:'ejecutada',outcome:a,...(esperandoCom(d)?{seguimiento_aplazado_hasta:null}:{})};
     case'ganado':return{estado:'ejecutada',outcome:'cerrado_ganado',fecha_firma:today(),motivo:null};
     case'perdido':return{estado:'ejecutada',outcome:'cerrado_perdido'};
-    case'cancelar':return{estado:'cancelada'};
-    case'reagendar':return{fecha:ds(addDays(1)),estado:'agendada',outcome:null,descartada:false,confirmada_at:null,...(d.estado==='cancelada'?{seguimiento_aplazado_hasta:null}:{})};
+    case'cancelar':return{estado:'cancelada',seguimiento_aplazado_hasta:null};
+    case'reagendar':return{fecha:ds(addDays(1)),estado:'agendada',outcome:null,descartada:false,confirmada_at:null,seguimiento_aplazado_hasta:null};
     case'aplazar':return{seguimiento_aplazado_hasta:ds(addDays(7))};
     case'descartar':return{descartada:true};
     case'confirmar':return{confirmada_at:new Date().toISOString()};
@@ -1722,7 +1726,7 @@ function segHint(f){
 function comHint(f){
   if(!f)return'Elige una fecha.';
   const n=daysBetween(today(),f);
-  return`Vuelve a la cámara el <b>${fmt(f)}</b> (${n<60?`dentro de ${n} día${n===1?'':'s'}`:`dentro de unos ${Math.round(n/30.4)} meses`}).`;
+  return`Vuelve el <b>${fmt(f)}</b> (${n<60?`dentro de ${n} día${n===1?'':'s'}`:`dentro de unos ${Math.round(n/30.4)} meses`}).`;
 }
 // Oportunidades para retomar: interesados (o necesita seguimiento) sin tocar 2+ meses.
 // 3–5 al azar, fijas durante el día (cambian con 🔀).
@@ -1827,9 +1831,11 @@ function demoSheet(d,view='main'){
     return h;
   }
   if(view==='comercial'){
-    const com=comName(d.comercial_id),def=ds(addDays(7));
-    h+=`<button class="back" data-act="back">← Volver</button><div class="act-title">YA HABLADO CON EL COMERCIAL</div>
-      <div class="msg">Ahora depende de ${com==='—'?'el comercial':`<b>${esc(com)}</b>`}: sale de la cámara y te la recordamos el día que elijas para pedirle el feedback.</div>
+    const com=comName(d.comercial_id),pase=sinResultado(d);
+    const def=esperandoCom(d)?d.seguimiento_aplazado_hasta:ds(addDays(pase?3:7));
+    const quien=com==='—'?'el comercial':`<b>${esc(com)}</b>`;
+    h+=`<button class="back" data-act="back">← Volver</button><div class="act-title">${pase?'PREGUNTADO AL COMERCIAL':'YA HABLADO CON EL COMERCIAL'}</div>
+      <div class="msg">${pase?`¿No sabes cómo fue la demo? Si ya se lo has preguntado a ${quien}, sale del pase`:`Ahora depende de ${quien}: sale de la cámara`} y te la recordamos el día que elijas para pedirle el feedback.</div>
       <div class="fq">${TRABAJAR_OPC.map(o=>`<button class="btn" data-act="cq:${o[0]}">${o[1]}</button>`).join('')}</div>
       <div class="row-inp"><input type="date" class="inp" id="inp-com" value="${def}" min="${ds(addDays(1))}"></div>
       <div class="msg" id="com-hint">${comHint(def)}</div>
@@ -1871,6 +1877,8 @@ function demoSheet(d,view='main'){
     if(!ejec)h+=`<div class="act-group"><div class="act-sub">NO SE HIZO</div><div class="acts">`+
        act('reagendar','Se mueve a otro día','Vuelve al rail con nueva fecha',xpLbl('reagendar',d),'','var(--teal-lt)')+
        act('cancelar','Cancelada','A platos devueltos, con motivo',xpLbl('cancelar',d),'warn','var(--amber)')+`</div></div>`;
+    h+=`<div class="act-group"><div class="act-sub">NO SÉ CÓMO FUE</div><div class="acts">`+
+       act('comercial','Preguntado al comercial','Sale del pase: te la recordamos para pedirle el feedback','','','var(--steel)')+`</div></div>`;
   }else if(zone==='nuevas'||zone==='agenda'||zone==='hoy'){
     h+=`<div class="acts">`;
     if(canEdit())h+=act('editar','Editar datos de la demo','Salesforce, comercial, hora, notas…','','','var(--steel)');
@@ -1892,6 +1900,18 @@ function demoSheet(d,view='main'){
        act('reagendar','Rescatar: reagendar','Vuelve al rail',xpLbl('reagendar',d),'good','var(--lime)')+
        act('descartar','Tirar al cubo','Descartada. Se puede recuperar.',xpLbl('descartar',d),'bad','var(--red)')+`</div>`+
        trabajarHTML('LA ESTOY TRABAJANDO · RECUÉRDAMELA EN');
+  }else if(zone==='reposo'&&esperandoCom(d)&&(d.fecha||'')<=today()){
+    h+=`<div class="alertbox wait">Esperando al comercial. Vuelve al pase el <b>${fmt(d.seguimiento_aplazado_hasta)}</b>; hasta entonces no se pudre.</div>`+
+      `<div class="act-group"><div class="act-sub">YA SÉ CÓMO FUE</div><div class="acts">`+
+       act('out:interesado','Interesado','Hay interés, sigue el proceso','','good','var(--lime)')+
+       act('out:necesita_seguimiento','Necesita seguimiento','A la cámara a los 7 días','','warn','var(--blue)')+
+       act('ganado','Cerrado ganado','Se sirve en el comedor',xpLbl('ganado',d),'good','var(--gold)')+
+       act('perdido','Cerrado perdido','Al cubo, con motivo','','bad','var(--red)')+`</div></div>`+
+      `<div class="act-group"><div class="act-sub">NO SE HIZO</div><div class="acts">`+
+       act('reagendar','Se mueve a otro día','Vuelve al rail con nueva fecha','','','var(--teal-lt)')+
+       act('cancelar','Cancelada','A platos devueltos, con motivo','','warn','var(--amber)')+`</div></div>`+
+      `<div class="acts">`+act('comercial','Cambiar el recordatorio','','','','var(--steel)')+
+       act('esperando-ya','Devolver ya al pase','Quita el recordatorio','','warn','var(--amber)')+`</div>`;
   }else if(zone==='reposo'&&canTrabajando(d)){
     h+=`<div class="alertbox wait">La estás trabajando. Vuelve a platos devueltos el <b>${fmt(d.seguimiento_aplazado_hasta)}</b>; hasta entonces no se pudre.</div><div class="acts">`+
        act('reagendar','Rescatar: reagendar','Vuelve al rail',xpLbl('reagendar',d),'good','var(--lime)')+
@@ -1946,7 +1966,7 @@ async function openDemo(id,fromEl,backZone=null){
     toast(`Comanda colgada en el rail · +${gain} XP`);
   }
   drawerCtx={id:d.id,el:fromEl,backZone};
-  openDrawer(ZONE_NAME[placeOf(d)]||'',d.sf_nombre||'Demo sin nombre',demoSheet(d));
+  openDrawer(esperandoCom(d)&&(d.fecha||'')<=today()?'Esperando al comercial':ZONE_NAME[placeOf(d)]||'',d.sf_nombre||'Demo sin nombre',demoSheet(d));
 }
 // Volver a la lista (o al inspector) desde la que se abrió una comanda
 const backLabel=z=>z==='inspector'?'la inspección':(ZONE_NAME[z]||'la lista').split(' · ')[0].toLowerCase();
@@ -1968,6 +1988,12 @@ function openZoneList(zone,quieto=false){
   openDrawer(ZONE_NAME[zone],`${list.length} ${list.length===1?'comanda':'comandas'}`,
     list.length?`<div class="list">${list.map(d=>`<button class="li" data-id="${d.id}">${zone==='vertedero'?`<span class="sw" style="background:${CAT_COLOR[d._zone]}"></span>`:''}<span class="nm">${esc(shortName(d))}</span><span class="meta">${esc(meta(d))}</span></button>`).join('')}</div>`
       :'<div style="color:var(--ink-3)">No hay nada aquí.</div>');
+  if(zone==='marcar'){
+    const esp=demos.filter(d=>esperandoCom(d)&&(d.fecha||'')<=today()).sort((a,b)=>a.seguimiento_aplazado_hasta.localeCompare(b.seguimiento_aplazado_hasta));
+    if(esp.length)drBody.insertAdjacentHTML('beforeend',`<div class="act-title" style="margin-top:14px">🤝 ESPERANDO AL COMERCIAL · ${esp.length}</div>
+      <div class="msg">Vuelven solas al pase el día del recordatorio.</div>
+      <div class="list">${esp.map(d=>`<button class="li" data-id="${d.id}"><span class="sw" style="background:var(--steel)"></span><span class="nm">${esc(shortName(d))}</span><span class="meta">${esc(comName(d.comercial_id))} · vuelve el ${esc(fmt(d.seguimiento_aplazado_hasta))}</span></button>`).join('')}</div>`);
+  }
   if(zone==='canceladas'){
     const trab=demos.filter(canTrabajando).sort((a,b)=>a.seguimiento_aplazado_hasta.localeCompare(b.seguimiento_aplazado_hasta));
     if(trab.length)drBody.insertAdjacentHTML('beforeend',`<div class="act-title" style="margin-top:14px">⏳ LAS ESTÁS TRABAJANDO · ${trab.length}</div>
@@ -2052,14 +2078,14 @@ drBody.addEventListener('click',async e=>{
   const kinds=[];
   const nm=shortName(d);
   if(a.startsWith('out:')){
-    const o=a.slice(4);patch={estado:'ejecutada',outcome:o};key=o;text=`Servida · ${OUTCOME_LABEL[o]}: ${nm}`;
+    const o=a.slice(4);patch={estado:'ejecutada',outcome:o};if(esperandoCom(d))patch.seguimiento_aplazado_hasta=null;key=o;text=`Servida · ${OUTCOME_LABEL[o]}: ${nm}`;
   }else if(a==='do-ganado'){
     const f=document.getElementById('inp-firma').value;if(!f){toast('Pon la fecha de la firma','warn');return;}
     patch={estado:'ejecutada',outcome:'cerrado_ganado',fecha_firma:f,motivo:null};key='ganado';text=`¡Venta! ${nm}`;
   }else if(a.startsWith('motivo:')){
     const[,tipo,m]=a.split(':');
     if(tipo==='perdido'){patch={estado:'ejecutada',outcome:'cerrado_perdido',motivo:m};key='perdido';text=`Perdida: ${nm}`;}
-    else{patch={estado:'cancelada',motivo:m};key='cancelar';text=`Devuelta (cancelada): ${nm}`;}
+    else{patch={estado:'cancelada',motivo:m,seguimiento_aplazado_hasta:null};key='cancelar';text=`Devuelta (cancelada): ${nm}`;}
   }else if(a.startsWith('aplazar:')){
     const n=+a.split(':')[1];patch={seguimiento_aplazado_hasta:ds(addDays(n))};key='aplazar';text=`Seguimiento aplazado ${n} días: ${nm}`;
   }else if(a==='do-fecha'){
@@ -2071,21 +2097,22 @@ drBody.addEventListener('click',async e=>{
     if(!f||f<=today()){toast('Elige una fecha a partir de mañana','warn');return;}
     const dicho=(document.getElementById('inp-com-nota').value||'').trim().replace(/\s+/g,' ');
     const com=comName(d.comercial_id);
-    const linea=`[${fmt(today())}] Hablado con ${com==='—'?'el comercial':com}${dicho?': '+dicho:''} · recordar el ${fmt(f)}`;
+    const quien=com==='—'?'el comercial':com,pase=sinResultado(d);
+    const linea=`[${fmt(today())}] ${pase?`Preguntado a ${quien} cómo fue la demo`:`Hablado con ${quien}`}${dicho?': '+dicho:''} · recordar el ${fmt(f)}`;
     patch={seguimiento_aplazado_hasta:f,notas:d.notas?`${d.notas}\n${linea}`:linea};
-    key='aplazar';text=`Hablado con el comercial, vuelve el ${fmt(f)}: ${nm}`;
+    key=pase?'':'aplazar';text=`${pase?'Esperando al comercial':'Hablado con el comercial'}, vuelve el ${fmt(f)}: ${nm}`;
   }else if(a==='do-reagendar'){
     const f=document.getElementById('inp-fecha').value,hr=document.getElementById('inp-hora').value;
     if(!f){toast('Elige una fecha','warn');return;}
     if(f<today()){toast('Elige hoy o una fecha futura','warn');return;}
-    patch={fecha:f,hora:hr||null,estado:'agendada',outcome:null,descartada:false,confirmada_at:null};
-    if(d.estado==='cancelada')patch.seguimiento_aplazado_hasta=null;
+    patch={fecha:f,hora:hr||null,estado:'agendada',outcome:null,descartada:false,confirmada_at:null,seguimiento_aplazado_hasta:null};
     const rescate=wasZone==='canceladas'||(wasZone==='reposo'&&d.estado==='cancelada');
     key='reagendar';text=(rescate?'Rescatada':wasZone==='marcar'?'No se hizo, reagendada':'Cambio de fecha')+` al ${fmt(f)}: ${nm}`;
     if(rescate)kinds.push('rescate');
   }else if(a.startsWith('trabajar:')){
     const f=fechaTrabajar(a.slice(9));patch={seguimiento_aplazado_hasta:f};key='trabajar';text=`La estás trabajando, vuelve el ${fmt(f)}: ${nm}`;
-  }else if(a==='trabajar-ya'){patch={seguimiento_aplazado_hasta:null};key='';text=`De vuelta a platos devueltos: ${nm}`;}
+  }else if(a==='esperando-ya'){patch={seguimiento_aplazado_hasta:null};key='';text=`De vuelta al pase: ${nm}`;}
+  else if(a==='trabajar-ya'){patch={seguimiento_aplazado_hasta:null};key='';text=`De vuelta a platos devueltos: ${nm}`;}
   else if(a==='descartar'){patch={descartada:true};key='descartar';text=`Al cubo: ${nm}`;}
   else if(a==='recuperar'){patch={descartada:false,seguimiento_aplazado_hasta:null};key='recuperar';text=`Recuperada: ${nm}`;}
   else if(a==='confirmar'){patch={confirmada_at:new Date().toISOString()};key='confirmar';text=`Asistencia confirmada: ${nm}`;}
@@ -2425,6 +2452,8 @@ async function saveDemoForm(d){
       motivo:(estado==='cancelada'||outcome==='cerrado_perdido')?(document.getElementById('f-motivo').value||null):null
     });
     if(estado!=='cancelada')payload.descartada=false;
+    // Mismo criterio que el Hub: un recordatorio no se arrastra a otro estado
+    if((estado==='cancelada'&&d.estado!=='cancelada')||(d.outcome&&!outcome)||(esperandoCom(d)&&outcome))payload.seguimiento_aplazado_hasta=null;
   }
   const btn=document.querySelector('#demo-form [type=submit]');btn.disabled=true;
   try{
