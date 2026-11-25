@@ -2386,16 +2386,18 @@ body.ia-abierto .ia-panel{display:flex;}
 <div class="modal-overlay" id="aplazar-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-head">
-      <div class="modal-title">📅 Seguimiento en una fecha concreta</div>
+      <div class="modal-title" id="aplazar-title">📅 Seguimiento en una fecha concreta</div>
       <button class="modal-close" onclick="closeAplazarModal()">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="aplazar-demo-id"/>
+      <input type="hidden" id="aplazar-modo"/>
       <div id="aplazar-intro" class="aplazar-intro" style="display:none;"></div>
       <div id="aplazar-demo-name" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface-2);border-radius:9px;"></div>
       <div class="form-group">
-        <label class="form-label">¿Cuándo le vuelves a llamar?</label>
+        <label class="form-label" id="aplazar-label">¿Cuándo le vuelves a llamar?</label>
         <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+          <button type="button" class="quick-date-btn" onclick="setAplazarQuick(3)">+3 días</button>
           <button type="button" class="quick-date-btn" onclick="setAplazarQuick(7)">+1 semana</button>
           <button type="button" class="quick-date-btn" onclick="setAplazarQuick(14)">+2 semanas</button>
           <button type="button" class="quick-date-btn" onclick="setAplazarMeses(1)">+1 mes</button>
@@ -2409,6 +2411,10 @@ body.ia-abierto .ia-panel{display:flex;}
         </div>
         <input class="form-input" type="date" id="aplazar-fecha" oninput="updateAplazarHint()"/>
         <div class="form-hint" id="aplazar-hint">Hasta esa fecha sale de tus Follow-ups; ese día vuelve a aparecer para que le llames.</div>
+      </div>
+      <div class="form-group" id="aplazar-nota-group" style="display:none;">
+        <label class="form-label">¿Qué te ha dicho? <span style="font-weight:400;color:var(--muted);">(opcional, se guarda en las notas)</span></label>
+        <textarea class="form-input" id="aplazar-nota" rows="2" placeholder="Ej.: le llama él el jueves, está esperando al socio…"></textarea>
       </div>
       <div class="sf-reminder-inline">📝 Apúntalo también en Salesforce: crea una <b>tarea</b> para esa fecha o deja una <b>nota</b> en la oportunidad con lo que te dijo.</div>
       <div class="modal-actions">
@@ -6120,6 +6126,7 @@ function pendCardHtml(d,q){
         <button class="pd-btn win" onclick="openFirmaModal(${d.id})">🏆 Firmada</button>
         <button class="pd-btn ok" onclick="openNuevaDemoModal(${d.id})" title="Hay que hacer otra demo con este cliente: se agenda una nueva y este seguimiento se cierra">📅 Nueva demo</button>
         <button class="pd-btn danger" onclick="openMotivoModal({id:${d.id},tipo:'perdida',outcome:'cerrado_perdido'})">💔 Perdida</button>
+        <button class="pd-btn" onclick="openComercialModal(${d.id})" title="Ya has hablado con el comercial y ahora depende de él: te lo recordamos para pedirle el feedback">🤝 Hablado con comercial</button>
         <button class="pd-btn" onclick="snoozeFollow(${d.id},3)" title="Recordármelo en 3 días">⏰ +3 días</button>
         <button class="pd-btn" onclick="snoozeFollow(${d.id},7)" title="Recordármelo en una semana">⏰ +1 sem</button>
         <button class="pd-btn ghost" onclick="openAplazarModal(${d.id})" title="Elige el día exacto (p. ej. 'llámame en 5 meses')">📅 Fecha concreta</button>
@@ -6239,9 +6246,15 @@ async function descartarDemo(id){
 // Aplazar seguimiento: abre modal con calendario para elegir fecha concreta
 function aplazarSeguimiento(id){openAplazarModal(id);}
 // intro: texto opcional arriba (p. ej. justo después de marcar "Interesado")
-function openAplazarModal(id,intro){
+function openAplazarModal(id,intro,modo=''){
   const demo=demos.find(d=>d.id===id);
   document.getElementById('aplazar-demo-id').value=id;
+  const com=modo==='comercial';
+  document.getElementById('aplazar-modo').value=modo;
+  document.getElementById('aplazar-title').textContent=com?'🤝 Ya hablado con el comercial':'📅 Seguimiento en una fecha concreta';
+  document.getElementById('aplazar-label').textContent=com?'¿Cuándo le pides el feedback?':'¿Cuándo le vuelves a llamar?';
+  document.getElementById('aplazar-nota-group').style.display=com?'':'none';
+  document.getElementById('aplazar-nota').value='';
   document.getElementById('aplazar-demo-name').textContent='📞 '+(demo?.sf_nombre||'Sin nombre');
   const introEl=document.getElementById('aplazar-intro');
   introEl.style.display=intro?'':'none';introEl.textContent=intro||'';
@@ -6256,6 +6269,14 @@ function openAplazarModal(id,intro){
   document.getElementById('aplazar-modal').classList.add('active');
 }
 function closeAplazarModal(){document.getElementById('aplazar-modal').classList.remove('active');}
+// "Ya hablado con el comercial": ahora depende de él. Sale de Follow-ups hasta la fecha
+// elegida y deja una línea en las notas (igual que en la cocina).
+function openComercialModal(id){
+  const d=demos.find(x=>x.id===id);
+  const com=d?comercialName(d.comercial_id):'—';
+  openAplazarModal(id,`Ahora depende de ${com==='—'?'el comercial':com}: sale de tus Follow-ups y te la recordamos el día que elijas para pedirle el feedback.`,'comercial');
+  document.getElementById('aplazar-cancel').textContent='Cancelar';
+}
 function setAplazarQuick(days){const d=new Date();d.setDate(d.getDate()+days);document.getElementById('aplazar-fecha').value=localDateStr(d);document.getElementById('aplazar-n-meses').value='';updateAplazarHint();}
 function addMonthsStr(n){
   const d=new Date();const dia=d.getDate();
@@ -6284,9 +6305,18 @@ async function confirmAplazar(){
   const fecha=document.getElementById('aplazar-fecha').value;
   if(!fecha){showToast('⚠️ Selecciona una fecha');return;}
   if(fecha<=todayStr()){showToast('⚠️ Elige una fecha a partir de mañana');return;}
+  const patch={seguimiento_aplazado_hasta:fecha};
+  const modoCom=document.getElementById('aplazar-modo').value==='comercial';
+  if(modoCom){
+    const d=demos.find(x=>x.id===id);
+    const com=d?comercialName(d.comercial_id):'—';
+    const dicho=(document.getElementById('aplazar-nota').value||'').trim().replace(/\s+/g,' ');
+    const linea=`[${fmtDate(todayStr())}] Hablado con ${com==='—'?'el comercial':com}${dicho?': '+dicho:''} · recordar el ${fmtDate(fecha)}`;
+    patch.notas=d&&d.notas?`${d.notas}\n${linea}`:linea;
+  }
   try{
-    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({seguimiento_aplazado_hasta:fecha})});
-    showToast('✓ Seguimiento programado para el '+fmtDate(fecha));
+    await sb(`demos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(patch)});
+    showToast(modoCom?'🤝 Hablado con el comercial · te lo recordamos el '+fmtDate(fecha):'✓ Seguimiento programado para el '+fmtDate(fecha));
     closeAplazarModal();
     await loadDemos();
     sfNudge(demos.find(d=>d.id===id),`Crea una tarea en Salesforce para el ${fmtDate(fecha)} o deja una nota en la oportunidad con lo que te dijo.`);
@@ -7014,6 +7044,7 @@ function renderDemoCard(d,liveClass='',searchMode=false){
               <option value="cerrado_perdido">❌ Perdido</option>
             </select>
             <button class="btn-ghost-amber" onclick="aplazarSeguimiento(${d.id})">📅 Seguimiento en fecha</button>
+            <button class="btn-ghost-amber" onclick="openComercialModal(${d.id})">🤝 Hablado con comercial</button>
             <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="openNuevaDemoModal(${d.id})">📅 Nueva demo</button>
           </div>`
         :!searchMode&&currentView==='papelera'
