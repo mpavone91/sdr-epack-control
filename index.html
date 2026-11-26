@@ -948,6 +948,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .ag-icon:hover{background:var(--surface-2);}
 .ag-done{font-size:12.5px;font-weight:700;color:var(--green);}
 
+/* ── MANAGER · DEMOS DEL DÍA ── */
+.mh-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.mh-day{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--teal-dark);min-width:200px;}
+.mh-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.mh-kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+.mh-kpi-num{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--teal-dark);line-height:1;}
+.mh-kpi-lbl{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:600;}
+.mh-kpi.warn{border-color:var(--amber);background:var(--amber-soft);}
+.mh-kpi.ok{border-color:var(--lime);background:var(--lime-soft);}
+.mh-sdr{margin-bottom:16px;}
+.mh-sdr-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.mh-sdr-name{font-weight:700;font-size:16px;color:var(--teal-dark);}
+.mh-count{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--lime-soft);color:var(--teal-dark);}
+.mh-count.warn{background:var(--amber);color:#fff;}
+.mh-sent{font-size:12px;color:var(--muted);}
+.mh-sdr-head .btn-copy{margin-left:auto;}
+.mh-pill{display:inline-block;padding:6px 12px;border-radius:10px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+.mh-pill.conf{background:var(--lime);color:var(--teal-dark);}
+.mh-pill.pend{background:var(--amber-soft);color:#8a5e00;border:1.5px solid var(--amber);}
+.mh-pill.done{background:var(--green-soft);color:var(--green);}
+.mh-pill.cierre{background:var(--surface-2);color:var(--muted);}
+.ag-item.mh-pend{border-left-color:var(--amber);}
+@media(max-width:700px){.mh-kpis{grid-template-columns:repeat(2,1fr);}.mh-sdr-head .btn-copy{margin-left:0;}}
+
 /* ── PENDIENTES ── */
 .pd-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
 .pd-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;}
@@ -1741,6 +1765,7 @@ body.ia-abierto .ia-panel{display:flex;}
     <!-- MANAGER NAV -->
     <div class="mgr-nav">
       <button class="mgr-nav-btn active" onclick="setMgrTab('equipo',this)">📊 Visión equipo</button>
+      <button class="mgr-nav-btn" onclick="setMgrTab('hoy',this)">✅ Demos de hoy <span id="mh-nav-badge"></span></button>
       <button class="mgr-nav-btn" onclick="setMgrTab('individual',this)">👤 Por SDR</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('planificacion',this)">🗓️ Planificación</button>
       <button class="mgr-nav-btn" onclick="setMgrTab('reportes',this)">📎 Reportes</button>
@@ -1849,6 +1874,24 @@ body.ia-abierto .ia-panel{display:flex;}
     </div>
 
     <!-- TAB: INDIVIDUAL -->
+    <!-- TAB: DEMOS DEL DÍA (todas las del equipo, confirmadas o no) -->
+    <div class="mgr-tab" id="mgrtab-hoy">
+      <div class="mh-bar">
+        <button class="month-nav-btn" onclick="mhShift(-1)" title="Día anterior">‹</button>
+        <div class="mh-day" id="mh-day">—</div>
+        <button class="month-nav-btn" onclick="mhShift(1)" title="Día siguiente">›</button>
+        <button class="month-nav-today" id="mh-today-btn" onclick="mhShift(0)">Hoy</button>
+        <div class="canal-filter-wrap" style="margin-left:auto;">
+          <button class="canal-filter-btn active" id="mh-f-todas" onclick="mhSetFiltro('todas')">Todas</button>
+          <button class="canal-filter-btn" id="mh-f-pend" onclick="mhSetFiltro('pend')">⏳ Sin confirmar</button>
+        </div>
+        <button class="btn-copy" onclick="mhRefresh(true)" title="Volver a cargar lo que han marcado los SDR">🔄 Actualizar</button>
+      </div>
+      <div class="mh-kpis" id="mh-kpis"></div>
+      <div id="mh-all-btn"></div>
+      <div id="mh-list"></div>
+    </div>
+
     <div class="mgr-tab" id="mgrtab-individual">
       <div class="mgr-sdr-selector" id="mgr-sdr-selector"></div>
       <div id="mgr-individual-content"></div>
@@ -3057,6 +3100,7 @@ function renderManager(){
   renderVacManager();
   renderGenTopics();
   renderReglasEditor();
+  renderMgrHoy();
 }
 
 // Helper: stats for previous month (used for delta comparisons)
@@ -4256,10 +4300,164 @@ function setMgrTab(tab,btn){
   document.querySelectorAll('.mgr-nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('mgrtab-'+tab).classList.add('active');
   btn.classList.add('active');
+  const mn=document.querySelector('#manager-app .month-nav');if(mn)mn.style.display=tab==='hoy'?'none':'';
   if(tab==='resumenes')renderResumen();
   if(tab==='generador')renderGenTopics();
   if(tab==='planificacion')openMgrPlan();
   if(tab==='reportes')loadReportes().then(renderReportes);
+  if(tab==='hoy')mhRefresh(false);
+}
+
+// ══════════ MANAGER · DEMOS DEL DÍA ══════════
+// Todas las demos del día de todo el equipo, como las ve cada SDR en su "Agenda de hoy",
+// con cuáles han marcado como confirmadas y un botón para recordarles las que faltan.
+let mhFecha=null,mhFiltro='todas',mhMensajes=[];
+function mhDia(){return mhFecha||todayStr();}
+function mhShift(delta){
+  if(!delta){mhFecha=todayStr();}
+  else{const[y,m,d]=mhDia().split('-').map(Number);mhFecha=localDateStr(new Date(y,m-1,d+delta));}
+  mhRefresh(false);
+}
+function mhSetFiltro(f){
+  mhFiltro=f;
+  document.getElementById('mh-f-todas').classList.toggle('active',f==='todas');
+  document.getElementById('mh-f-pend').classList.toggle('active',f==='pend');
+  renderMgrHoy();
+}
+function mhDemosDelDia(){
+  const f=mhDia();
+  return allDemos.filter(d=>d.fecha===f&&d.estado!=='cancelada'&&d.estado!=='reagendada');
+}
+// 'conf' confirmada · 'pend' sin confirmar · 'done' ya hecha · 'cierre' ya pasó y falta marcar cómo fue
+function mhEstado(d){
+  if(d.estado==='ejecutada'||d.outcome)return'done';
+  if(isPendingCierre(d))return d.confirmada_at?'conf':'cierre';
+  return d.confirmada_at?'conf':'pend';
+}
+function mhSdrNombre(id){const s=todosSdrs.find(x=>x.id===id)||allSdrs.find(x=>x.id===id);return s?s.nombre:'SDR #'+id;}
+async function mhRefresh(manual){
+  const f=mhDia();
+  try{
+    const [rows,msgs]=await Promise.all([
+      sb(`demos?fecha=eq.${f}&select=*`),
+      sb(`planificacion_mensajes?created_at=gte.${todayStr()}T00:00:00&select=*&order=created_at.desc`).catch(()=>[])
+    ]);
+    const frescas=await sinUsuariosDePrueba(rows||[]);
+    const ids=new Set(frescas.map(d=>d.id));
+    allDemos=allDemos.filter(d=>d.fecha!==f&&!ids.has(d.id)).concat(frescas);
+    mhMensajes=(msgs||[]).filter(m=>String(m.texto||'').includes('sin confirmar'));
+    if(manual)showToast('✓ Actualizado');
+  }catch(e){console.error(e);if(manual)showToast('❌ No se pudo actualizar');}
+  renderMgrHoy();
+}
+function mhFechaTxt(f){
+  const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const[y,m,d]=f.split('-').map(Number);
+  const dow=dias[new Date(y,m-1,d).getDay()];
+  if(f===todayStr())return'Hoy · '+dow+' '+fmtDate(f);
+  if(f===tomorrowStr())return'Mañana · '+dow+' '+fmtDate(f);
+  return dow.charAt(0).toUpperCase()+dow.slice(1)+' '+fmtDate(f);
+}
+function renderMgrHoy(){
+  const el=document.getElementById('mh-list');if(!el)return;
+  const f=mhDia(),esHoy=f===todayStr();
+  document.getElementById('mh-day').textContent=mhFechaTxt(f);
+  document.getElementById('mh-today-btn').style.visibility=esHoy?'hidden':'visible';
+  const lista=mhDemosDelDia();
+  const cuenta={conf:0,pend:0,done:0,cierre:0};
+  lista.forEach(d=>cuenta[mhEstado(d)]++);
+  const kpi=(cls,n,l)=>`<div class="mh-kpi ${cls}"><div class="mh-kpi-num">${n}</div><div class="mh-kpi-lbl">${l}</div></div>`;
+  document.getElementById('mh-kpis').innerHTML=
+    kpi('',lista.length,'Demos '+(esHoy?'hoy':'ese día'))+
+    kpi(cuenta.conf?'ok':'',cuenta.conf,'✓ Confirmadas')+
+    kpi(cuenta.pend?'warn':'',cuenta.pend,'⏳ Sin confirmar')+
+    kpi('',cuenta.done+cuenta.cierre,'Ya pasadas'+(cuenta.cierre?` (${cuenta.cierre} sin marcar)`:''));
+  const badge=document.getElementById('mh-nav-badge');
+  if(badge&&esHoy)badge.innerHTML=cuenta.pend?`<span class="pd-tab-count hot" style="margin-left:4px;">${cuenta.pend}</span>`:'';
+
+  // Agrupado por SDR: primero los que tienen más sin confirmar
+  const porSdr={};
+  lista.forEach(d=>{(porSdr[d.sdr_id]=porSdr[d.sdr_id]||[]).push(d);});
+  const grupos=Object.keys(porSdr).map(id=>{
+    const ds=sortByHora(porSdr[id]);
+    return{id:+id,nombre:mhSdrNombre(+id),demos:ds,pend:ds.filter(d=>mhEstado(d)==='pend'),conf:ds.filter(d=>mhEstado(d)==='conf').length};
+  }).sort((a,b)=>b.pend.length-a.pend.length||a.nombre.localeCompare(b.nombre));
+  const conPend=grupos.filter(g=>g.pend.length);
+  document.getElementById('mh-all-btn').innerHTML=conPend.length>1
+    ?`<div style="display:flex;justify-content:flex-end;margin-bottom:14px;"><button class="btn-copy primary" onclick="mhRecordarTodos()">📣 Recordar a los ${conPend.length} SDR con demos sin confirmar</button></div>`:'';
+
+  const vis=mhFiltro==='pend'?conPend:grupos;
+  if(!vis.length){
+    el.innerHTML=`<div class="mgr-block"><div class="home-empty"><b>${lista.length?'Todo confirmado ✓':'Sin demos este día'}</b>${lista.length?'Ninguna demo pendiente de confirmar.':'Nadie del equipo tiene demos agendadas.'}</div></div>`;
+    return;
+  }
+  el.innerHTML=vis.map(g=>{
+    const pendientes=g.pend.length;
+    const activas=g.demos.filter(d=>mhEstado(d)!=='done'&&mhEstado(d)!=='cierre').length;
+    const m=mhMensajes.find(x=>x.sdr_id===g.id);
+    const enviado=m?`<span class="mh-sent">📣 Recordado a las ${new Date(m.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})} · ${m.leida_at?'✓ leído':'sin leer'}</span>`:'';
+    const demosVis=mhFiltro==='pend'?g.pend:g.demos;
+    return`<div class="mgr-block mh-sdr">
+      <div class="mh-sdr-head">
+        <span class="mh-sdr-name">${escHtml(g.nombre)}</span>
+        <span class="mh-count${pendientes?' warn':''}">${activas?`${g.conf}/${g.conf+pendientes} confirmadas`:'Todas pasadas'}</span>
+        ${enviado}
+        ${pendientes?`<button class="btn-copy primary" onclick="mhOpenRecordar(${g.id})">📣 Recordar (${pendientes})</button>`:''}
+      </div>
+      ${demosVis.map(mhItemHtml).join('')}
+    </div>`;
+  }).join('');
+}
+function mhItemHtml(d){
+  const st=mhEstado(d);
+  const pill={conf:'<span class="mh-pill conf">✓ Confirmada</span>',pend:'<span class="mh-pill pend">⏳ Sin confirmar</span>',
+    done:`<span class="mh-pill done">✓ ${escHtml(outcomeLabel(d.outcome)||'Ejecutada')}</span>`,cierre:'<span class="mh-pill cierre">Pasada · sin marcar</span>'}[st];
+  const conf=d.confirmada_at?`<div class="ag-time-s" style="text-transform:none;letter-spacing:0;">conf. ${new Date(d.confirmada_at).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`:'';
+  const cls=st==='done'?'cerrada':st==='cierre'?'cierre':st==='conf'?'confirmada':'mh-pend';
+  return`<div class="ag-item ${cls}">
+    <div class="ag-time"><div class="ag-time-h">${d.hora?d.hora.slice(0,5):'—'}</div>${d.hora?'':'<div class="ag-time-s">Sin hora</div>'}</div>
+    <div class="ag-body">
+      <div class="ag-name">${demoNameHtml(d)}</div>
+      <div class="ag-meta">${demoMetaHtml(d)}${d.telefono?`<span>📱 ${escHtml(d.telefono)}</span>`:''}</div>
+      ${d.notas?`<div class="ag-note">📝 ${escHtml(d.notas)}</div>`:''}
+    </div>
+    <div class="ag-actions" style="flex-direction:column;align-items:flex-end;justify-content:center;">${pill}${conf}</div>
+  </div>`;
+}
+function mhTextoRecordar(id){
+  const f=mhDia();
+  const g=mhDemosDelDia().filter(d=>d.sdr_id===id&&mhEstado(d)==='pend');
+  const n=mhSdrNombre(id).split(' ')[0];
+  const cuando=f===todayStr()?'de hoy':f===tomorrowStr()?'de mañana':'del '+mhFechaTxt(f).toLowerCase();
+  let lista=sortByHora(g).map(d=>`${d.hora?d.hora.slice(0,5)+' ':''}${d.sf_nombre||'Sin nombre'}`).join(', ');
+  const base=`${n}, tienes ${g.length} demo${g.length>1?'s':''} ${cuando} sin confirmar: `;
+  const fin=`. Confirma con el cliente y márcala${g.length>1?'s':''} como ✓ Confirmada en tu Agenda.`;
+  if((base+lista+fin).length>500)lista=lista.slice(0,500-base.length-fin.length-1)+'…';
+  return base+lista+fin;
+}
+function mhOpenRecordar(id){
+  plModal(`📣 Recordar a ${mhSdrNombre(id)}`,`
+    <p class="form-hint" style="margin:-6px 0 12px;">Le aparece arriba del todo en el Hub hasta que le da a "Entendido". Aquí verás si lo ha leído.</p>
+    <div class="form-group"><textarea class="form-textarea" id="mh-r-txt" maxlength="500" style="min-height:110px;">${escHtml(mhTextoRecordar(id))}</textarea></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="mhEnviar([${id}],document.getElementById('mh-r-txt').value)">Enviar recordatorio</button></div>`);
+}
+function mhRecordarTodos(){
+  const ids=[...new Set(mhDemosDelDia().filter(d=>mhEstado(d)==='pend').map(d=>d.sdr_id))];
+  if(!ids.length)return;
+  if(!confirm(`Se enviará un recordatorio a ${ids.length} SDR (${ids.map(i=>mhSdrNombre(i).split(' ')[0]).join(', ')}) con sus demos sin confirmar. ¿Enviar?`))return;
+  mhEnviar(ids,null);
+}
+async function mhEnviar(ids,textoUnico){
+  const filas=ids.map(id=>({sdr_id:id,autor_id:currentUser.id,texto:(textoUnico!=null?textoUnico:mhTextoRecordar(id)).trim()})).filter(r=>r.texto);
+  if(!filas.length){showToast('⚠️ Escribe el mensaje');return;}
+  try{
+    const r=await sb('planificacion_mensajes',{method:'POST',body:JSON.stringify(filas)});
+    (r||[]).forEach(m=>{if(String(m.texto).includes('sin confirmar'))mhMensajes.unshift(m);});
+    plMensajes.unshift(...(r||[]));
+    plCloseModal();
+    showToast(filas.length>1?`✓ Recordatorio enviado a ${filas.length} SDR`:`✓ Recordatorio enviado a ${mhSdrNombre(filas[0].sdr_id)}`);
+    renderMgrHoy();
+  }catch(e){console.error(e);showToast('❌ No se pudo enviar');}
 }
 
 // ── RESÚMENES ──
